@@ -1,0 +1,8 @@
+interface:
+  display_name: "Feature Dev"
+  short_description: "Structured workflow for non-trivial feature development"
+  default_prompt: "Use $feature-dev for this task."
+  brand_color: "#2563EB"
+
+policy:
+  allow_implicit_invocation: false
