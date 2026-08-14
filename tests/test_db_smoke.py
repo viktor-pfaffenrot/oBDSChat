@@ -1,4 +1,4 @@
-"""Optional PostgreSQL smoke test for the document schema."""
+"""Optional PostgreSQL smoke test for BM25 document search."""
 
 import os
 import uuid
@@ -12,7 +12,7 @@ DATABASE_SCHEMA_PATH = Path(__file__).parents[1] / "db" / "init.sql"
 
 
 @pytest.mark.db_smoke
-def test_document_schema_supports_german_full_text_search() -> None:
+def test_document_schema_supports_german_bm25_search() -> None:
     database_url = os.environ.get("TEST_DATABASE_URL")
     if database_url is None:
         pytest.skip("TEST_DATABASE_URL is not configured")
@@ -30,6 +30,26 @@ def test_document_schema_supports_german_full_text_search() -> None:
                     sql.Identifier(schema_name)
                 )
             )
+            cursor.execute(
+                """
+                CREATE TABLE documents (
+                    id BIGSERIAL PRIMARY KEY,
+                    source_type TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    section TEXT,
+                    content TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    obds_version TEXT
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX documents_full_text_idx
+                ON documents
+                USING GIN (to_tsvector('german', content))
+                """
+            )
             cursor.execute(schema_sql.encode(), prepare=False)
             cursor.execute(
                 """
@@ -40,46 +60,106 @@ def test_document_schema_supports_german_full_text_search() -> None:
                     content,
                     url
                 )
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES
+                    (%s, %s, %s, %s, %s),
+                    (%s, %s, %s, %s, %s),
+                    (%s, %s, %s, %s, %s),
+                    (%s, %s, %s, %s, %s)
+                RETURNING id, obds_version
                 """,
                 (
                     "umsetzungsleitfaden",
-                    "Diagnosesicherung",
-                    "Zulässige Werte",
-                    "Die Diagnose ist histologisch gesichert.",
-                    "https://example.test/diagnose",
+                    "Meldungen",
+                    "Allgemein",
+                    "Versionsübergreifende Hinweise.",
+                    "https://example.test/generic",
+                    "umsetzungsleitfaden",
+                    "Versionshinweis",
+                    "Details",
+                    "Diese Meldung gilt für Version 3.0.5.",
+                    "https://example.test/current",
+                    "umsetzungsleitfaden",
+                    "Alter Versionshinweis",
+                    "Details",
+                    "Diese Meldung gilt für Version 3.0.4.",
+                    "https://example.test/old",
+                    "umsetzungsleitfaden",
+                    "Anderes Thema",
+                    "Details",
+                    "Kein passender Begriff.",
+                    "https://example.test/unrelated",
                 ),
             )
+            inserted_rows = cursor.fetchall()
+            generic_id = inserted_rows[0][0]
+            current_version_id = inserted_rows[1][0]
             cursor.execute(
-                """
-                SELECT (
-                    setweight(to_tsvector('german', title), 'A')
-                    || setweight(
-                        to_tsvector('german', COALESCE(section, '')),
-                        'B'
-                    )
-                    || setweight(to_tsvector('german', content), 'C')
-                ) @@ websearch_to_tsquery('german', %s)
-                FROM documents
-                """,
-                ("Diagnosesicherung",),
+                "UPDATE documents SET obds_version = %s WHERE id = %s",
+                ("3.0.5", current_version_id),
             )
-            search_result = cursor.fetchone()
-            assert search_result is not None
-            assert search_result[0] is True
+            cursor.execute(
+                "UPDATE documents SET obds_version = %s WHERE id = %s",
+                ("3.0.4", inserted_rows[2][0]),
+            )
 
             cursor.execute(
                 """
-                SELECT indexdef
-                FROM pg_indexes
-                WHERE schemaname = %s
-                  AND indexname = 'documents_full_text_idx'
+                SELECT id, pdb.score(id)::double precision AS score
+                FROM documents
+                WHERE source_type = %s
+                  AND (
+                      title ||| (%s::text)::pdb.boost(3)
+                      OR section ||| (%s::text)::pdb.boost(2)
+                      OR content ||| %s
+                  )
+                  AND (
+                      %s::text IS NULL
+                      OR obds_version IS NULL
+                      OR obds_version = %s
+                  )
+                ORDER BY score DESC, id
+                LIMIT %s
+                """,
+                (
+                    "umsetzungsleitfaden",
+                    "Meldung",
+                    "Meldung",
+                    "Meldung",
+                    "3.0.5",
+                    "3.0.5",
+                    5,
+                ),
+            )
+            search_results = cursor.fetchall()
+            assert [result[0] for result in search_results] == [
+                generic_id,
+                current_version_id,
+            ]
+
+            cursor.execute(
+                "SELECT content FROM documents WHERE id = %s",
+                (current_version_id,),
+            )
+            excerpt_result = cursor.fetchone()
+            assert excerpt_result == ("Diese Meldung gilt für Version 3.0.5.",)
+
+            cursor.execute(
+                """
+                SELECT access_method.amname, pg_get_indexdef(index_relation.oid)
+                FROM pg_class AS index_relation
+                JOIN pg_namespace AS namespace
+                    ON namespace.oid = index_relation.relnamespace
+                JOIN pg_am AS access_method
+                    ON access_method.oid = index_relation.relam
+                WHERE namespace.nspname = %s
+                  AND index_relation.relname = 'documents_full_text_idx'
                 """,
                 (schema_name,),
             )
             index_result = cursor.fetchone()
             assert index_result is not None
-            assert "using gin" in index_result[0].casefold()
+            assert index_result[0] in {"bm25", "paradedb"}
+            assert "stemmer=german" in index_result[1].casefold()
     finally:
         connection.rollback()
         connection.close()
