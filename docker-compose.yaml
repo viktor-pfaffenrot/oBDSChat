@@ -11,7 +11,11 @@ secrets:
 
 services:
   obdschat-db:
-    image: postgres:18
+    image: paradedb/paradedb:0.25.2-pg18 #postgres:18
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_search
     container_name: oBDSChat_postgres_db
     restart: unless-stopped #on-failure:5 #unless-stopped
     environment:
