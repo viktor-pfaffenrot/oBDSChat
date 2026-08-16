@@ -1,1 +1,1279 @@
-[]
+# Field meaning (9)
+- id: meaning-diagnosesicherung
+  category: field_meaning
+  question: Was bedeutet das Feld Diagnosesicherung in einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Bedeutung
+      answer_any: [höchste erreichte Diagnosesicherheit, Diagnosesicherheit zum Diagnosedatum, höchste zum Diagnosedatum erreichte Sicherheit]
+      evidence_any: [höchste erreichte Diagnosesicherheit]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: &meaning_tools [search_schema, get_schema_element, get_schema_values, search_umsetzungsleitfaden, get_source_excerpt]
+  expected_versions: [3.0.5]
+  expected_source_types: &xsd_sources [xsd]
+  allowed_source_types: *xsd_sources
+
+- id: meaning-geschlecht-x-u
+  category: field_meaning
+  question: Worin unterscheiden sich X und U beim Feld Geschlecht?
+  obds_version: 3.0.5
+  facts:
+    - label: X
+      answer_any: [unbestimmtes Geschlecht, keine Angabe]
+      evidence_any: [keine Angabe / unbestimmt]
+    - label: U
+      answer_any: [tatsächlich unbekannt, unbekannt]
+      evidence_any: [Unbekannt]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *meaning_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+# Datatypes (9)
+- id: datatype-diagnosesicherung
+  category: datatype
+  question: Welchen XSD-Datentyp hat Diagnosesicherung in der Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [xs:string]
+      evidence_any: [xs:string]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: &schema_lookup_tools [search_schema, get_schema_element]
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-meldedatum
+  category: datatype
+  question: Welchen XSD-Typ verwendet das Wurzelelement Meldedatum?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [Datum_Tag_genau_Typ]
+      evidence_any: [Datum_Tag_genau_Typ]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-geburtsdatum
+  category: datatype
+  question: Welchen XSD-Typ hat Geburtsdatum in Patienten_Stammdaten?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
+      evidence_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-seitenlokalisation
+  category: datatype
+  question: Welchen XSD-Typ hat Seitenlokalisation in Tumorzuordnung?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [Seitenlokalisation_Typ]
+      evidence_any: [Seitenlokalisation_Typ]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-therapieart
+  category: datatype
+  question: Welchen Basistyp hat Therapieart in SYST?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [xs:string]
+      evidence_any: [xs:string]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-patient
+  category: datatype
+  question: Ist Patient im XSD ein einfacher oder komplexer Typ?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [complexType, komplexer Typ]
+      evidence_any: [complexType]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-fernmetastase
+  category: datatype
+  question: Welchen Datentyp hat Fernmetastase unter Diagnose/Menge_FM?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [complexType, komplexer Typ]
+      evidence_any: [complexType]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-histologiedatum
+  category: datatype
+  question: Welchen XSD-Typ hat Tumor_Histologiedatum?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
+      evidence_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: datatype-grading
+  category: datatype
+  question: Welchen Basistyp hat Grading innerhalb der Histologie?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [xs:string]
+      evidence_any: [xs:string]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+# Cardinality (9)
+- id: cardinality-patient
+  category: cardinality
+  question: Welche Kardinalität hat Patient unter Menge_Patient?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [mindestens einmal, minOccurs 1]
+      evidence_any: ['"min_occurs": 1']
+    - label: Maximum
+      answer_any: [unbegrenzt oft, unbounded, beliebig oft]
+      evidence_any: [unbounded]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: &schema_cardinality_tools [search_schema, get_schema_element, get_schema_cardinality]
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-meldung
+  category: cardinality
+  question: Wie oft darf Meldung innerhalb von Menge_Meldung vorkommen?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [mindestens einmal, minOccurs 1]
+      evidence_any: ['"min_occurs": 1']
+    - label: Maximum
+      answer_any: [unbegrenzt oft, unbounded, beliebig oft]
+      evidence_any: [unbounded]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-seitenlokalisation
+  category: cardinality
+  question: Ist Seitenlokalisation in Tumorzuordnung Pflicht und wie oft darf sie vorkommen?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [optional, minOccurs 0, kann fehlen]
+      evidence_any: ['"min_occurs": 0']
+    - label: Maximum
+      answer_any: [höchstens einmal, maxOccurs 1]
+      evidence_any: ['"max_occurs": 1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-diagnose-histologie
+  category: cardinality
+  question: Welche Kardinalität hat Histologie innerhalb einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [optional, minOccurs 0, kann fehlen]
+      evidence_any: ['"min_occurs": 0']
+    - label: Maximum
+      answer_any: [höchstens einmal, maxOccurs 1]
+      evidence_any: ['"max_occurs": 1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-diagnosesicherung
+  category: cardinality
+  question: Ist Diagnosesicherung in einer Diagnosemeldung verpflichtend und wiederholbar?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [verpflichtend, minOccurs 1]
+      evidence_any: ['"min_occurs": 1']
+    - label: Maximum
+      answer_any: [genau einmal, maxOccurs 1, nicht wiederholbar]
+      evidence_any: ['"max_occurs": 1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-histologiedatum
+  category: cardinality
+  question: Welche Kardinalität hat Tumor_Histologiedatum innerhalb Histologie?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [optional, minOccurs 0]
+      evidence_any: ['"min_occurs": 0']
+    - label: Maximum
+      answer_any: [höchstens einmal, maxOccurs 1]
+      evidence_any: ['"max_occurs": 1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-fernmetastase
+  category: cardinality
+  question: Wie oft darf Fernmetastase innerhalb Diagnose/Menge_FM vorkommen?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [mindestens einmal, minOccurs 1]
+      evidence_any: ['"min_occurs": 1']
+    - label: Maximum
+      answer_any: [unbegrenzt oft, unbounded, beliebig oft]
+      evidence_any: [unbounded]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-ctnm
+  category: cardinality
+  question: Welche Kardinalität hat cTNM innerhalb einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [optional, minOccurs 0]
+      evidence_any: ['"min_occurs": 0']
+    - label: Maximum
+      answer_any: [höchstens einmal, maxOccurs 1]
+      evidence_any: ['"max_occurs": 1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: cardinality-meldedatum
+  category: cardinality
+  question: Welche Kardinalität hat Meldedatum direkt unter oBDS?
+  obds_version: 3.0.5
+  facts:
+    - label: Minimum
+      answer_any: [verpflichtend, minOccurs 1]
+      evidence_any: ['"min_occurs": 1']
+    - label: Maximum
+      answer_any: [genau einmal, maxOccurs 1]
+      evidence_any: ['"max_occurs": 1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+# XML hierarchy (10)
+- id: hierarchy-root
+  category: xml_hierarchy
+  question: Welche direkten Kindelemente hat das Wurzelelement oBDS?
+  obds_version: 3.0.5
+  facts:
+    - label: Absender
+      answer_any: [Absender]
+      evidence_any: [/oBDS/Absender]
+    - label: Meldedatum
+      answer_any: [Meldedatum]
+      evidence_any: [/oBDS/Meldedatum]
+    - label: Patientenmenge
+      answer_any: [Menge_Patient]
+      evidence_any: [/oBDS/Menge_Patient]
+    - label: Meldermenge
+      answer_any: [Menge_Melder]
+      evidence_any: [/oBDS/Menge_Melder]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-patient
+  category: xml_hierarchy
+  question: Unter welchem XML-Elternelement liegt Patient?
+  obds_version: 3.0.5
+  facts:
+    - label: Elternpfad
+      answer_any: [Menge_Patient]
+      evidence_any: [/oBDS/Menge_Patient/Patient]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-stammdaten
+  category: xml_hierarchy
+  question: Wo liegen Patienten_Stammdaten in der XML-Hierarchie?
+  obds_version: 3.0.5
+  facts:
+    - label: Pfad
+      answer_any: [/oBDS/Menge_Patient/Patient/Patienten_Stammdaten, unter Patient]
+      evidence_any: [/oBDS/Menge_Patient/Patient/Patienten_Stammdaten]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-menge-meldung
+  category: xml_hierarchy
+  question: Unter welchem Element liegt Menge_Meldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Elternpfad
+      answer_any: [unter Patient, /Patient/Menge_Meldung]
+      evidence_any: [/oBDS/Menge_Patient/Patient/Menge_Meldung]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-meldung
+  category: xml_hierarchy
+  question: Wo liegt Meldung relativ zu Menge_Meldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Elternpfad
+      answer_any: [unter Menge_Meldung, /Menge_Meldung/Meldung]
+      evidence_any: [/Menge_Meldung/Meldung]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-tumorzuordnung
+  category: xml_hierarchy
+  question: Wo befindet sich Tumorzuordnung innerhalb einer Meldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Pfad
+      answer_any: [/Meldung/Tumorzuordnung, direkt unter Meldung]
+      evidence_any: [/Meldung/Tumorzuordnung]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-diagnosesicherung
+  category: xml_hierarchy
+  question: Wie lautet der XML-Pfad zur Diagnosesicherung einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Pfad
+      answer_any: [/Meldung/Diagnose/Diagnosesicherung]
+      evidence_any: [/Meldung/Diagnose/Diagnosesicherung]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-grading
+  category: xml_hierarchy
+  question: Unter welchem Element liegt Grading in einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Elternpfad
+      answer_any: [unter Histologie, /Histologie/Grading]
+      evidence_any: [/Diagnose/Histologie/Grading]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: hierarchy-fernmetastase
+  category: xml_hierarchy
+  question: Wie ist Fernmetastase unter einer Diagnose hierarchisch eingeordnet?
+  obds_version: 3.0.5
+  facts:
+    - label: Pfad
+      answer_any: [/Diagnose/Menge_FM/Fernmetastase, unter Menge_FM]
+      evidence_any: [/Diagnose/Menge_FM/Fernmetastase]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+  forbidden_answer_terms: [X bedeutet unbekannt]
+
+- id: tnm-quelle
+  category: xml_hierarchy
+  question: In welcher Meldung darf ein TNM gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+      evidence_any: [/Meldung/Diagnose/cTNM, /Meldung/Diagnose/pTNM]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+      evidence_any: [/Meldung/Pathologie/cTNM, /Meldung/Pathologie/pTNM]
+    - label: OP-Meldung
+      answer_any: [OP-Meldung, Operationsmeldung]
+      evidence_any: [/Meldung/OP/TNM]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+      evidence_any: [/Meldung/Verlauf/TNM]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: meaning-seitenlokalisation
+  category: field_meaning
+  question: Welche fachliche Bedeutung hat die Seitenlokalisation?
+  obds_version: 3.0.5
+  facts:
+    - label: Bedeutung
+      answer_any: [betroffene Seite, organspezifische Angabe der betroffenen Seite]
+      evidence_any: [organspezifische Angabe der betroffenen Seite]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *meaning_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: meaning-grading
+  category: field_meaning
+  question: Wozu dient das histopathologische Grading im oBDS?
+  obds_version: 3.0.5
+  facts:
+    - label: Zweck
+      answer_any: [Aggressivität, Prognose und Behandlung]
+      evidence_any: [Aggressivität]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *meaning_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: meaning-ctnm
+  category: field_meaning
+  question: Was bezeichnet cTNM in einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Zeitpunkt
+      answer_any: [prätherapeutisches TNM, vor der Therapie]
+      evidence_any: [Prätherapeutisches TNM]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *meaning_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: meaning-ptnm
+  category: field_meaning
+  question: Was bezeichnet pTNM in einer Diagnosemeldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Zeitpunkt
+      answer_any: [postoperatives TNM, nach der Operation]
+      evidence_any: [Postoperatives TNM]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *meaning_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: meaning-tumor-id
+  category: field_meaning
+  question: Wozu dient die Tumor_ID und in welchem Kontext muss sie eindeutig sein?
+  facts:
+    - label: Zweck
+      answer_any: [Identifikator für den Primärtumor, Zuordnung verschiedener Meldungen]
+      evidence_any: [Identifikator für den Primärtumor]
+    - label: Eindeutigkeit
+      answer_any: [im Kontext des Patienten eindeutig, für den Melder im Kontext des Patienten]
+      evidence_any: [im Kontext des Patienten eindeutig]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: &guide_tools [search_umsetzungsleitfaden, get_source_excerpt]
+  expected_source_types: &guide_sources [umsetzungsleitfaden]
+  allowed_source_types: *guide_sources
+
+- id: meaning-meldebegruendung
+  category: field_meaning
+  question: Was beschreibt die Meldebegründung fachlich?
+  facts:
+    - label: Rechtsgrundlage
+      answer_any: [Rechtsgrundlage für den Versand, Rechtsgrundlage für die Meldung]
+      evidence_any: [Rechtsgrundlage für den Versand]
+    - label: Patienteninformation
+      answer_any: [informiert wurde, widersprochen hat]
+      evidence_any: [informiert wurde]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: meaning-therapieart
+  category: field_meaning
+  question: Was wird im Feld Therapieart einer systemischen Therapie ausgedrückt?
+  obds_version: 3.0.5
+  facts:
+    - label: Bedeutung
+      answer_any: [Art der Therapie, abwartende Strategie]
+      evidence_any: [Art der Therapie bzw. abwartende Strategie]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *meaning_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+# Allowed values (9)
+- id: values-diagnosesicherung
+  category: allowed_values
+  question: Welche Werte darf Diagnosesicherung in einer Diagnosemeldung haben?
+  obds_version: 3.0.5
+  facts:
+    - label: Klinische Sicherung
+      answer_any: [klinisch ohne tumorspezifische Diagnostik, klinische Diagnose]
+      evidence_any: [klinisch ohne tumorspezifische Diagnostik]
+    - label: Zytologie
+      answer_any: [zytologisch]
+      evidence_any: [Zytologisch]
+    - label: Histologie
+      answer_any: [Histologie des Primärtumors, Histologie Metastase]
+      evidence_any: [Histologie des Primärtumors]
+    - label: Molekular
+      answer_any: [zytogenetisch, molekularer Test]
+      evidence_any: [molekularer Test]
+    - label: Unbekannt
+      answer_any: [9 = Unbekannt, '9: Unbekannt', Unbekannt]
+      evidence_any: [Unbekannt]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: &schema_value_tools [search_schema, get_schema_element, get_schema_values]
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: values-pathologie-diagnosesicherung
+  category: allowed_values
+  question: Welche Diagnosesicherungswerte sind in einer Pathologiemeldung erlaubt?
+  obds_version: 3.0.5
+  facts:
+    - label: Erlaubte Werte
+      answer_any: ['4, 5, 6, 7, 7.1, 7.2, 7.3, 8, 9']
+      evidence_any: ['7.3']
+    - label: Nicht erlaubt
+      answer_any: [1 und 2 sind nicht erlaubt, ohne 1, ohne 2]
+      evidence_any: [ohne 1]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+  forbidden_answer_terms: [1 und 2 sind erlaubt]
+
+- id: values-geschlecht
+  category: allowed_values
+  question: Welche Ausprägungen sind für Geschlecht zulässig?
+  obds_version: 3.0.5
+  facts:
+    - label: Männlich
+      answer_any: [Männlich]
+      evidence_any: [Männlich]
+    - label: Weiblich
+      answer_any: [Weiblich]
+      evidence_any: [Weiblich]
+    - label: Divers
+      answer_any: [Divers]
+      evidence_any: [Divers]
+    - label: Unbestimmt
+      answer_any: [unbestimmt, keine Angabe]
+      evidence_any: [keine Angabe / unbestimmt]
+    - label: Unbekannt
+      answer_any: [Unbekannt]
+      evidence_any: [Unbekannt]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: values-seitenlokalisation
+  category: allowed_values
+  question: Welche Werte sind für Seitenlokalisation zulässig und was bedeuten sie?
+  obds_version: 3.0.5
+  facts:
+    - label: Links und rechts
+      answer_any: [Links, Rechts]
+      evidence_any: [Links]
+    - label: Beidseitig
+      answer_any: [Beidseitig]
+      evidence_any: [Beidseitig]
+    - label: Mittellinie
+      answer_any: [Mittellinie, mittig]
+      evidence_any: [Mittellinie/mittig]
+    - label: Unbekannt
+      answer_any: [Unbekannt]
+      evidence_any: [Unbekannt]
+    - label: Nicht zutreffend
+      answer_any: [Trifft nicht zu]
+      evidence_any: [Trifft nicht zu]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: values-grading
+  category: allowed_values
+  question: Welche Gruppen von Ausprägungen erlaubt das Feld Grading?
+  obds_version: 3.0.5
+  facts:
+    - label: Differenzierung
+      answer_any: [gut differenziert, mäßig differenziert, schlecht differenziert, undifferenziert]
+      evidence_any: [Gut differenziert]
+    - label: Grade
+      answer_any: [Low grade, Intermediate, High grade]
+      evidence_any: [Low grade]
+    - label: Sonderwerte
+      answer_any: [Borderline, Nicht bestimmbar, Unbekannt, Trifft nicht zu]
+      evidence_any: [Borderline]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: values-therapieart
+  category: allowed_values
+  question: Welche Therapiearten und abwartenden Strategien sind im Feld Therapieart zulässig?
+  obds_version: 3.0.5
+  facts:
+    - label: Medikamentöse Therapien
+      answer_any: [Chemotherapie, Hormontherapie, Immun-/Antikörpertherapie]
+      evidence_any: [Chemotherapie]
+    - label: Zielgerichtet und Transplantation
+      answer_any: [zielgerichtete Substanzen, Stammzelltransplantation]
+      evidence_any: [zielgerichtete Substanzen]
+    - label: Abwartende Strategien
+      answer_any: [Active Surveillance, Wait and see, Watchful Waiting]
+      evidence_any: [Active Surveillance]
+    - label: Sonstiges
+      answer_any: [Sonstiges]
+      evidence_any: [Sonstiges]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: values-op-intention
+  category: allowed_values
+  question: Welche Werte erlaubt Intention innerhalb einer OP-Meldung?
+  obds_version: 3.0.5
+  facts:
+    - label: Kurativ und palliativ
+      answer_any: [kurativ, palliativ]
+      evidence_any: [kurativ]
+    - label: Diagnostisch
+      answer_any: [diagnostisch]
+      evidence_any: [diagnostisch]
+    - label: Revision
+      answer_any: [Revision, Komplikation]
+      evidence_any: [Revision/Komplikation]
+    - label: Restwerte
+      answer_any: [Sonstiges, fehlende Angabe]
+      evidence_any: [fehlende Angabe]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: values-st-stellung-op
+  category: allowed_values
+  question: Welche Werte sind für Stellung_OP bei einer Strahlentherapie erlaubt?
+  obds_version: 3.0.5
+  facts:
+    - label: Ohne Bezug
+      answer_any: [ohne Bezug zu einer operativen Therapie]
+      evidence_any: [Ohne Bezug zu einer operativen Therapie]
+    - label: Zeitlicher Bezug
+      answer_any: [adjuvant, neoadjuvant, intraoperativ]
+      evidence_any: [adjuvant]
+    - label: Additiv
+      answer_any: [additiv]
+      evidence_any: [additiv]
+    - label: Sonstiges
+      answer_any: [Sonstiges]
+      evidence_any: [Sonstiges]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+# Implementation guidance (9)
+- id: guidance-tumor-id
+  category: implementation_guidance
+  question: Welche Regeln gelten für die Vergabe und Wiederverwendung der Tumor_ID?
+  facts:
+    - label: Eindeutigkeit
+      answer_any: [im Kontext des Patienten eindeutig]
+      evidence_any: [im Kontext des Patienten eindeutig]
+    - label: Zuordnung
+      answer_any: [Zuordnung verschiedener Meldungen zum selben Tumor, selben Tumor]
+      evidence_any: [Zuordnung verschiedener Meldungen zum selben Tumor]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: guidance-pathologie-diagnosedatum
+  category: implementation_guidance
+  question: Welche Priorität gilt für das Diagnosedatum in einer Pathologiemeldung?
+  facts:
+    - label: Erste Priorität
+      answer_any: [klinisches Diagnosedatum]
+      evidence_any: [klinisches Diagnosedatum]
+    - label: Weitere Prioritäten
+      answer_any: [Datum eines Vorbefundes, Entnahmedatum]
+      evidence_any: [Datum eines Vorbefundes]
+    - label: Letzte Prioritäten
+      answer_any: [Einsendedatum, Eingangsdatum, Befundungsdatum]
+      evidence_any: [Befundungsdatum]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: guidance-tnm-mindestinhalt
+  category: implementation_guidance
+  question: Welchen Mindestinhalt verlangt der Leitfaden für eine TNM-Angabe?
+  facts:
+    - label: Mindestinhalt
+      answer_any: [mindestens eine T-, N-, M-Kategorie, Angabe des UICC-Stadiums]
+      evidence_any: [mindestens eine T-, N-, M-Kategorie]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: guidance-kfrg-meldeanlaesse
+  category: implementation_guidance
+  question: Welche zentralen Meldeanlässe nennt der Leitfaden nach KFRG?
+  facts:
+    - label: Diagnose
+      answer_any: [Diagnose einer Krebserkrankung]
+      evidence_any: [Diagnose einer Krebserkrankung]
+    - label: Therapie
+      answer_any: [Beginn und Abschluss einer therapeutischen Maßnahme]
+      evidence_any: [Beginn und Abschluss einer therapeutischen Maßnahme]
+    - label: Verlauf
+      answer_any: [Statusänderung, Statusmeldungen]
+      evidence_any: [Statusänderung]
+    - label: Tod
+      answer_any: [Tod der Betroffenen, Tod]
+      evidence_any: [Tod der Betroffenen]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: guidance-pathologie-meldeanlaesse
+  category: implementation_guidance
+  question: Welche Befunde lösen nach KFRG eine Pathologiemeldung aus?
+  facts:
+    - label: Erstdiagnose
+      answer_any: [Sicherung der Erstdiagnose]
+      evidence_any: [Sicherung der Erstdiagnose]
+    - label: Rezidiv und Metastase
+      answer_any: [Diagnose von Rezidiven und von Metastasen, Rezidive und Metastasen]
+      evidence_any: [Diagnose von Rezidiven und von Metastasen]
+    - label: Sicherungsarten
+      answer_any: [histologische oder zytologische Sicherung]
+      evidence_any: [histologische oder zytologische Sicherung]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: guidance-dkkr-pathologie
+  category: implementation_guidance
+  question: Welche Pathologiebefunde sind für das DKKR ein Meldeanlass?
+  facts:
+    - label: Einschränkung
+      answer_any: [lediglich Befunde, die zur Erstdiagnose gehören, nur Befunde der Erstdiagnose]
+      evidence_any: [lediglich Befunde, die zur Erstdiagnose gehören]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+  forbidden_answer_terms: [Rezidive sind für das DKKR immer ein Meldeanlass]
+
+- id: guidance-einwilligung-niedersachsen
+  category: implementation_guidance
+  question: Wann und wo ist Einwilligung_nicht_meldepflichtig relevant?
+  facts:
+    - label: Bundesland
+      answer_any: [Niedersachsen]
+      evidence_any: [Niedersachen, Niedersachsen]
+    - label: Anlass
+      answer_any: [nicht meldepflichtige Meldeanlässe]
+      evidence_any: [nicht meldepflichtige Meldeanlässe]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+- id: guidance-meldebegruendung-e
+  category: implementation_guidance
+  question: Warum kann E bei der Meldebegründung nicht gewählt werden?
+  facts:
+    - label: Eigenes Merkmal
+      answer_any: [als eigenes Merkmal umgesetzt, Einwilligung zur Übermittlung nicht meldepflichtiger Meldeanlässe]
+      evidence_any: [als eigenes Merkmal umgesetzt]
+    - label: Folge
+      answer_any: [E kann nicht gewählt werden]
+      evidence_any: [E kann nicht gewählt werden]
+  required_tool_groups:
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *guide_tools
+  expected_source_types: *guide_sources
+  allowed_source_types: *guide_sources
+
+# Version questions (8)
+- id: version-diagnose-301-302
+  category: version
+  question: Welche Diagnosesicherungswerte kamen in Diagnose zwischen oBDS 3.0.1 und 3.0.2 hinzu?
+  facts:
+    - label: Histologie-Unterwerte
+      answer_any: ['7.1, 7.2, 7.3', 7.1 bis 7.3]
+      evidence_any: ['7.1']
+    - label: Molekular
+      answer_any: ['8']
+      evidence_any: [zytogenetisch und/oder molekularer Test]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.1, 3.0.2]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-pathologie-302-303
+  category: version
+  question: Wie änderte sich Diagnosesicherung in Pathologie von 3.0.2 auf 3.0.3?
+  facts:
+    - label: Neue Werte
+      answer_any: ['7.1, 7.2, 7.3, 8', 7.1 bis 7.3 sowie 8]
+      evidence_any: ['7.3']
+    - label: Alte Werte
+      answer_any: [in 3.0.2 nicht enthalten, kamen in 3.0.3 hinzu]
+      evidence_any: [Histologie der Autopsie]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.2, 3.0.3]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-tnm-303-304
+  category: version
+  question: Ist TNM-Version 9 in oBDS 3.0.3 und 3.0.4 zulässig?
+  facts:
+    - label: Version 3.0.3
+      answer_any: [in 3.0.3 nicht, 3.0.3 erlaubt nur 6, 7 und 8]
+      evidence_any: [TNM]
+    - label: Version 3.0.4
+      answer_any: [in 3.0.4 zulässig, ab 3.0.4]
+      evidence_any: ['9']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.3, 3.0.4]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-diagnose-300-305
+  category: version
+  question: Wie unterscheiden sich die Diagnose-Diagnosesicherungswerte in 3.0.0 und 3.0.5?
+  facts:
+    - label: Alte Menge
+      answer_any: ['1, 2, 4, 5, 6, 7 und 9']
+      evidence_any: [3.0.0]
+    - label: Neue Werte
+      answer_any: ['7.1, 7.2, 7.3 und 8', 7.1 bis 7.3 sowie 8]
+      evidence_any: ['7.1']
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.0, 3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-pathologie-300-305
+  category: version
+  question: Welche neuen Pathologie-Diagnosesicherungswerte gibt es in 3.0.5 gegenüber 3.0.0?
+  facts:
+    - label: Neue Werte
+      answer_any: ['7.1, 7.2, 7.3 und 8', 7.1 bis 7.3 sowie 8]
+      evidence_any: ['7.2']
+    - label: Nicht neu
+      answer_any: ['4, 5, 6, 7 und 9']
+      evidence_any: [3.0.0]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.0, 3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-seitenlokalisation-stabil
+  category: version
+  question: Haben sich die Seitenlokalisationswerte zwischen 3.0.0 und 3.0.5 geändert?
+  facts:
+    - label: Stabilität
+      answer_any: [nicht geändert, unverändert, identisch]
+      evidence_any: [Beidseitig]
+    - label: Werte
+      answer_any: ['L, R, B, M, U und T']
+      evidence_any: [Trifft nicht zu]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.0, 3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-grading-stabil
+  category: version
+  question: Ist die Wertemenge von Grading in 3.0.0 und 3.0.5 gleich?
+  facts:
+    - label: Stabilität
+      answer_any: [gleich, unverändert, identisch]
+      evidence_any: [Borderline]
+    - label: Wertebereiche
+      answer_any: [0 bis 4, Low grade, High grade]
+      evidence_any: [High grade]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.0, 3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+- id: version-patient-cardinality-stabil
+  category: version
+  question: Hat sich die Kardinalität von Patient unter Menge_Patient zwischen 3.0.0 und 3.0.5 geändert?
+  facts:
+    - label: Stabilität
+      answer_any: [nicht geändert, unverändert, gleich]
+      evidence_any: [/Menge_Patient/Patient]
+    - label: Kardinalität
+      answer_any: [1 bis unbounded, mindestens einmal und unbegrenzt]
+      evidence_any: [unbounded]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_cardinality]
+  allowed_tools: *schema_cardinality_tools
+  expected_versions: [3.0.0, 3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources
+
+# Mixed-source questions (7)
+- id: mixed-diagnosesicherung-300
+  category: mixed_source
+  question: Welche Werte erlaubt das XSD 3.0.0 für Diagnosesicherung in Diagnose, und was sagt der Leitfaden zu Wert 9?
+  obds_version: 3.0.0
+  facts:
+    - label: XSD-Werte
+      answer_any: ['1, 2, 4, 5, 6, 7 und 9']
+      evidence_any: [Histologie Primärtumor]
+    - label: Leitfaden-Abweichung
+      answer_any: [Basisdatensatz enthält nicht die Ausprägung 9, im Ausnahmefall]
+      evidence_any: [im Ausnahmefall inhaltlich der Fall]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: &all_tools
+    [search_schema, get_schema_element, get_schema_values, get_schema_cardinality, search_umsetzungsleitfaden, get_source_excerpt]
+  expected_versions: [3.0.0]
+  expected_source_types: &mixed_sources [xsd, umsetzungsleitfaden]
+  allowed_source_types: *mixed_sources
+
+- id: mixed-pathologie-diagnosedatum
+  category: mixed_source
+  question: Welchen XSD-Typ hat Diagnosedatum in Tumorzuordnung, und welche Belegungspriorität nennt der Leitfaden für Pathologiemeldungen?
+  obds_version: 3.0.5
+  facts:
+    - label: Datentyp
+      answer_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
+      evidence_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
+    - label: Erste Priorität
+      answer_any: [klinisches Diagnosedatum]
+      evidence_any: [klinisches Diagnosedatum]
+    - label: Folgeprioritäten
+      answer_any: [Vorbefund, Entnahmedatum, Befundungsdatum]
+      evidence_any: [Befundungsdatum]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *all_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *mixed_sources
+  allowed_source_types: *mixed_sources
+
+- id: mixed-seitenlokalisation-b
+  category: mixed_source
+  question: Was bedeutet B bei Seitenlokalisation laut XSD, und welchen Umsetzungshinweis gibt der Leitfaden?
+  obds_version: 3.0.5
+  facts:
+    - label: Bedeutung
+      answer_any: [Beidseitig]
+      evidence_any: [Beidseitig]
+    - label: Umsetzung
+      answer_any: [bei bestimmten Tumoren 2 Meldungen, zwei Meldungen]
+      evidence_any: [2 Meldungen]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *all_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *mixed_sources
+  allowed_source_types: *mixed_sources
+
+- id: mixed-tnm-structure-guidance
+  category: mixed_source
+  question: Wo liegt cTNM im Diagnose-XML, und welche Mindestangabe fordert der Leitfaden für TNM?
+  obds_version: 3.0.5
+  facts:
+    - label: XML-Pfad
+      answer_any: [/Meldung/Diagnose/cTNM]
+      evidence_any: [/Meldung/Diagnose/cTNM]
+    - label: Mindestangabe
+      answer_any: [mindestens eine T-, N-, M-Kategorie, Angabe des UICC-Stadiums]
+      evidence_any: [mindestens eine T-, N-, M-Kategorie]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *all_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *mixed_sources
+  allowed_source_types: *mixed_sources
+
+- id: mixed-pathologie-values-trigger
+  category: mixed_source
+  question: Welche Diagnosesicherungswerte erlaubt Pathologie in 3.0.3, und welche Pathologiebefunde sind laut Leitfaden Meldeanlass?
+  obds_version: 3.0.3
+  facts:
+    - label: XSD-Werte
+      answer_any: ['4, 5, 6, 7, 7.1, 7.2, 7.3, 8, 9']
+      evidence_any: [Histologie der Autopsie]
+    - label: Meldeanlass
+      answer_any: [Erstdiagnose, Rezidiven und von Metastasen]
+      evidence_any: [Diagnose von Rezidiven und von Metastasen]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *all_tools
+  expected_versions: [3.0.3]
+  expected_source_types: *mixed_sources
+  allowed_source_types: *mixed_sources
+
+- id: mixed-einwilligung
+  category: mixed_source
+  question: Welche XSD-Kardinalität und Werte hat Einwilligung_nicht_meldepflichtig, und für welches Bundesland ist das Feld laut Leitfaden relevant?
+  obds_version: 3.0.5
+  facts:
+    - label: Kardinalität
+      answer_any: [optional, 0 bis 1, minOccurs 0]
+      evidence_any: ['"min_occurs": 0']
+    - label: Werte
+      answer_any: [J und N, Ja und Nein]
+      evidence_any: [JN_Typ]
+    - label: Bundesland
+      answer_any: [Niedersachsen]
+      evidence_any: [Niedersachen, Niedersachsen]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values, get_schema_cardinality]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *all_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *mixed_sources
+  allowed_source_types: *mixed_sources
+
+- id: mixed-meldebegruendung
+  category: mixed_source
+  question: Welche Werte erlaubt das XSD für Meldebegruendung, und warum fehlt E laut Leitfaden?
+  obds_version: 3.0.5
+  facts:
+    - label: XSD-Werte
+      answer_any: [I, A, D, W und V]
+      evidence_any: [Meldebegruendung_Typ]
+    - label: Fehlendes E
+      answer_any: [E kann nicht gewählt werden]
+      evidence_any: [E kann nicht gewählt werden]
+    - label: Begründung
+      answer_any: [als eigenes Merkmal umgesetzt]
+      evidence_any: [als eigenes Merkmal umgesetzt]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+    - [search_umsetzungsleitfaden]
+  allowed_tools: *all_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *mixed_sources
+  allowed_source_types: *mixed_sources
+
+# Ambiguous or unanswerable (4)
+
+- id: unsupported-xml-missing
+  category: ambiguous_or_unanswerable
+  question: Ist mein konkretes oBDS-XML valide?
+  expected_supported: false
+  facts:
+    - label: Fehlende Eingabe
+      answer_any: [XML fehlt, kein XML bereitgestellt, konkreten XML-Inhalt]
+  required_tool_groups:
+    - [search_schema, get_schema_element]
+  allowed_tools: *schema_lookup_tools
+  expected_source_types: []
+  allowed_source_types: []
+  forbidden_answer_terms: [XML ist valide]
+
+- id: unsupported-unknown-field
+  category: ambiguous_or_unanswerable
+  question: Welche Werte erlaubt das oBDS-Feld Zauberstatus?
+  expected_supported: false
+  facts:
+    - label: Nicht gefunden
+      answer_any: [nicht gefunden, kein Feld, keine Belege]
+  required_tool_groups:
+    - [search_schema]
+  allowed_tools: *schema_value_tools
+  expected_source_types: []
+  allowed_source_types: []
+  forbidden_answer_terms: [Zauberstatus erlaubt]
+
+- id: unsupported-version
+  category: ambiguous_or_unanswerable
+  question: Welche Werte hat Diagnosesicherung in oBDS-Version 9.9.9?
+  expected_supported: false
+  facts:
+    - label: Version nicht verfügbar
+      answer_any: [Version 9.9.9 ist nicht verfügbar, nicht unterstützte Version, unavailable]
+  required_tool_groups:
+    - [search_schema, get_schema_element, get_schema_values]
+  allowed_tools: *schema_value_tools
+  expected_source_types: []
+  allowed_source_types: []
+  forbidden_answer_terms: [Version 9.9.9 erlaubt]
+
+- id: ambiguous-status
+  category: ambiguous_or_unanswerable
+  question: Welche Werte darf das Feld Status haben?
+  obds_version: 3.0.5
+  facts:
+    - label: Mehrdeutigkeit
+      answer_any: [mehrdeutig, mehrere Elemente, genauer XML-Pfad, konkretisieren]
+      evidence_any: [path]
+  required_tool_groups:
+    - [search_schema]
+  allowed_tools: *schema_value_tools
+  expected_versions: [3.0.5]
+  expected_source_types: *xsd_sources
+  allowed_source_types: *xsd_sources

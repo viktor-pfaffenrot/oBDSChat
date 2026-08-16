@@ -311,12 +311,11 @@ def _build_instructions(version_context: VersionContext | None) -> str:
         f"{version_instruction}"
         "Source-bearing tool results contain citation_id. In the final structured "
         "response, include all and only citation IDs that directly support the "
-        "answer. Never invent a citation ID. Set supported to true only when the "
+        "answer. Do not include citation IDs in the field 'answer'. "
+        "Never invent a citation ID. Set supported to true only when the "
         "answer is grounded and include at least one citation ID. When the available "
         "evidence cannot support an answer, set supported to false and use an empty "
         "citation list. "
-        "Do not cite the structured fields 'source_type' and 'source_id' in your answer. "
-        "E.g. do not write something like [umsetzungsleitfaden:450]. "
         "If the evidence is insufficient, say so explicitly and do not invent facts."
     )
 

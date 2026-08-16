@@ -20,3 +20,15 @@ Run the optional database smoke test against a disposable PostgreSQL database:
 ```bash
 TEST_DATABASE_URL=postgresql://... uv run pytest -m db_smoke
 ```
+
+## Evaluation
+
+With production configuration, PostgreSQL, and source data available, run:
+
+```bash
+uv run python -m scripts.run_eval
+```
+
+Detailed results and a PNG summary are written to `evaluation-results/`. In a
+notebook, `run_production_evaluation()` returns the report and matplotlib figure
+for inline inspection. Use `--no-show` in headless environments.
