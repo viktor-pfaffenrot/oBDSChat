@@ -14,6 +14,8 @@ from backend.xsd import (
     search_schema,
 )
 
+CITATION_ID_FIELD: Final = "citation_id"
+
 
 def _object_schema(properties: dict[str, object]) -> dict[str, object]:
     return {
@@ -58,13 +60,35 @@ def _schema_selector_properties() -> dict[str, object]:
 
 
 def _dump_models(models: Sequence[BaseModel]) -> list[dict[str, object]]:
-    return [model.model_dump(mode="json") for model in models]
+    return [_dump_model(model) for model in models]
 
 
 def _dump_optional_model(model: BaseModel | None) -> dict[str, object] | None:
     if model is None:
         return None
-    return model.model_dump(mode="json")
+    return _dump_model(model)
+
+
+def _dump_model(model: BaseModel) -> dict[str, object]:
+    data = model.model_dump(mode="json")
+    citation_id = _citation_id(data)
+    if citation_id is not None:
+        data[CITATION_ID_FIELD] = citation_id
+    return data
+
+
+def _citation_id(data: dict[str, object]) -> str | None:
+    source_type = data.get("source_type")
+    if source_type == "xsd":
+        version = data.get("version")
+        path = data.get("path")
+        if isinstance(version, str) and isinstance(path, str):
+            return f"xsd:{version}:{path}"
+
+    source_id = data.get("source_id")
+    if isinstance(source_type, str) and isinstance(source_id, int):
+        return f"{source_type}:{source_id}"
+    return None
 
 
 def _search_schema(

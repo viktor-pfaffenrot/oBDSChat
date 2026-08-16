@@ -23,6 +23,22 @@ class _Result(BaseModel):
     url: HttpUrl
 
 
+class _SchemaResult(BaseModel):
+    name: str
+    path: str
+    version: str
+    source_url: HttpUrl
+    source_type: str = "xsd"
+
+
+class _DocumentResult(BaseModel):
+    source_id: int
+    source_type: str
+    title: str
+    content: str
+    url: HttpUrl
+
+
 def _registered_tool(name: str) -> tools.LocalTool:
     return next(tool for tool in tools.TOOLS if tool.name == name)
 
@@ -163,9 +179,16 @@ def test_search_adapters_forward_explicit_limits(
 def test_source_excerpt_adapter_returns_json_safe_data_or_none(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    excerpt = _DocumentResult(
+        source_id=42,
+        source_type="umsetzungsleitfaden",
+        title="Diagnose",
+        content="Vollständiger Beleg.",
+        url="https://example.test/source",
+    )
     source_lookup = Mock(
         side_effect=[
-            _Result(value="vollständig", url="https://example.test/source"),
+            excerpt,
             None,
         ]
     )
@@ -176,8 +199,33 @@ def test_source_excerpt_adapter_returns_json_safe_data_or_none(
     missing_result = handler(source_id=404)
 
     assert result == {
-        "value": "vollständig",
+        "source_id": 42,
+        "source_type": "umsetzungsleitfaden",
+        "title": "Diagnose",
+        "content": "Vollständiger Beleg.",
         "url": "https://example.test/source",
+        "citation_id": "umsetzungsleitfaden:42",
     }
     assert missing_result is None
     assert json.loads(json.dumps(result, ensure_ascii=False)) == result
+
+
+def test_schema_tool_results_include_stable_citation_ids(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    schema_result = _SchemaResult(
+        name="Diagnosesicherung",
+        path="/oBDS/Diagnose/Diagnosesicherung",
+        version="3.0.5",
+        source_url="https://www.basisdatensatz.de/xml/oBDS_v3.0.5.xsd",
+    )
+    monkeypatch.setattr(tools, "search_schema", Mock(return_value=[schema_result]))
+
+    result = _registered_tool("search_schema").handler(
+        query="Diagnosesicherung",
+        version="3.0.5",
+        limit=None,
+    )
+
+    assert isinstance(result, list)
+    assert result[0]["citation_id"] == ("xsd:3.0.5:/oBDS/Diagnose/Diagnosesicherung")
