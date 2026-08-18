@@ -24,7 +24,7 @@ class LlmProvider(StrEnum):
 
 
 OPENAI_BASE_URL: Final = "https://api.openai.com/v1"
-REQUESTY_BASE_URL: Final = "https://router.requesty.ai/v1"
+REQUESTY_BASE_URL: Final = "https://router.eu.requesty.ai/v1"
 DEFAULT_LLM_PROVIDER: Final = LlmProvider.OPENAI
 DEFAULT_OPENAI_MODEL: Final = "gpt-5.6-terra"
 REQUESTY_POLICY_ROUTE: Final = "policy/obdschat"
