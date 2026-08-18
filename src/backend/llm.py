@@ -1,4 +1,4 @@
-"""Provider-neutral Responses API integration for the backend."""
+"""Provider-neutral Chat Completions integration for the backend."""
 
 import json
 from collections.abc import Callable, Sequence
@@ -6,7 +6,11 @@ from dataclasses import dataclass
 from typing import Any, Self
 
 from openai import OpenAI
-from openai.types.responses import FunctionToolParam, ResponseFunctionToolCall
+from openai.types.chat import (
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionMessageFunctionToolCall,
+    ChatCompletionToolParam,
+)
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from backend.config import LlmEndpoint, load_settings
@@ -84,14 +88,16 @@ class LocalTool(BaseModel):
             raise ValueError("Strict tools must reject additional properties")
         return self
 
-    def as_response_tool(self) -> FunctionToolParam:
-        """Return the OpenAI-compatible Responses API definition."""
+    def as_chat_completion_tool(self) -> ChatCompletionToolParam:
+        """Return the OpenAI-compatible Chat Completions definition."""
         return {
             "type": "function",
-            "name": self.name,
-            "description": self.description,
-            "parameters": self.parameters,
-            "strict": True,
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters,
+                "strict": True,
+            },
         }
 
 
@@ -111,7 +117,7 @@ def answer_question(
     tools: Sequence[LocalTool] = (),
     client: OpenAI | None = None,
     endpoint: LlmEndpoint | None = None,
-    max_tool_rounds: int = 4,
+    max_tool_rounds: int = 10,
 ) -> QuestionAnswer:
     """Answer a question, executing local function calls requested by the model."""
     normalized_question = question.strip()
@@ -123,29 +129,34 @@ def answer_question(
     resolved_endpoint = endpoint or load_settings().resolve_llm_endpoint()
     resolved_client = client or create_client(resolved_endpoint)
     tools_by_name = _index_tools(tools)
-    tool_definitions = [tool.as_response_tool() for tool in tools]
-    input_items: list[Any] = [{"role": "user", "content": normalized_question}]
+    tool_definitions = [tool.as_chat_completion_tool() for tool in tools]
+    messages: list[Any] = [
+        {
+            "role": "system",
+            "content": _build_instructions(version_context),
+        },
+        {"role": "user", "content": normalized_question},
+    ]
     tool_executions: list[ToolExecution] = []
+    tool_rounds = 0
 
-    for tool_round in range(max_tool_rounds + 1):
-        response = resolved_client.responses.parse(
+    while True:
+        tool_choice = "required" if tool_definitions and tool_rounds == 0 else "auto"
+        completion = resolved_client.chat.completions.parse(
             model=resolved_endpoint.route,
-            input=input_items,
-            instructions=_build_instructions(version_context),
-            text_format=ModelAnswer,
-            #reasoning={"effort": "high"},
-            tool_choice="required"
-            if tool_definitions and not tool_executions
-            else "auto",
+            messages=messages,
+            response_format=ModelAnswer,
+            tool_choice=tool_choice,
             tools=tool_definitions,
             store=False,
         )
-        input_items.extend(response.output)
-        function_calls = [
-            item for item in response.output if item.type == "function_call"
-        ]
-        if not function_calls:
-            model_answer = response.output_parsed
+        if not completion.choices:
+            raise ToolCallError("Model returned no completion choice")
+
+        message = completion.choices[0].message
+        tool_calls = message.tool_calls or []
+        if not tool_calls:
+            model_answer = message.parsed
             if model_answer is None:
                 raise ToolCallError("Model returned no structured answer")
             answer = model_answer.answer.strip()
@@ -158,8 +169,17 @@ def answer_question(
                 tool_executions=tuple(tool_executions),
                 citation_ids=citation_ids,
             )
-        if tool_round == max_tool_rounds:
+
+        function_calls: list[ChatCompletionMessageFunctionToolCall] = []
+        for tool_call in tool_calls:
+            if tool_call.type != "function":
+                raise ToolCallError(f"Unsupported tool-call type: {tool_call.type}")
+            function_calls.append(tool_call)
+
+        messages.append(_build_assistant_tool_message(message.content, function_calls))
+        if tool_rounds >= max_tool_rounds:
             raise ToolCallError("Model tool-call limit exceeded")
+        tool_rounds += 1
 
         for function_call in function_calls:
             execution = _execute_tool_call(
@@ -168,15 +188,35 @@ def answer_question(
                 version_context=version_context,
             )
             tool_executions.append(execution)
-            input_items.append(
+            messages.append(
                 {
-                    "type": "function_call_output",
-                    "call_id": function_call.call_id,
-                    "output": execution.output,
+                    "role": "tool",
+                    "tool_call_id": function_call.id,
+                    "content": execution.output,
                 }
             )
 
-    raise AssertionError("unreachable")
+
+def _build_assistant_tool_message(
+    content: str | None,
+    function_calls: Sequence[ChatCompletionMessageFunctionToolCall],
+) -> ChatCompletionAssistantMessageParam:
+    """Build replayable assistant input without SDK-only parsed fields."""
+    return {
+        "role": "assistant",
+        "content": content,
+        "tool_calls": [
+            {
+                "id": function_call.id,
+                "type": "function",
+                "function": {
+                    "name": function_call.function.name,
+                    "arguments": function_call.function.arguments,
+                },
+            }
+            for function_call in function_calls
+        ],
+    }
 
 
 def _index_tools(tools: Sequence[LocalTool]) -> dict[str, LocalTool]:
@@ -187,25 +227,23 @@ def _index_tools(tools: Sequence[LocalTool]) -> dict[str, LocalTool]:
 
 
 def _execute_tool_call(
-    function_call: ResponseFunctionToolCall,
+    function_call: ChatCompletionMessageFunctionToolCall,
     tools: dict[str, LocalTool],
     *,
     version_context: VersionContext | None,
 ) -> ToolExecution:
-    tool = tools.get(function_call.name)
+    function = function_call.function
+    tool_name = function.name
+    tool = tools.get(tool_name)
     if tool is None:
-        raise ToolCallError(f"Unknown tool requested: {function_call.name}")
+        raise ToolCallError(f"Unknown tool requested: {tool_name}")
 
     try:
-        arguments = json.loads(function_call.arguments)
+        arguments = json.loads(function.arguments)
     except json.JSONDecodeError as error:
-        raise ToolCallError(
-            f"Invalid arguments for tool {function_call.name}"
-        ) from error
+        raise ToolCallError(f"Invalid arguments for tool {tool_name}") from error
     if not isinstance(arguments, dict):
-        raise ToolCallError(
-            f"Arguments for tool {function_call.name} must be an object"
-        )
+        raise ToolCallError(f"Arguments for tool {tool_name} must be an object")
 
     unsupported_version = _apply_version_context(tool, arguments, version_context)
     if unsupported_version is not None:
@@ -217,7 +255,7 @@ def _execute_tool_call(
             "available_versions": list(version_context.available_versions),
         }
         return _build_tool_execution(
-            name=function_call.name,
+            name=tool_name,
             arguments=arguments,
             result=result,
             execution_error="unsupported_obds_version",
@@ -226,12 +264,10 @@ def _execute_tool_call(
     try:
         result = tool.handler(**arguments)
     except (TypeError, ValueError) as error:
-        raise ToolCallError(
-            f"Invalid arguments for tool {function_call.name}"
-        ) from error
+        raise ToolCallError(f"Invalid arguments for tool {tool_name}") from error
 
     return _build_tool_execution(
-        name=function_call.name,
+        name=tool_name,
         arguments=arguments,
         result=result,
     )
