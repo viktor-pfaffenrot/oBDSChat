@@ -39,8 +39,8 @@
   facts:
     - label: Bedeutung
       answer_any: [höchste erreichte Diagnosesicherheit, Diagnosesicherheit zum Diagnosedatum, höchste zum Diagnosedatum erreichte Sicherheit]
-  expected_source_types: [xsd]
-
+  expected_source_types: [xsd, umsetzungsleitfaden]
+  
 - id: meaning-geschlecht-x-u
   category: field_meaning
   question: Worin unterscheiden sich X und U beim Feld Geschlecht?

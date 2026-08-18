@@ -5,13 +5,20 @@ from unittest.mock import Mock, call
 import pytest
 from openai import OpenAI
 
-from backend.config import Settings
+from backend.config import (
+    OPENAI_BASE_URL,
+    REQUESTY_BASE_URL,
+    REQUESTY_POLICY_ROUTE,
+    LlmEndpoint,
+    LlmProvider,
+)
 from backend.llm import (
     LocalTool,
     ModelAnswer,
     ToolCallError,
     VersionContext,
     answer_question,
+    create_client,
 )
 
 
@@ -28,6 +35,15 @@ class FakeResponses:
 class FakeOpenAI:
     def __init__(self, responses: list[SimpleNamespace]) -> None:
         self.responses = FakeResponses(responses)
+
+
+def _endpoint(route: str = "gpt-5.6-terra") -> LlmEndpoint:
+    return LlmEndpoint(
+        provider=LlmProvider.OPENAI,
+        base_url=OPENAI_BASE_URL,
+        route=route,
+        api_key="test-key",
+    )
 
 
 def _schema() -> dict[str, object]:
@@ -59,6 +75,28 @@ def _version_context(constraint: str | None = None) -> VersionContext:
     )
 
 
+def _function_call(
+    name: str,
+    arguments: str,
+    call_id: str = "call_1",
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        type="function_call",
+        name=name,
+        arguments=arguments,
+        call_id=call_id,
+    )
+
+
+def _tool_response(
+    *output_items: SimpleNamespace,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        output=list(output_items),
+        output_parsed=None,
+    )
+
+
 def _final_response(
     answer: str,
     citation_ids: tuple[str, ...] = (),
@@ -77,33 +115,53 @@ def _final_response(
     )
 
 
-def test_answer_question_uses_configured_model() -> None:
+def test_create_client_uses_resolved_endpoint() -> None:
+    endpoint = LlmEndpoint(
+        provider=LlmProvider.REQUESTY,
+        base_url=REQUESTY_BASE_URL,
+        route=REQUESTY_POLICY_ROUTE,
+        api_key="requesty-key",
+    )
+
+    client = create_client(endpoint)
+
+    assert str(client.base_url) == f"{REQUESTY_BASE_URL}/"
+    assert client.api_key == "requesty-key"
+    client.close()
+
+
+def test_answer_question_uses_configured_route() -> None:
     fake_client = FakeOpenAI([_final_response("Diagnosesicherung erklärt.")])
 
     result = answer_question(
         "Was bedeutet Diagnosesicherung?",
         client=cast(OpenAI, fake_client),
-        settings=Settings(openai_model="gpt-5.6-terra"),
+        endpoint=_endpoint(),
     )
 
+    request = fake_client.responses.calls[0]
     assert result.answer == "Diagnosesicherung erklärt."
     assert result.tool_executions == ()
-    assert fake_client.responses.calls[0]["model"] == "gpt-5.6-terra"
-    assert fake_client.responses.calls[0]["store"] is False
-    assert fake_client.responses.calls[0]["text_format"] is ModelAnswer
+    assert request["model"] == "gpt-5.6-terra"
+    assert request["text_format"] is ModelAnswer
+    assert request["input"][0] == {
+        "role": "user",
+        "content": "Was bedeutet Diagnosesicherung?",
+    }
+    assert request["store"] is False
+    assert "reasoning" not in request
+    assert "reasoning_effort" not in request
 
 
 def test_answer_question_executes_function_call() -> None:
     reasoning_item = SimpleNamespace(type="reasoning")
-    function_call = SimpleNamespace(
-        type="function_call",
-        name="search_schema",
-        arguments='{"query":"Diagnosesicherung"}',
-        call_id="call_1",
+    function_call = _function_call(
+        "search_schema",
+        '{"query":"Diagnosesicherung"}',
     )
     fake_client = FakeOpenAI(
         [
-            SimpleNamespace(output=[reasoning_item, function_call], output_text=""),
+            _tool_response(reasoning_item, function_call),
             _final_response(
                 "Belegte Antwort.",
                 (" source:1 ", "source:1"),
@@ -121,7 +179,7 @@ def test_answer_question_executes_function_call() -> None:
         "Welche Werte sind erlaubt?",
         tools=[tool],
         client=cast(OpenAI, fake_client),
-        settings=Settings(),
+        endpoint=_endpoint(),
     )
 
     assert result.answer == "Belegte Antwort."
@@ -129,11 +187,15 @@ def test_answer_question_executes_function_call() -> None:
     assert len(result.tool_executions) == 1
     assert result.tool_executions[0].name == "search_schema"
     assert result.tool_executions[0].result == {"element": "Diagnosesicherung"}
-    definition = fake_client.responses.calls[0]["tools"][0]
+    first_request = fake_client.responses.calls[0]
+    second_request = fake_client.responses.calls[1]
+    definition = first_request["tools"][0]
     assert definition["strict"] is True
-    assert fake_client.responses.calls[0]["tool_choice"] == "required"
-    assert fake_client.responses.calls[1]["tool_choice"] == "auto"
-    next_input = fake_client.responses.calls[1]["input"]
+    assert "reasoning" not in first_request
+    assert "reasoning" not in second_request
+    assert first_request["tool_choice"] == "required"
+    assert second_request["tool_choice"] == "auto"
+    next_input = second_request["input"]
     assert reasoning_item in next_input
     assert {
         "type": "function_call_output",
@@ -143,15 +205,13 @@ def test_answer_question_executes_function_call() -> None:
 
 
 def test_answer_question_enforces_version_constraint_on_tool_calls() -> None:
-    function_call = SimpleNamespace(
-        type="function_call",
-        name="search_schema",
-        arguments='{"query":"Diagnose","version":"3.0.0"}',
-        call_id="call_1",
+    function_call = _function_call(
+        "search_schema",
+        '{"query":"Diagnose","version":"3.0.0"}',
     )
     fake_client = FakeOpenAI(
         [
-            SimpleNamespace(output=[function_call], output_text=""),
+            _tool_response(function_call),
             _final_response("Antwort für 3.0.5."),
         ]
     )
@@ -168,26 +228,23 @@ def test_answer_question_enforces_version_constraint_on_tool_calls() -> None:
         version_context=_version_context(constraint="3.0.5"),
         tools=[tool],
         client=cast(OpenAI, fake_client),
-        settings=Settings(),
+        endpoint=_endpoint(),
     )
 
     handler.assert_called_once_with(query="Diagnose", version="3.0.5")
     assert result.tool_executions[0].arguments["version"] == "3.0.5"
-    assert (
-        "Use only oBDS version 3.0.5" in fake_client.responses.calls[0]["instructions"]
-    )
+    instructions = fake_client.responses.calls[0]["instructions"]
+    assert "Use only oBDS version 3.0.5" in instructions
 
 
 def test_answer_question_applies_default_version_to_null_tool_argument() -> None:
-    function_call = SimpleNamespace(
-        type="function_call",
-        name="search_schema",
-        arguments='{"query":"Diagnose","version":null}',
-        call_id="call_1",
+    function_call = _function_call(
+        "search_schema",
+        '{"query":"Diagnose","version":null}',
     )
     fake_client = FakeOpenAI(
         [
-            SimpleNamespace(output=[function_call], output_text=""),
+            _tool_response(function_call),
             _final_response("Antwort für 3.0.5."),
         ]
     )
@@ -204,7 +261,7 @@ def test_answer_question_applies_default_version_to_null_tool_argument() -> None
         version_context=_version_context(),
         tools=[tool],
         client=cast(OpenAI, fake_client),
-        settings=Settings(),
+        endpoint=_endpoint(),
     )
 
     handler.assert_called_once_with(query="Diagnose", version="3.0.5")
@@ -213,17 +270,16 @@ def test_answer_question_applies_default_version_to_null_tool_argument() -> None
 
 def test_answer_question_preserves_versions_for_comparison() -> None:
     calls = [
-        SimpleNamespace(
-            type="function_call",
-            name="search_schema",
-            arguments=f'{{"query":"Änderungen","version":"{version}"}}',
+        _function_call(
+            "search_schema",
+            f'{{"query":"Änderungen","version":"{version}"}}',
             call_id=f"call_{version}",
         )
         for version in ("3.0.4", "3.0.5")
     ]
     fake_client = FakeOpenAI(
         [
-            SimpleNamespace(output=calls, output_text=""),
+            _tool_response(*calls),
             _final_response("Vergleich."),
         ]
     )
@@ -240,7 +296,7 @@ def test_answer_question_preserves_versions_for_comparison() -> None:
         version_context=_version_context(),
         tools=[tool],
         client=cast(OpenAI, fake_client),
-        settings=Settings(),
+        endpoint=_endpoint(),
     )
 
     assert handler.call_args_list == [
@@ -254,15 +310,13 @@ def test_answer_question_preserves_versions_for_comparison() -> None:
 
 
 def test_answer_question_returns_unsupported_version_to_model() -> None:
-    function_call = SimpleNamespace(
-        type="function_call",
-        name="search_schema",
-        arguments='{"query":"Diagnose","version":"9.9.9"}',
-        call_id="call_1",
+    function_call = _function_call(
+        "search_schema",
+        '{"query":"Diagnose","version":"9.9.9"}',
     )
     fake_client = FakeOpenAI(
         [
-            SimpleNamespace(output=[function_call], output_text=""),
+            _tool_response(function_call),
             _final_response("Version nicht verfügbar."),
         ]
     )
@@ -279,7 +333,7 @@ def test_answer_question_returns_unsupported_version_to_model() -> None:
         version_context=_version_context(),
         tools=[tool],
         client=cast(OpenAI, fake_client),
-        settings=Settings(),
+        endpoint=_endpoint(),
     )
 
     handler.assert_not_called()
@@ -299,19 +353,14 @@ def test_answer_question_returns_unsupported_version_to_model() -> None:
 
 
 def test_answer_question_rejects_unknown_tool_call() -> None:
-    function_call = SimpleNamespace(
-        type="function_call",
-        name="unknown",
-        arguments="{}",
-        call_id="call_1",
-    )
-    fake_client = FakeOpenAI([SimpleNamespace(output=[function_call], output_text="")])
+    function_call = _function_call("unknown", "{}")
+    fake_client = FakeOpenAI([_tool_response(function_call)])
 
     with pytest.raises(ToolCallError, match="Unknown tool"):
         answer_question(
             "Test",
             client=cast(OpenAI, fake_client),
-            settings=Settings(),
+            endpoint=_endpoint(),
         )
 
 
@@ -322,5 +371,5 @@ def test_answer_question_rejects_supported_answer_without_citations() -> None:
         answer_question(
             "Test",
             client=cast(OpenAI, fake_client),
-            settings=Settings(),
+            endpoint=_endpoint(),
         )

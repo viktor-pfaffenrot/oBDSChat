@@ -1,4 +1,4 @@
-"""OpenAI function-tool registration for local oBDS data sources."""
+"""Function-tool registration for local oBDS data sources."""
 
 from collections.abc import Sequence
 from typing import Final

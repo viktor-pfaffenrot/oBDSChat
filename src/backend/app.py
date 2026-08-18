@@ -184,7 +184,7 @@ def _collect_sources(
     for citation_id in citation_ids:
         source = sources_by_citation_id.get(citation_id)
         if source is None:
-            raise ToolCallError(f"OpenAI cited unknown evidence: {citation_id}")
+            raise ToolCallError(f"Model cited unknown evidence: {citation_id}")
         key = _source_key(source)
         if key in seen_keys:
             continue
