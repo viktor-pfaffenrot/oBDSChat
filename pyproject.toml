@@ -27,7 +27,9 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "matplotlib>=3.11.1",
     "pytest",
+    "pyyaml>=6.0.3",
     "ruff",
     "ty",
 ]
