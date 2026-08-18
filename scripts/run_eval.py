@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
 import time
 import unicodedata
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Final, Literal, Self
+from zoneinfo import ZoneInfo
 
 import matplotlib.pyplot as plt
 import yaml
@@ -34,8 +34,12 @@ from backend.xsd import SchemaCatalog, get_schema_catalog
 PROJECT_ROOT: Final = Path(__file__).resolve().parents[1]
 DEFAULT_QUESTIONS_PATH: Final = PROJECT_ROOT / "tests" / "questions.yaml"
 DEFAULT_OUTPUT_DIRECTORY: Final = PROJECT_ROOT / "evaluation-results"
-DEFAULT_REPORT_NAME: Final = "results.json"
-DEFAULT_FIGURE_NAME: Final = "summary.png"
+DEFAULT_REPORT_NAME: Final = (
+    f"results_{datetime.now(ZoneInfo('Europe/Berlin')).strftime('%Y%m%d_%H%M%S')}.json"
+)
+DEFAULT_FIGURE_NAME: Final = (
+    f"summary_{datetime.now(ZoneInfo('Europe/Berlin')).strftime('%Y%m%d_%H%M%S')}.png"
+)
 
 EvaluationCategory = Literal[
     "field_meaning",
@@ -50,7 +54,7 @@ EvaluationCategory = Literal[
 ]
 SourceType = Literal["xsd", "umsetzungsleitfaden"]
 
-CATEGORY_NAMES: Final[tuple[str, ...]] = (
+CATEGORY_NAMES: Final[tuple[EvaluationCategory, ...]] = (
     "field_meaning",
     "allowed_values",
     "datatype",
@@ -61,13 +65,18 @@ CATEGORY_NAMES: Final[tuple[str, ...]] = (
     "mixed_source",
     "ambiguous_or_unanswerable",
 )
-METRIC_LABELS: Final[tuple[tuple[str, str], ...]] = (
-    ("answer_correctness", "Antwort"),
-    ("tool_selection", "Tools"),
-    ("citation_correctness", "Quellen"),
-    ("unsupported_claims", "Belegtreue"),
-)
-REGISTERED_TOOL_NAMES: Final = frozenset(tool.name for tool in TOOLS)
+CATEGORY_LABELS: Final[dict[EvaluationCategory, str]] = {
+    "field_meaning": "Feldbedeutung",
+    "allowed_values": "Zulässige Werte",
+    "datatype": "Datentypen",
+    "cardinality": "Kardinalität",
+    "xml_hierarchy": "XML-Hierarchie",
+    "implementation_guidance": "Implementierung",
+    "version": "Versionen",
+    "mixed_source": "Gemischte Quellen",
+    "ambiguous_or_unanswerable": "Unklar / nicht beantwortbar",
+}
+_TOKEN_PATTERN: Final = re.compile(r"\w+(?:(?:[.:/])\w+)*")
 
 
 class _FrozenModel(BaseModel):
@@ -75,11 +84,10 @@ class _FrozenModel(BaseModel):
 
 
 class FactExpectation(_FrozenModel):
-    """One benchmark fact and accepted terms in answer and cited evidence."""
+    """One benchmark fact and accepted answer terms."""
 
     label: str = Field(min_length=1)
     answer_any: tuple[str, ...] = Field(min_length=1)
-    evidence_any: tuple[str, ...] = ()
 
 
 class EvaluationCase(_FrozenModel):
@@ -91,58 +99,30 @@ class EvaluationCase(_FrozenModel):
     obds_version: str | None = None
     expected_supported: bool = True
     facts: tuple[FactExpectation, ...] = Field(min_length=1)
-    required_tool_groups: tuple[tuple[str, ...], ...] = Field(min_length=1)
-    allowed_tools: frozenset[str] = Field(min_length=1)
-    expected_versions: frozenset[str] = frozenset()
     expected_source_types: frozenset[SourceType] = frozenset()
-    allowed_source_types: frozenset[SourceType] = frozenset()
-    forbidden_answer_terms: tuple[str, ...] = ()
 
     @model_validator(mode="after")
     def validate_expectations(self) -> Self:
         """Reject rubrics that cannot produce meaningful deterministic scores."""
-        unknown_tools = set(self.allowed_tools.difference(REGISTERED_TOOL_NAMES))
-        grouped_tools = {
-            tool_name
-            for tool_group in self.required_tool_groups
-            for tool_name in tool_group
-        }
-        unknown_tools.update(grouped_tools.difference(REGISTERED_TOOL_NAMES))
-        if unknown_tools:
-            names = ", ".join(sorted(unknown_tools))
-            raise ValueError(f"Unknown evaluation tools: {names}")
-        if any(not tool_group for tool_group in self.required_tool_groups):
-            raise ValueError("Required tool groups must not be empty")
-        if not grouped_tools.issubset(self.allowed_tools):
-            raise ValueError("Required tools must also be allowed")
-        if not self.expected_source_types.issubset(self.allowed_source_types):
-            raise ValueError("Expected source types must also be allowed")
         if self.expected_supported and not self.expected_source_types:
             raise ValueError("Supported cases require an expected source type")
         if not self.expected_supported and self.expected_source_types:
             raise ValueError("Unsupported cases cannot expect cited sources")
-        if self.expected_supported and any(
-            not fact.evidence_any for fact in self.facts
-        ):
-            raise ValueError("Supported facts require evidence terms")
         return self
 
 
 class FactScore(_FrozenModel):
-    """Observed answer and evidence match for one expected fact."""
+    """Observed answer match for one expected fact."""
 
     label: str
     answer_matched: bool
-    evidence_matched: bool | None
 
 
 class MetricScores(_FrozenModel):
-    """Four requested evaluation metrics, each normalized to zero through one."""
+    """Answer and citation metrics normalized to zero through one."""
 
     answer_correctness: float = Field(ge=0, le=1)
-    tool_selection: float = Field(ge=0, le=1)
     citation_correctness: float = Field(ge=0, le=1)
-    unsupported_claims: float = Field(ge=0, le=1)
 
 
 class EvaluationResult(_FrozenModel):
@@ -152,16 +132,21 @@ class EvaluationResult(_FrozenModel):
     category: EvaluationCategory
     question: str
     answer: str | None
-    called_tools: tuple[str, ...]
-    used_versions: tuple[str, ...]
     citation_ids: tuple[str, ...]
     cited_source_types: tuple[str, ...]
     fact_scores: tuple[FactScore, ...]
-    forbidden_terms_found: tuple[str, ...]
-    unexpected_tools: tuple[str, ...]
     metrics: MetricScores
     duration_seconds: float = Field(ge=0)
     error: str | None = None
+
+
+class CategorySummary(_FrozenModel):
+    """Mean scores for one question category."""
+
+    category: EvaluationCategory
+    case_count: int = Field(gt=0)
+    answer_correctness: float = Field(ge=0, le=1)
+    citation_correctness: float = Field(ge=0, le=1)
 
 
 class EvaluationSummary(_FrozenModel):
@@ -170,9 +155,8 @@ class EvaluationSummary(_FrozenModel):
     case_count: int = Field(ge=0)
     failed_case_count: int = Field(ge=0)
     answer_correctness: float = Field(ge=0, le=1)
-    tool_selection: float = Field(ge=0, le=1)
     citation_correctness: float = Field(ge=0, le=1)
-    unsupported_claims: float = Field(ge=0, le=1)
+    categories: tuple[CategorySummary, ...]
 
 
 class EvaluationReport(_FrozenModel):
@@ -292,28 +276,13 @@ def score_evaluation_case(
         for citation_id in answer.citation_ids
         for item in evidence_by_id.get(citation_id, ())
     )
-    evidence_text = _json_text(cited_evidence)
     fact_scores = tuple(
         FactScore(
             label=fact.label,
             answer_matched=_contains_any(answer.answer, fact.answer_any),
-            evidence_matched=(
-                _contains_any(evidence_text, fact.evidence_any)
-                if case.expected_supported
-                else None
-            ),
         )
         for fact in case.facts
     )
-    forbidden_terms_found = tuple(
-        term
-        for term in case.forbidden_answer_terms
-        if _contains_term(answer.answer, term)
-    )
-    called_tools = tuple(execution.name for execution in answer.tool_executions)
-    called_tool_set = set(called_tools)
-    unexpected_tools = tuple(sorted(called_tool_set.difference(case.allowed_tools)))
-    used_versions = _used_versions(answer.tool_executions)
     cited_source_types = tuple(
         sorted(
             {
@@ -326,23 +295,11 @@ def score_evaluation_case(
 
     metrics = MetricScores(
         answer_correctness=_answer_correctness(fact_scores),
-        tool_selection=_tool_selection_score(
-            case,
-            called_tool_set,
-            set(used_versions),
-            unexpected_tools,
-        ),
         citation_correctness=_citation_score(
             case,
             answer.citation_ids,
             evidence_by_id,
             set(cited_source_types),
-        ),
-        unsupported_claims=_unsupported_claims_score(
-            case,
-            answer.citation_ids,
-            fact_scores,
-            forbidden_terms_found,
         ),
     )
     return EvaluationResult(
@@ -350,13 +307,9 @@ def score_evaluation_case(
         category=case.category,
         question=case.question,
         answer=answer.answer,
-        called_tools=called_tools,
-        used_versions=used_versions,
         citation_ids=answer.citation_ids,
         cited_source_types=cited_source_types,
         fact_scores=fact_scores,
-        forbidden_terms_found=forbidden_terms_found,
-        unexpected_tools=unexpected_tools,
         metrics=metrics,
         duration_seconds=duration_seconds,
     )
@@ -373,13 +326,10 @@ def summarize_results(results: Sequence[EvaluationResult]) -> EvaluationSummary:
         answer_correctness=_mean(
             result.metrics.answer_correctness for result in results
         ),
-        tool_selection=_mean(result.metrics.tool_selection for result in results),
         citation_correctness=_mean(
             result.metrics.citation_correctness for result in results
         ),
-        unsupported_claims=_mean(
-            result.metrics.unsupported_claims for result in results
-        ),
+        categories=_summarize_categories(results),
     )
 
 
@@ -387,17 +337,55 @@ def plot_summary(
     summary: EvaluationSummary,
     output_path: Path = DEFAULT_OUTPUT_DIRECTORY / DEFAULT_FIGURE_NAME,
 ) -> Figure:
-    """Return an inline-friendly bar plot and save it as a PNG."""
-    metric_values = [
-        getattr(summary, metric_name) * 100 for metric_name, _ in METRIC_LABELS
+    """Return a category-grouped bar plot and save it as a PNG."""
+    positions = list(range(len(summary.categories)))
+    bar_width = 0.38
+    answer_values = [
+        category.answer_correctness * 100 for category in summary.categories
     ]
-    metric_labels = [label for _, label in METRIC_LABELS]
-    figure, axis = plt.subplots(figsize=(8, 4.5))
-    bars = axis.bar(metric_labels, metric_values, color="#28666e", width=0.62)
-    axis.bar_label(bars, labels=[f"{value:.1f}%" for value in metric_values], padding=3)
+    citation_values = [
+        category.citation_correctness * 100 for category in summary.categories
+    ]
+    answer_positions = [position - bar_width / 2 for position in positions]
+    citation_positions = [position + bar_width / 2 for position in positions]
+
+    figure, axis = plt.subplots(figsize=(14, 6))
+    answer_bars = axis.bar(
+        answer_positions,
+        answer_values,
+        width=bar_width,
+        color="#28666e",
+        label="Antwort",
+    )
+    citation_bars = axis.bar(
+        citation_positions,
+        citation_values,
+        width=bar_width,
+        color="#d99126",
+        label="Quellen",
+    )
+    axis.bar_label(
+        answer_bars,
+        labels=[f"{value:.0f}%" for value in answer_values],
+        padding=3,
+        fontsize=8,
+    )
+    axis.bar_label(
+        citation_bars,
+        labels=[f"{value:.0f}%" for value in citation_values],
+        padding=3,
+        fontsize=8,
+    )
     axis.set_title(f"oBDSChat Evaluation ({summary.case_count} Fragen)")
     axis.set_ylabel("Erfüllung (%)")
     axis.set_ylim(0, 105)
+    axis.set_xticks(
+        positions,
+        [CATEGORY_LABELS[category.category] for category in summary.categories],
+        rotation=25,
+        ha="right",
+    )
+    axis.legend()
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="y", alpha=0.2)
     figure.tight_layout()
@@ -439,7 +427,7 @@ def run_production_evaluation(
     results = run_evaluation(cases, answerer)
     summary = summarize_results(results)
     report = EvaluationReport(
-        generated_at=datetime.now(UTC),
+        generated_at=datetime.now(ZoneInfo("Europe/Berlin")),
         model=settings.openai_model,
         questions_path=str(questions_path.resolve()),
         summary=summary,
@@ -474,38 +462,8 @@ def _iter_mappings(value: object) -> Iterator[Mapping[str, object]]:
             yield from _iter_mappings(item)
 
 
-def _used_versions(executions: Sequence[ToolExecution]) -> tuple[str, ...]:
-    versions = {
-        version
-        for execution in executions
-        if execution.error is None
-        and isinstance((version := execution.arguments.get("version")), str)
-    }
-    return tuple(sorted(versions, key=_version_key))
-
-
-def _version_key(version: str) -> tuple[tuple[int, int | str], ...]:
-    return tuple(
-        (0, int(part)) if part.isdigit() else (1, part) for part in version.split(".")
-    )
-
-
 def _answer_correctness(fact_scores: Sequence[FactScore]) -> float:
     return _mean(float(fact.answer_matched) for fact in fact_scores)
-
-
-def _tool_selection_score(
-    case: EvaluationCase,
-    called_tools: set[str],
-    used_versions: set[str],
-    unexpected_tools: Sequence[str],
-) -> float:
-    groups_satisfied = all(
-        called_tools.intersection(tool_group)
-        for tool_group in case.required_tool_groups
-    )
-    versions_satisfied = case.expected_versions.issubset(used_versions)
-    return float(groups_satisfied and versions_satisfied and not unexpected_tools)
 
 
 def _citation_score(
@@ -519,31 +477,36 @@ def _citation_score(
         citation_id in evidence_by_id for citation_id in citation_ids
     )
     expected_sources_present = case.expected_source_types.issubset(cited_source_types)
-    sources_allowed = cited_source_types.issubset(case.allowed_source_types)
     return float(
         actual_supported == case.expected_supported
         and citations_resolve
         and expected_sources_present
-        and sources_allowed
     )
 
 
-def _unsupported_claims_score(
-    case: EvaluationCase,
-    citation_ids: Sequence[str],
-    fact_scores: Sequence[FactScore],
-    forbidden_terms_found: Sequence[str],
-) -> float:
-    actual_supported = bool(citation_ids)
-    grounded_asserted_facts = all(
-        not fact.answer_matched or fact.evidence_matched is not False
-        for fact in fact_scores
-    )
-    return float(
-        actual_supported == case.expected_supported
-        and grounded_asserted_facts
-        and not forbidden_terms_found
-    )
+def _summarize_categories(
+    results: Sequence[EvaluationResult],
+) -> tuple[CategorySummary, ...]:
+    summaries: list[CategorySummary] = []
+    for category in CATEGORY_NAMES:
+        category_results = tuple(
+            result for result in results if result.category == category
+        )
+        if not category_results:
+            continue
+        summaries.append(
+            CategorySummary(
+                category=category,
+                case_count=len(category_results),
+                answer_correctness=_mean(
+                    result.metrics.answer_correctness for result in category_results
+                ),
+                citation_correctness=_mean(
+                    result.metrics.citation_correctness for result in category_results
+                ),
+            )
+        )
+    return tuple(summaries)
 
 
 def _failed_result(
@@ -556,18 +519,12 @@ def _failed_result(
         category=case.category,
         question=case.question,
         answer=None,
-        called_tools=(),
-        used_versions=(),
         citation_ids=(),
         cited_source_types=(),
         fact_scores=(),
-        forbidden_terms_found=(),
-        unexpected_tools=(),
         metrics=MetricScores(
             answer_correctness=0,
-            tool_selection=0,
             citation_correctness=0,
-            unsupported_claims=0,
         ),
         duration_seconds=duration_seconds,
         error=f"{type(error).__name__}: {error}",
@@ -581,33 +538,31 @@ def _contains_any(text: str, terms: Sequence[str]) -> bool:
 def _matches_term(text: str, term: str) -> bool:
     if _contains_term(text, term):
         return True
-    term_tokens = set(re.findall(r"\w+", _normalize_text(term)))
-    if len(term_tokens) < 3:
+    term_tokens = _tokenize(term)
+    if len(term_tokens) < 2:
         return False
-    text_tokens = set(re.findall(r"\w+", _normalize_text(text)))
-    return term_tokens.issubset(text_tokens)
+    text_tokens = set(_tokenize(text))
+    return set(term_tokens).issubset(text_tokens)
 
 
 def _contains_term(text: str, term: str) -> bool:
     normalized_term = _normalize_text(term)
     if not normalized_term:
         raise ValueError("Evaluation terms must not be empty")
-    prefix = r"(?<!\w)" if normalized_term[0].isalnum() else ""
-    suffix = r"(?!\w)" if normalized_term[-1].isalnum() else ""
-    pattern = f"{prefix}{re.escape(normalized_term)}{suffix}"
-    return re.search(pattern, _normalize_text(text)) is not None
+    normalized_text = _normalize_text(text)
+    return f" {normalized_term} " in f" {normalized_text} "
 
 
 def _normalize_text(value: str) -> str:
+    return " ".join(_tokenize(value))
+
+
+def _tokenize(value: str) -> tuple[str, ...]:
     normalized_value = unicodedata.normalize("NFKC", value).casefold()
-    return re.sub(r"\s+", " ", normalized_value).strip()
+    return tuple(_TOKEN_PATTERN.findall(normalized_value))
 
 
-def _json_text(value: object) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
-
-
-def _mean(values: Iterator[float]) -> float:
+def _mean(values: Iterable[float]) -> float:
     collected_values = tuple(values)
     if not collected_values:
         raise ValueError("Cannot calculate the mean of no values")

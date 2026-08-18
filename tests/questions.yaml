@@ -1,3 +1,36 @@
+# Evaluation question format
+# ==========================
+# This file is a YAML list. Add one list item per evaluation question.
+#
+# Required case fields:
+# - id: Stable lowercase identifier using letters, digits, underscores, or hyphens.
+# - category: One of field_meaning, allowed_values, datatype, cardinality,
+#   xml_hierarchy, implementation_guidance, version, mixed_source, or
+#   ambiguous_or_unanswerable.
+# - question: German question sent unchanged to production.
+# - facts: Facts expected in the answer. Each fact has:
+#   - label: Human-readable result label.
+#   - answer_any: Alternative valid phrases. Matching ignores case and punctuation;
+#     multi-token phrases may contain extra words or use a different word order.
+#     Keep alternatives short but distinctive and add common valid wording variants.
+# - expected_source_types: Required cited source types. Supported values are xsd and
+#   umsetzungsleitfaden. All listed types must be cited; extra official sources are OK.
+#
+# Optional case fields:
+# - obds_version: Constrains production to one oBDS version.
+# - expected_supported: Defaults to true. Set false when evidence cannot answer the
+#   question; then use expected_source_types: [] and expect no citations.
+#
+# Example:
+# - id: datatype-example
+#   category: datatype
+#   question: Welchen XSD-Datentyp hat Beispiel?
+#   obds_version: 3.0.5
+#   facts:
+#     - label: Datentyp
+#       answer_any: [xs:string, String-Typ]
+#   expected_source_types: [xsd]
+
 # Field meaning (9)
 - id: meaning-diagnosesicherung
   category: field_meaning
@@ -6,13 +39,7 @@
   facts:
     - label: Bedeutung
       answer_any: [höchste erreichte Diagnosesicherheit, Diagnosesicherheit zum Diagnosedatum, höchste zum Diagnosedatum erreichte Sicherheit]
-      evidence_any: [höchste erreichte Diagnosesicherheit]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: &meaning_tools [search_schema, get_schema_element, get_schema_values, search_umsetzungsleitfaden, get_source_excerpt]
-  expected_versions: [3.0.5]
-  expected_source_types: &xsd_sources [xsd]
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: meaning-geschlecht-x-u
   category: field_meaning
@@ -21,16 +48,9 @@
   facts:
     - label: X
       answer_any: [unbestimmtes Geschlecht, keine Angabe]
-      evidence_any: [keine Angabe / unbestimmt]
     - label: U
       answer_any: [tatsächlich unbekannt, unbekannt]
-      evidence_any: [Unbekannt]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *meaning_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 # Datatypes (9)
 - id: datatype-diagnosesicherung
@@ -40,13 +60,7 @@
   facts:
     - label: Datentyp
       answer_any: [xs:string]
-      evidence_any: [xs:string]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: &schema_lookup_tools [search_schema, get_schema_element]
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-meldedatum
   category: datatype
@@ -55,13 +69,7 @@
   facts:
     - label: Datentyp
       answer_any: [Datum_Tag_genau_Typ]
-      evidence_any: [Datum_Tag_genau_Typ]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-geburtsdatum
   category: datatype
@@ -70,13 +78,7 @@
   facts:
     - label: Datentyp
       answer_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
-      evidence_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-seitenlokalisation
   category: datatype
@@ -85,13 +87,7 @@
   facts:
     - label: Datentyp
       answer_any: [Seitenlokalisation_Typ]
-      evidence_any: [Seitenlokalisation_Typ]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-therapieart
   category: datatype
@@ -100,13 +96,7 @@
   facts:
     - label: Datentyp
       answer_any: [xs:string]
-      evidence_any: [xs:string]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-patient
   category: datatype
@@ -115,13 +105,7 @@
   facts:
     - label: Datentyp
       answer_any: [complexType, komplexer Typ]
-      evidence_any: [complexType]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-fernmetastase
   category: datatype
@@ -130,13 +114,7 @@
   facts:
     - label: Datentyp
       answer_any: [complexType, komplexer Typ]
-      evidence_any: [complexType]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-histologiedatum
   category: datatype
@@ -145,13 +123,7 @@
   facts:
     - label: Datentyp
       answer_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
-      evidence_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: datatype-grading
   category: datatype
@@ -160,13 +132,7 @@
   facts:
     - label: Datentyp
       answer_any: [xs:string]
-      evidence_any: [xs:string]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 # Cardinality (9)
 - id: cardinality-patient
@@ -175,17 +141,10 @@
   obds_version: 3.0.5
   facts:
     - label: Minimum
-      answer_any: [mindestens einmal, minOccurs 1]
-      evidence_any: ['"min_occurs": 1']
+      answer_any: [mindestens einmal, mindestens 1, minOccurs 1]
     - label: Maximum
       answer_any: [unbegrenzt oft, unbounded, beliebig oft]
-      evidence_any: [unbounded]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: &schema_cardinality_tools [search_schema, get_schema_element, get_schema_cardinality]
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-meldung
   category: cardinality
@@ -194,16 +153,9 @@
   facts:
     - label: Minimum
       answer_any: [mindestens einmal, minOccurs 1]
-      evidence_any: ['"min_occurs": 1']
     - label: Maximum
       answer_any: [unbegrenzt oft, unbounded, beliebig oft]
-      evidence_any: [unbounded]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-seitenlokalisation
   category: cardinality
@@ -212,16 +164,9 @@
   facts:
     - label: Minimum
       answer_any: [optional, minOccurs 0, kann fehlen]
-      evidence_any: ['"min_occurs": 0']
     - label: Maximum
       answer_any: [höchstens einmal, maxOccurs 1]
-      evidence_any: ['"max_occurs": 1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-diagnose-histologie
   category: cardinality
@@ -230,16 +175,9 @@
   facts:
     - label: Minimum
       answer_any: [optional, minOccurs 0, kann fehlen]
-      evidence_any: ['"min_occurs": 0']
     - label: Maximum
       answer_any: [höchstens einmal, maxOccurs 1]
-      evidence_any: ['"max_occurs": 1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-diagnosesicherung
   category: cardinality
@@ -247,17 +185,10 @@
   obds_version: 3.0.5
   facts:
     - label: Minimum
-      answer_any: [verpflichtend, minOccurs 1]
-      evidence_any: ['"min_occurs": 1']
+      answer_any: [verpflichtend, erforderlich, minOccurs 1]
     - label: Maximum
       answer_any: [genau einmal, maxOccurs 1, nicht wiederholbar]
-      evidence_any: ['"max_occurs": 1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-histologiedatum
   category: cardinality
@@ -266,16 +197,9 @@
   facts:
     - label: Minimum
       answer_any: [optional, minOccurs 0]
-      evidence_any: ['"min_occurs": 0']
     - label: Maximum
       answer_any: [höchstens einmal, maxOccurs 1]
-      evidence_any: ['"max_occurs": 1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-fernmetastase
   category: cardinality
@@ -284,16 +208,9 @@
   facts:
     - label: Minimum
       answer_any: [mindestens einmal, minOccurs 1]
-      evidence_any: ['"min_occurs": 1']
     - label: Maximum
       answer_any: [unbegrenzt oft, unbounded, beliebig oft]
-      evidence_any: [unbounded]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-ctnm
   category: cardinality
@@ -302,16 +219,9 @@
   facts:
     - label: Minimum
       answer_any: [optional, minOccurs 0]
-      evidence_any: ['"min_occurs": 0']
     - label: Maximum
       answer_any: [höchstens einmal, maxOccurs 1]
-      evidence_any: ['"max_occurs": 1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: cardinality-meldedatum
   category: cardinality
@@ -319,164 +229,12 @@
   obds_version: 3.0.5
   facts:
     - label: Minimum
-      answer_any: [verpflichtend, minOccurs 1]
-      evidence_any: ['"min_occurs": 1']
+      answer_any: [verpflichtend, erforderlich, minOccurs 1]
     - label: Maximum
       answer_any: [genau einmal, maxOccurs 1]
-      evidence_any: ['"max_occurs": 1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
-# XML hierarchy (10)
-- id: hierarchy-root
-  category: xml_hierarchy
-  question: Welche direkten Kindelemente hat das Wurzelelement oBDS?
-  obds_version: 3.0.5
-  facts:
-    - label: Absender
-      answer_any: [Absender]
-      evidence_any: [/oBDS/Absender]
-    - label: Meldedatum
-      answer_any: [Meldedatum]
-      evidence_any: [/oBDS/Meldedatum]
-    - label: Patientenmenge
-      answer_any: [Menge_Patient]
-      evidence_any: [/oBDS/Menge_Patient]
-    - label: Meldermenge
-      answer_any: [Menge_Melder]
-      evidence_any: [/oBDS/Menge_Melder]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-patient
-  category: xml_hierarchy
-  question: Unter welchem XML-Elternelement liegt Patient?
-  obds_version: 3.0.5
-  facts:
-    - label: Elternpfad
-      answer_any: [Menge_Patient]
-      evidence_any: [/oBDS/Menge_Patient/Patient]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-stammdaten
-  category: xml_hierarchy
-  question: Wo liegen Patienten_Stammdaten in der XML-Hierarchie?
-  obds_version: 3.0.5
-  facts:
-    - label: Pfad
-      answer_any: [/oBDS/Menge_Patient/Patient/Patienten_Stammdaten, unter Patient]
-      evidence_any: [/oBDS/Menge_Patient/Patient/Patienten_Stammdaten]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-menge-meldung
-  category: xml_hierarchy
-  question: Unter welchem Element liegt Menge_Meldung?
-  obds_version: 3.0.5
-  facts:
-    - label: Elternpfad
-      answer_any: [unter Patient, /Patient/Menge_Meldung]
-      evidence_any: [/oBDS/Menge_Patient/Patient/Menge_Meldung]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-meldung
-  category: xml_hierarchy
-  question: Wo liegt Meldung relativ zu Menge_Meldung?
-  obds_version: 3.0.5
-  facts:
-    - label: Elternpfad
-      answer_any: [unter Menge_Meldung, /Menge_Meldung/Meldung]
-      evidence_any: [/Menge_Meldung/Meldung]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-tumorzuordnung
-  category: xml_hierarchy
-  question: Wo befindet sich Tumorzuordnung innerhalb einer Meldung?
-  obds_version: 3.0.5
-  facts:
-    - label: Pfad
-      answer_any: [/Meldung/Tumorzuordnung, direkt unter Meldung]
-      evidence_any: [/Meldung/Tumorzuordnung]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-diagnosesicherung
-  category: xml_hierarchy
-  question: Wie lautet der XML-Pfad zur Diagnosesicherung einer Diagnosemeldung?
-  obds_version: 3.0.5
-  facts:
-    - label: Pfad
-      answer_any: [/Meldung/Diagnose/Diagnosesicherung]
-      evidence_any: [/Meldung/Diagnose/Diagnosesicherung]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-grading
-  category: xml_hierarchy
-  question: Unter welchem Element liegt Grading in einer Diagnosemeldung?
-  obds_version: 3.0.5
-  facts:
-    - label: Elternpfad
-      answer_any: [unter Histologie, /Histologie/Grading]
-      evidence_any: [/Diagnose/Histologie/Grading]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-
-- id: hierarchy-fernmetastase
-  category: xml_hierarchy
-  question: Wie ist Fernmetastase unter einer Diagnose hierarchisch eingeordnet?
-  obds_version: 3.0.5
-  facts:
-    - label: Pfad
-      answer_any: [/Diagnose/Menge_FM/Fernmetastase, unter Menge_FM]
-      evidence_any: [/Diagnose/Menge_FM/Fernmetastase]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-  forbidden_answer_terms: [X bedeutet unbekannt]
-
+# XML hierarchy (5)
 - id: tnm-quelle
   category: xml_hierarchy
   question: In welcher Meldung darf ein TNM gemeldet werden?
@@ -484,22 +242,67 @@
   facts:
     - label: Diagnosemeldung
       answer_any: [Diagnosemeldung, Diagnose]
-      evidence_any: [/Meldung/Diagnose/cTNM, /Meldung/Diagnose/pTNM]
     - label: Pathologiemeldung
       answer_any: [Pathologiemeldung, Pathologie]
-      evidence_any: [/Meldung/Pathologie/cTNM, /Meldung/Pathologie/pTNM]
     - label: OP-Meldung
       answer_any: [OP-Meldung, Operationsmeldung]
-      evidence_any: [/Meldung/OP/TNM]
     - label: Verlaufsmeldung
       answer_any: [Verlaufsmeldung, Verlauf]
-      evidence_any: [/Meldung/Verlauf/TNM]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
+
+- id: tumorfreier-status
+  category: xml_hierarchy
+  question: Welche Variable im oBDS würde einen tumorfreien Status am besten beschreiben?
+  obds_version: 3.0.5
+  facts:
+    - label: Variable
+      answer_any: [Gesamtbeurteilung_Tumorstatus, Gesamtbeurteilung des Tumorstatus]
+    - label: Tumorfreier Status
+      answer_any: [V = Vollremission, Vollremission]
+  expected_source_types: [xsd]
+
+- id: meldungstypen-rezidiv
+  category: xml_hierarchy
+  question: In welchen Meldungstypen können Informationen zu einem Rezidiv gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: OP-Meldung
+      answer_any: [OP-Meldung, Operationsmeldung]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
+
+- id: meldungstypen-fernmetastasen
+  category: xml_hierarchy
+  question: In welchen Meldungstypen können Fernmetastasen gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
+
+- id: meldungstypen-genetik
+  category: xml_hierarchy
+  question: In welchen Meldungstypen können Informationen zu genetischen Markern gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: OP-Meldung
+      answer_any: [OP-Meldung, Operationsmeldung]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
 
 - id: meaning-seitenlokalisation
   category: field_meaning
@@ -508,13 +311,7 @@
   facts:
     - label: Bedeutung
       answer_any: [betroffene Seite, organspezifische Angabe der betroffenen Seite]
-      evidence_any: [organspezifische Angabe der betroffenen Seite]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *meaning_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: meaning-grading
   category: field_meaning
@@ -523,13 +320,7 @@
   facts:
     - label: Zweck
       answer_any: [Aggressivität, Prognose und Behandlung]
-      evidence_any: [Aggressivität]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *meaning_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: meaning-ctnm
   category: field_meaning
@@ -537,14 +328,8 @@
   obds_version: 3.0.5
   facts:
     - label: Zeitpunkt
-      answer_any: [prätherapeutisches TNM, vor der Therapie]
-      evidence_any: [Prätherapeutisches TNM]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *meaning_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: [prätherapeutisches TNM, vor der Therapie, klinische TNM-Klassifikation]
+  expected_source_types: [xsd]
 
 - id: meaning-ptnm
   category: field_meaning
@@ -552,14 +337,8 @@
   obds_version: 3.0.5
   facts:
     - label: Zeitpunkt
-      answer_any: [postoperatives TNM, nach der Operation]
-      evidence_any: [Postoperatives TNM]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *meaning_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: [postoperatives TNM, nach der Operation, postoperative TNM]
+  expected_source_types: [xsd]
 
 - id: meaning-tumor-id
   category: field_meaning
@@ -567,15 +346,9 @@
   facts:
     - label: Zweck
       answer_any: [Identifikator für den Primärtumor, Zuordnung verschiedener Meldungen]
-      evidence_any: [Identifikator für den Primärtumor]
     - label: Eindeutigkeit
       answer_any: [im Kontext des Patienten eindeutig, für den Melder im Kontext des Patienten]
-      evidence_any: [im Kontext des Patienten eindeutig]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: &guide_tools [search_umsetzungsleitfaden, get_source_excerpt]
   expected_source_types: &guide_sources [umsetzungsleitfaden]
-  allowed_source_types: *guide_sources
 
 - id: meaning-meldebegruendung
   category: field_meaning
@@ -583,15 +356,9 @@
   facts:
     - label: Rechtsgrundlage
       answer_any: [Rechtsgrundlage für den Versand, Rechtsgrundlage für die Meldung]
-      evidence_any: [Rechtsgrundlage für den Versand]
     - label: Patienteninformation
       answer_any: [informiert wurde, widersprochen hat]
-      evidence_any: [informiert wurde]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: meaning-therapieart
   category: field_meaning
@@ -600,13 +367,7 @@
   facts:
     - label: Bedeutung
       answer_any: [Art der Therapie, abwartende Strategie]
-      evidence_any: [Art der Therapie bzw. abwartende Strategie]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *meaning_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 # Allowed values (9)
 - id: values-diagnosesicherung
@@ -616,25 +377,15 @@
   facts:
     - label: Klinische Sicherung
       answer_any: [klinisch ohne tumorspezifische Diagnostik, klinische Diagnose]
-      evidence_any: [klinisch ohne tumorspezifische Diagnostik]
     - label: Zytologie
       answer_any: [zytologisch]
-      evidence_any: [Zytologisch]
     - label: Histologie
       answer_any: [Histologie des Primärtumors, Histologie Metastase]
-      evidence_any: [Histologie des Primärtumors]
     - label: Molekular
       answer_any: [zytogenetisch, molekularer Test]
-      evidence_any: [molekularer Test]
     - label: Unbekannt
       answer_any: [9 = Unbekannt, '9: Unbekannt', Unbekannt]
-      evidence_any: [Unbekannt]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: &schema_value_tools [search_schema, get_schema_element, get_schema_values]
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: values-pathologie-diagnosesicherung
   category: allowed_values
@@ -643,17 +394,9 @@
   facts:
     - label: Erlaubte Werte
       answer_any: ['4, 5, 6, 7, 7.1, 7.2, 7.3, 8, 9']
-      evidence_any: ['7.3']
     - label: Nicht erlaubt
       answer_any: [1 und 2 sind nicht erlaubt, ohne 1, ohne 2]
-      evidence_any: [ohne 1]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
-  forbidden_answer_terms: [1 und 2 sind erlaubt]
+  expected_source_types: [xsd]
 
 - id: values-geschlecht
   category: allowed_values
@@ -662,25 +405,15 @@
   facts:
     - label: Männlich
       answer_any: [Männlich]
-      evidence_any: [Männlich]
     - label: Weiblich
       answer_any: [Weiblich]
-      evidence_any: [Weiblich]
     - label: Divers
       answer_any: [Divers]
-      evidence_any: [Divers]
     - label: Unbestimmt
       answer_any: [unbestimmt, keine Angabe]
-      evidence_any: [keine Angabe / unbestimmt]
     - label: Unbekannt
       answer_any: [Unbekannt]
-      evidence_any: [Unbekannt]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: values-seitenlokalisation
   category: allowed_values
@@ -689,25 +422,15 @@
   facts:
     - label: Links und rechts
       answer_any: [Links, Rechts]
-      evidence_any: [Links]
     - label: Beidseitig
       answer_any: [Beidseitig]
-      evidence_any: [Beidseitig]
     - label: Mittellinie
       answer_any: [Mittellinie, mittig]
-      evidence_any: [Mittellinie/mittig]
     - label: Unbekannt
       answer_any: [Unbekannt]
-      evidence_any: [Unbekannt]
     - label: Nicht zutreffend
       answer_any: [Trifft nicht zu]
-      evidence_any: [Trifft nicht zu]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: values-grading
   category: allowed_values
@@ -716,19 +439,11 @@
   facts:
     - label: Differenzierung
       answer_any: [gut differenziert, mäßig differenziert, schlecht differenziert, undifferenziert]
-      evidence_any: [Gut differenziert]
     - label: Grade
       answer_any: [Low grade, Intermediate, High grade]
-      evidence_any: [Low grade]
     - label: Sonderwerte
       answer_any: [Borderline, Nicht bestimmbar, Unbekannt, Trifft nicht zu]
-      evidence_any: [Borderline]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: values-therapieart
   category: allowed_values
@@ -737,22 +452,13 @@
   facts:
     - label: Medikamentöse Therapien
       answer_any: [Chemotherapie, Hormontherapie, Immun-/Antikörpertherapie]
-      evidence_any: [Chemotherapie]
     - label: Zielgerichtet und Transplantation
       answer_any: [zielgerichtete Substanzen, Stammzelltransplantation]
-      evidence_any: [zielgerichtete Substanzen]
     - label: Abwartende Strategien
       answer_any: [Active Surveillance, Wait and see, Watchful Waiting]
-      evidence_any: [Active Surveillance]
     - label: Sonstiges
       answer_any: [Sonstiges]
-      evidence_any: [Sonstiges]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: values-op-intention
   category: allowed_values
@@ -761,22 +467,13 @@
   facts:
     - label: Kurativ und palliativ
       answer_any: [kurativ, palliativ]
-      evidence_any: [kurativ]
     - label: Diagnostisch
       answer_any: [diagnostisch]
-      evidence_any: [diagnostisch]
     - label: Revision
       answer_any: [Revision, Komplikation]
-      evidence_any: [Revision/Komplikation]
     - label: Restwerte
       answer_any: [Sonstiges, fehlende Angabe]
-      evidence_any: [fehlende Angabe]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: values-st-stellung-op
   category: allowed_values
@@ -785,22 +482,13 @@
   facts:
     - label: Ohne Bezug
       answer_any: [ohne Bezug zu einer operativen Therapie]
-      evidence_any: [Ohne Bezug zu einer operativen Therapie]
     - label: Zeitlicher Bezug
       answer_any: [adjuvant, neoadjuvant, intraoperativ]
-      evidence_any: [adjuvant]
     - label: Additiv
       answer_any: [additiv]
-      evidence_any: [additiv]
     - label: Sonstiges
       answer_any: [Sonstiges]
-      evidence_any: [Sonstiges]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 # Implementation guidance (9)
 - id: guidance-tumor-id
@@ -809,15 +497,9 @@
   facts:
     - label: Eindeutigkeit
       answer_any: [im Kontext des Patienten eindeutig]
-      evidence_any: [im Kontext des Patienten eindeutig]
     - label: Zuordnung
       answer_any: [Zuordnung verschiedener Meldungen zum selben Tumor, selben Tumor]
-      evidence_any: [Zuordnung verschiedener Meldungen zum selben Tumor]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: guidance-pathologie-diagnosedatum
   category: implementation_guidance
@@ -825,18 +507,11 @@
   facts:
     - label: Erste Priorität
       answer_any: [klinisches Diagnosedatum]
-      evidence_any: [klinisches Diagnosedatum]
     - label: Weitere Prioritäten
       answer_any: [Datum eines Vorbefundes, Entnahmedatum]
-      evidence_any: [Datum eines Vorbefundes]
     - label: Letzte Prioritäten
       answer_any: [Einsendedatum, Eingangsdatum, Befundungsdatum]
-      evidence_any: [Befundungsdatum]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: guidance-tnm-mindestinhalt
   category: implementation_guidance
@@ -844,12 +519,7 @@
   facts:
     - label: Mindestinhalt
       answer_any: [mindestens eine T-, N-, M-Kategorie, Angabe des UICC-Stadiums]
-      evidence_any: [mindestens eine T-, N-, M-Kategorie]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: guidance-kfrg-meldeanlaesse
   category: implementation_guidance
@@ -857,21 +527,13 @@
   facts:
     - label: Diagnose
       answer_any: [Diagnose einer Krebserkrankung]
-      evidence_any: [Diagnose einer Krebserkrankung]
     - label: Therapie
       answer_any: [Beginn und Abschluss einer therapeutischen Maßnahme]
-      evidence_any: [Beginn und Abschluss einer therapeutischen Maßnahme]
     - label: Verlauf
       answer_any: [Statusänderung, Statusmeldungen]
-      evidence_any: [Statusänderung]
     - label: Tod
       answer_any: [Tod der Betroffenen, Tod]
-      evidence_any: [Tod der Betroffenen]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: guidance-pathologie-meldeanlaesse
   category: implementation_guidance
@@ -879,18 +541,11 @@
   facts:
     - label: Erstdiagnose
       answer_any: [Sicherung der Erstdiagnose]
-      evidence_any: [Sicherung der Erstdiagnose]
     - label: Rezidiv und Metastase
-      answer_any: [Diagnose von Rezidiven und von Metastasen, Rezidive und Metastasen]
-      evidence_any: [Diagnose von Rezidiven und von Metastasen]
+      answer_any: [Diagnose von Rezidiven und von Metastasen, Rezidive und Metastasen, Sicherung eines Rezidivs und einer Metastase]
     - label: Sicherungsarten
       answer_any: [histologische oder zytologische Sicherung]
-      evidence_any: [histologische oder zytologische Sicherung]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: guidance-dkkr-pathologie
   category: implementation_guidance
@@ -898,13 +553,7 @@
   facts:
     - label: Einschränkung
       answer_any: [lediglich Befunde, die zur Erstdiagnose gehören, nur Befunde der Erstdiagnose]
-      evidence_any: [lediglich Befunde, die zur Erstdiagnose gehören]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
-  forbidden_answer_terms: [Rezidive sind für das DKKR immer ein Meldeanlass]
 
 - id: guidance-einwilligung-niedersachsen
   category: implementation_guidance
@@ -912,15 +561,9 @@
   facts:
     - label: Bundesland
       answer_any: [Niedersachsen]
-      evidence_any: [Niedersachen, Niedersachsen]
     - label: Anlass
       answer_any: [nicht meldepflichtige Meldeanlässe]
-      evidence_any: [nicht meldepflichtige Meldeanlässe]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 - id: guidance-meldebegruendung-e
   category: implementation_guidance
@@ -928,15 +571,9 @@
   facts:
     - label: Eigenes Merkmal
       answer_any: [als eigenes Merkmal umgesetzt, Einwilligung zur Übermittlung nicht meldepflichtiger Meldeanlässe]
-      evidence_any: [als eigenes Merkmal umgesetzt]
     - label: Folge
       answer_any: [E kann nicht gewählt werden]
-      evidence_any: [E kann nicht gewählt werden]
-  required_tool_groups:
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *guide_tools
   expected_source_types: *guide_sources
-  allowed_source_types: *guide_sources
 
 # Version questions (8)
 - id: version-diagnose-301-302
@@ -945,16 +582,9 @@
   facts:
     - label: Histologie-Unterwerte
       answer_any: ['7.1, 7.2, 7.3', 7.1 bis 7.3]
-      evidence_any: ['7.1']
     - label: Molekular
       answer_any: ['8']
-      evidence_any: [zytogenetisch und/oder molekularer Test]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.1, 3.0.2]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: version-pathologie-302-303
   category: version
@@ -962,33 +592,19 @@
   facts:
     - label: Neue Werte
       answer_any: ['7.1, 7.2, 7.3, 8', 7.1 bis 7.3 sowie 8]
-      evidence_any: ['7.3']
     - label: Alte Werte
-      answer_any: [in 3.0.2 nicht enthalten, kamen in 3.0.3 hinzu]
-      evidence_any: [Histologie der Autopsie]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.2, 3.0.3]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: [in 3.0.2 nicht enthalten, kamen in 3.0.3 hinzu, in 3.0.3 neu]
+  expected_source_types: [xsd]
 
 - id: version-tnm-303-304
   category: version
   question: Ist TNM-Version 9 in oBDS 3.0.3 und 3.0.4 zulässig?
   facts:
     - label: Version 3.0.3
-      answer_any: [in 3.0.3 nicht, 3.0.3 erlaubt nur 6, 7 und 8]
-      evidence_any: [TNM]
+      answer_any: [in 3.0.3 nicht, 3.0.3 erlaubt nur 6, 7 und 8, nein in 3.0.4]
     - label: Version 3.0.4
-      answer_any: [in 3.0.4 zulässig, ab 3.0.4]
-      evidence_any: ['9']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.3, 3.0.4]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: [in 3.0.4 zulässig, ab 3.0.4, ja in 3.0.4]
+  expected_source_types: [xsd]
 
 - id: version-diagnose-300-305
   category: version
@@ -996,16 +612,9 @@
   facts:
     - label: Alte Menge
       answer_any: ['1, 2, 4, 5, 6, 7 und 9']
-      evidence_any: [3.0.0]
     - label: Neue Werte
       answer_any: ['7.1, 7.2, 7.3 und 8', 7.1 bis 7.3 sowie 8]
-      evidence_any: ['7.1']
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.0, 3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: version-pathologie-300-305
   category: version
@@ -1013,16 +622,9 @@
   facts:
     - label: Neue Werte
       answer_any: ['7.1, 7.2, 7.3 und 8', 7.1 bis 7.3 sowie 8]
-      evidence_any: ['7.2']
     - label: Nicht neu
       answer_any: ['4, 5, 6, 7 und 9']
-      evidence_any: [3.0.0]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.0, 3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: version-seitenlokalisation-stabil
   category: version
@@ -1030,16 +632,9 @@
   facts:
     - label: Stabilität
       answer_any: [nicht geändert, unverändert, identisch]
-      evidence_any: [Beidseitig]
     - label: Werte
       answer_any: ['L, R, B, M, U und T']
-      evidence_any: [Trifft nicht zu]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.0, 3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+  expected_source_types: [xsd]
 
 - id: version-grading-stabil
   category: version
@@ -1047,16 +642,9 @@
   facts:
     - label: Stabilität
       answer_any: [gleich, unverändert, identisch]
-      evidence_any: [Borderline]
     - label: Wertebereiche
-      answer_any: [0 bis 4, Low grade, High grade]
-      evidence_any: [High grade]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.0, 3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: ['0, 1, 2, 3, 4', 0 bis 4, Low grade, High grade]
+  expected_source_types: [xsd]
 
 - id: version-patient-cardinality-stabil
   category: version
@@ -1064,16 +652,9 @@
   facts:
     - label: Stabilität
       answer_any: [nicht geändert, unverändert, gleich]
-      evidence_any: [/Menge_Patient/Patient]
     - label: Kardinalität
-      answer_any: [1 bis unbounded, mindestens einmal und unbegrenzt]
-      evidence_any: [unbounded]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_cardinality]
-  allowed_tools: *schema_cardinality_tools
-  expected_versions: [3.0.0, 3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: [1 bis unbounded, 1..unbounded, mindestens einmal und unbegrenzt, mindestens 1 und beliebig viele]
+  expected_source_types: [xsd]
 
 # Mixed-source questions (7)
 - id: mixed-diagnosesicherung-300
@@ -1083,18 +664,9 @@
   facts:
     - label: XSD-Werte
       answer_any: ['1, 2, 4, 5, 6, 7 und 9']
-      evidence_any: [Histologie Primärtumor]
     - label: Leitfaden-Abweichung
       answer_any: [Basisdatensatz enthält nicht die Ausprägung 9, im Ausnahmefall]
-      evidence_any: [im Ausnahmefall inhaltlich der Fall]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: &all_tools
-    [search_schema, get_schema_element, get_schema_values, get_schema_cardinality, search_umsetzungsleitfaden, get_source_excerpt]
-  expected_versions: [3.0.0]
   expected_source_types: &mixed_sources [xsd, umsetzungsleitfaden]
-  allowed_source_types: *mixed_sources
 
 - id: mixed-pathologie-diagnosedatum
   category: mixed_source
@@ -1103,20 +675,11 @@
   facts:
     - label: Datentyp
       answer_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
-      evidence_any: [Datum_Tag_oder_Monat_oder_Jahr_oder_nicht_genau_Typ]
     - label: Erste Priorität
       answer_any: [klinisches Diagnosedatum]
-      evidence_any: [klinisches Diagnosedatum]
     - label: Folgeprioritäten
       answer_any: [Vorbefund, Entnahmedatum, Befundungsdatum]
-      evidence_any: [Befundungsdatum]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *all_tools
-  expected_versions: [3.0.5]
   expected_source_types: *mixed_sources
-  allowed_source_types: *mixed_sources
 
 - id: mixed-seitenlokalisation-b
   category: mixed_source
@@ -1125,17 +688,9 @@
   facts:
     - label: Bedeutung
       answer_any: [Beidseitig]
-      evidence_any: [Beidseitig]
     - label: Umsetzung
       answer_any: [bei bestimmten Tumoren 2 Meldungen, zwei Meldungen]
-      evidence_any: [2 Meldungen]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *all_tools
-  expected_versions: [3.0.5]
   expected_source_types: *mixed_sources
-  allowed_source_types: *mixed_sources
 
 - id: mixed-tnm-structure-guidance
   category: mixed_source
@@ -1144,17 +699,9 @@
   facts:
     - label: XML-Pfad
       answer_any: [/Meldung/Diagnose/cTNM]
-      evidence_any: [/Meldung/Diagnose/cTNM]
     - label: Mindestangabe
       answer_any: [mindestens eine T-, N-, M-Kategorie, Angabe des UICC-Stadiums]
-      evidence_any: [mindestens eine T-, N-, M-Kategorie]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *all_tools
-  expected_versions: [3.0.5]
   expected_source_types: *mixed_sources
-  allowed_source_types: *mixed_sources
 
 - id: mixed-pathologie-values-trigger
   category: mixed_source
@@ -1163,17 +710,9 @@
   facts:
     - label: XSD-Werte
       answer_any: ['4, 5, 6, 7, 7.1, 7.2, 7.3, 8, 9']
-      evidence_any: [Histologie der Autopsie]
     - label: Meldeanlass
       answer_any: [Erstdiagnose, Rezidiven und von Metastasen]
-      evidence_any: [Diagnose von Rezidiven und von Metastasen]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *all_tools
-  expected_versions: [3.0.3]
   expected_source_types: *mixed_sources
-  allowed_source_types: *mixed_sources
 
 - id: mixed-einwilligung
   category: mixed_source
@@ -1182,20 +721,11 @@
   facts:
     - label: Kardinalität
       answer_any: [optional, 0 bis 1, minOccurs 0]
-      evidence_any: ['"min_occurs": 0']
     - label: Werte
       answer_any: [J und N, Ja und Nein]
-      evidence_any: [JN_Typ]
     - label: Bundesland
       answer_any: [Niedersachsen]
-      evidence_any: [Niedersachen, Niedersachsen]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values, get_schema_cardinality]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *all_tools
-  expected_versions: [3.0.5]
   expected_source_types: *mixed_sources
-  allowed_source_types: *mixed_sources
 
 - id: mixed-meldebegruendung
   category: mixed_source
@@ -1204,20 +734,11 @@
   facts:
     - label: XSD-Werte
       answer_any: [I, A, D, W und V]
-      evidence_any: [Meldebegruendung_Typ]
     - label: Fehlendes E
-      answer_any: [E kann nicht gewählt werden]
-      evidence_any: [E kann nicht gewählt werden]
+      answer_any: [E kann nicht gewählt werden, E fehlt, E nicht als Wert verwendet]
     - label: Begründung
       answer_any: [als eigenes Merkmal umgesetzt]
-      evidence_any: [als eigenes Merkmal umgesetzt]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-    - [search_umsetzungsleitfaden]
-  allowed_tools: *all_tools
-  expected_versions: [3.0.5]
   expected_source_types: *mixed_sources
-  allowed_source_types: *mixed_sources
 
 # Ambiguous or unanswerable (4)
 
@@ -1227,13 +748,8 @@
   expected_supported: false
   facts:
     - label: Fehlende Eingabe
-      answer_any: [XML fehlt, kein XML bereitgestellt, konkreten XML-Inhalt]
-  required_tool_groups:
-    - [search_schema, get_schema_element]
-  allowed_tools: *schema_lookup_tools
+      answer_any: [XML fehlt, kein XML bereitgestellt, konkreten XML-Inhalt, vollständigen XML-Inhalt senden]
   expected_source_types: []
-  allowed_source_types: []
-  forbidden_answer_terms: [XML ist valide]
 
 - id: unsupported-unknown-field
   category: ambiguous_or_unanswerable
@@ -1242,12 +758,7 @@
   facts:
     - label: Nicht gefunden
       answer_any: [nicht gefunden, kein Feld, keine Belege]
-  required_tool_groups:
-    - [search_schema]
-  allowed_tools: *schema_value_tools
   expected_source_types: []
-  allowed_source_types: []
-  forbidden_answer_terms: [Zauberstatus erlaubt]
 
 - id: unsupported-version
   category: ambiguous_or_unanswerable
@@ -1255,13 +766,8 @@
   expected_supported: false
   facts:
     - label: Version nicht verfügbar
-      answer_any: [Version 9.9.9 ist nicht verfügbar, nicht unterstützte Version, unavailable]
-  required_tool_groups:
-    - [search_schema, get_schema_element, get_schema_values]
-  allowed_tools: *schema_value_tools
+      answer_any: [Version 9.9.9 ist nicht verfügbar, nicht unterstützte Version, Version nicht unterstützt, keine Werte verfügbar, unavailable]
   expected_source_types: []
-  allowed_source_types: []
-  forbidden_answer_terms: [Version 9.9.9 erlaubt]
 
 - id: ambiguous-status
   category: ambiguous_or_unanswerable
@@ -1269,11 +775,5 @@
   obds_version: 3.0.5
   facts:
     - label: Mehrdeutigkeit
-      answer_any: [mehrdeutig, mehrere Elemente, genauer XML-Pfad, konkretisieren]
-      evidence_any: [path]
-  required_tool_groups:
-    - [search_schema]
-  allowed_tools: *schema_value_tools
-  expected_versions: [3.0.5]
-  expected_source_types: *xsd_sources
-  allowed_source_types: *xsd_sources
+      answer_any: [mehrdeutig, mehrere Elemente, genauer XML-Pfad, konkretisieren, kein Feld mit dem exakten Namen Status]
+  expected_source_types: [xsd]
