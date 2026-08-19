@@ -49,6 +49,14 @@ def test_all_required_tools_are_registered_once() -> None:
     assert len({tool.name for tool in tools.TOOLS}) == len(tools.TOOLS)
 
 
+def test_schema_search_requires_an_exact_lookup_follow_up() -> None:
+    assert _registered_tool("search_schema").follow_up_tools == (
+        "get_schema_element",
+        "get_schema_values",
+        "get_schema_cardinality",
+    )
+
+
 def test_all_registered_tools_use_strict_chat_completion_schemas() -> None:
     for tool in tools.TOOLS:
         definition = tool.as_chat_completion_tool()

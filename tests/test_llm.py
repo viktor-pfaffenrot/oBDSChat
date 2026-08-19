@@ -280,7 +280,24 @@ def test_answer_question_uses_configured_route() -> None:
         "content": "Was bedeutet Diagnosesicherung?",
     }
     assert request["messages"][0]["role"] == "system"
-    assert "Answer questions about the German oBDS" in request["messages"][0]["content"]
+    assert "Beantworte Fragen zum deutschen oBDS" in request["messages"][0]["content"]
+    assert (
+        "beschreibe oder verspreche niemals einen zukünftigen Werkzeugaufruf"
+        in request["messages"][0]["content"]
+    )
+    assert (
+        "Wiederhole niemals einen identischen Werkzeugaufruf"
+        in request["messages"][0]["content"]
+    )
+    assert (
+        "search_schema liefert eine begrenzte Trefferliste"
+        in request["messages"][0]["content"]
+    )
+    assert "get_schema_element mit diesem Namen" in request["messages"][0]["content"]
+    assert (
+        "die erfragten Daten direkt repräsentieren" in request["messages"][0]["content"]
+    )
+    assert "Beantworte nur die gestellte Frage" in request["messages"][0]["content"]
     assert request["store"] is False
     assert "reasoning" not in request
     assert "reasoning_effort" not in request
@@ -403,6 +420,264 @@ def test_answer_question_supports_dependent_tool_rounds() -> None:
     }
 
 
+def test_answer_question_requires_configured_follow_up_before_final_answer() -> None:
+    search_handler = Mock(
+        return_value=[{"citation_id": "xsd:diagnose", "path": "/Diagnose"}]
+    )
+    exact_handler = Mock(
+        return_value=[
+            {"citation_id": "xsd:diagnose", "path": "/Diagnose"},
+            {"citation_id": "xsd:pathologie", "path": "/Pathologie"},
+        ]
+    )
+    values_handler = Mock(return_value=[])
+    fake_client = FakeOpenAI(
+        [
+            _tool_completion(
+                _function_call(
+                    "search_schema",
+                    '{"query":"genetische Marker"}',
+                    call_id="call_1",
+                )
+            ),
+            _final_completion("Nur Diagnose.", ("xsd:diagnose",)),
+            _tool_completion(
+                _function_call(
+                    "get_schema_element",
+                    '{"query":"Genetische_Variante"}',
+                    call_id="call_2",
+                )
+            ),
+            _final_completion(
+                "Diagnose und Pathologie.",
+                ("xsd:diagnose", "xsd:pathologie"),
+            ),
+        ]
+    )
+    search_tool = LocalTool(
+        name="search_schema",
+        description="Find candidate schema elements.",
+        parameters=_schema(),
+        handler=search_handler,
+        follow_up_tools=("get_schema_element", "get_schema_values"),
+    )
+    exact_tool = LocalTool(
+        name="get_schema_element",
+        description="Get all paths for an exact element name.",
+        parameters=_schema(),
+        handler=exact_handler,
+    )
+    values_tool = LocalTool(
+        name="get_schema_values",
+        description="Get values for an exact element name.",
+        parameters=_schema(),
+        handler=values_handler,
+    )
+
+    result = answer_question(
+        "In welchen Meldungstypen kommen genetische Marker vor?",
+        tools=[search_tool, exact_tool, values_tool],
+        client=cast(OpenAI, fake_client),
+        endpoint=_endpoint(),
+    )
+
+    assert result.answer == "Diagnose und Pathologie."
+    assert [execution.name for execution in result.tool_executions] == [
+        "search_schema",
+        "get_schema_element",
+    ]
+    assert [
+        request["tool_choice"] for request in fake_client.chat.completions.calls
+    ] == ["required", "auto", "required", "auto"]
+    follow_up_definitions = fake_client.chat.completions.calls[2]["tools"]
+    assert [tool["function"]["name"] for tool in follow_up_definitions] == [
+        "get_schema_element",
+        "get_schema_values",
+    ]
+    search_handler.assert_called_once_with(query="genetische Marker")
+    exact_handler.assert_called_once_with(query="Genetische_Variante")
+    values_handler.assert_not_called()
+
+
+def test_answer_question_rejects_unknown_configured_follow_up_tool() -> None:
+    tool = LocalTool(
+        name="search_schema",
+        description="Find candidate schema elements.",
+        parameters=_schema(),
+        handler=lambda query: [],
+        follow_up_tools=("missing_tool",),
+    )
+
+    with pytest.raises(ValueError, match="unknown follow-up tools: missing_tool"):
+        answer_question(
+            "Test",
+            tools=[tool],
+            client=cast(OpenAI, FakeOpenAI([])),
+            endpoint=_endpoint(),
+        )
+
+
+@pytest.mark.parametrize(
+    "premature_answer",
+    [
+        "Dafür müsste der Umsetzungsleitfaden durchsucht werden.",
+        "",
+    ],
+)
+def test_answer_question_recovers_from_premature_unsupported_answer(
+    premature_answer: str,
+) -> None:
+    schema_handler = Mock(return_value=[])
+    exact_handler = Mock(return_value=[])
+    guide_handler = Mock(
+        return_value=[
+            {
+                "citation_id": "umsetzungsleitfaden:92",
+                "excerpt": "Rechtsgrundlage für den Versand",
+            }
+        ]
+    )
+    fake_client = FakeOpenAI(
+        [
+            _tool_completion(
+                _function_call(
+                    "search_schema",
+                    '{"query":"Meldebegründung"}',
+                    call_id="call_1",
+                )
+            ),
+            _final_completion(
+                premature_answer,
+                supported=False,
+            ),
+            _tool_completion(
+                _function_call(
+                    "search_umsetzungsleitfaden",
+                    '{"query":"Meldebegründung"}',
+                    call_id="call_2",
+                )
+            ),
+            _final_completion(
+                "Die Meldebegründung nennt die Rechtsgrundlage.",
+                ("umsetzungsleitfaden:92",),
+            ),
+        ]
+    )
+    schema_tool = LocalTool(
+        name="search_schema",
+        description="Search the local oBDS schema.",
+        parameters=_schema(),
+        handler=schema_handler,
+        follow_up_tools=("get_schema_element",),
+    )
+    exact_tool = LocalTool(
+        name="get_schema_element",
+        description="Get all paths for an exact element name.",
+        parameters=_schema(),
+        handler=exact_handler,
+    )
+    guide_tool = LocalTool(
+        name="search_umsetzungsleitfaden",
+        description="Search the official implementation guide.",
+        parameters=_schema(),
+        handler=guide_handler,
+    )
+
+    result = answer_question(
+        "Was beschreibt die Meldebegründung fachlich?",
+        tools=[schema_tool, exact_tool, guide_tool],
+        client=cast(OpenAI, fake_client),
+        endpoint=_endpoint(),
+    )
+
+    assert result.answer == "Die Meldebegründung nennt die Rechtsgrundlage."
+    assert result.citation_ids == ("umsetzungsleitfaden:92",)
+    assert [execution.name for execution in result.tool_executions] == [
+        "search_schema",
+        "search_umsetzungsleitfaden",
+    ]
+    assert schema_handler.call_args_list == [call(query="Meldebegründung")]
+    exact_handler.assert_not_called()
+    assert guide_handler.call_args_list == [call(query="Meldebegründung")]
+    assert [
+        request["tool_choice"] for request in fake_client.chat.completions.calls
+    ] == ["required", "auto", "required", "auto"]
+    recovery_tools = fake_client.chat.completions.calls[2]["tools"]
+    assert [tool["function"]["name"] for tool in recovery_tools] == [
+        "get_schema_element",
+        "search_umsetzungsleitfaden",
+    ]
+
+
+def test_answer_question_does_not_execute_duplicate_recovery_call() -> None:
+    schema_handler = Mock(return_value=[])
+    guide_handler = Mock(return_value=[])
+    duplicate_call = _function_call(
+        "search_schema",
+        '{"version":null,"query":"Meldebegründung"}',
+        call_id="call_2",
+    )
+    fake_client = FakeOpenAI(
+        [
+            _tool_completion(
+                _function_call(
+                    "search_schema",
+                    '{"query":"Meldebegründung","version":null}',
+                    call_id="call_1",
+                )
+            ),
+            _final_completion("Keine ausreichende Evidenz.", supported=False),
+            _tool_completion(duplicate_call),
+            _final_completion("Keine ausreichende Evidenz.", supported=False),
+        ]
+    )
+    schema_tool = LocalTool(
+        name="search_schema",
+        description="Search the local oBDS schema.",
+        parameters=_versioned_schema(),
+        handler=schema_handler,
+    )
+    guide_tool = LocalTool(
+        name="search_umsetzungsleitfaden",
+        description="Search the official implementation guide.",
+        parameters=_schema(),
+        handler=guide_handler,
+    )
+
+    result = answer_question(
+        "Was beschreibt die Meldebegründung fachlich?",
+        tools=[schema_tool, guide_tool],
+        client=cast(OpenAI, fake_client),
+        endpoint=_endpoint(),
+        max_recovery_attempts=1,
+    )
+
+    schema_handler.assert_called_once_with(query="Meldebegründung", version=None)
+    guide_handler.assert_not_called()
+    assert len(result.tool_executions) == 2
+    duplicate_execution = result.tool_executions[1]
+    assert duplicate_execution.error == "duplicate_tool_call"
+    assert duplicate_execution.result == {
+        "error": "duplicate_tool_call",
+        "message": (
+            "Dieser Tool-Aufruf wurde bereits ausgeführt. Verwenden Sie das "
+            "vorherige Ergebnis oder rufe ein anderes Tool auf bzw. gebe andere "
+            "Argumente an."
+        ),
+        "tool": "search_schema",
+    }
+    assert fake_client.chat.completions.calls[3]["messages"][-1] == {
+        "role": "tool",
+        "tool_call_id": "call_2",
+        "content": duplicate_execution.output,
+    }
+
+
+def test_answer_question_rejects_negative_recovery_limit() -> None:
+    with pytest.raises(ValueError, match="max_recovery_attempts"):
+        answer_question("Test", max_recovery_attempts=-1)
+
+
 def test_answer_question_enforces_tool_round_limit() -> None:
     fake_client = FakeOpenAI(
         [
@@ -472,7 +747,7 @@ def test_answer_question_enforces_version_constraint_on_tool_calls() -> None:
     handler.assert_called_once_with(query="Diagnose", version="3.0.5")
     assert result.tool_executions[0].arguments["version"] == "3.0.5"
     instructions = fake_client.chat.completions.calls[0]["messages"][0]["content"]
-    assert "Use only oBDS version 3.0.5" in instructions
+    assert "Verwende ausschließlich die oBDS-Version 3.0.5" in instructions
 
 
 def test_answer_question_applies_default_version_to_null_tool_argument() -> None:

@@ -161,6 +161,11 @@ TOOLS: Final[tuple[LocalTool, ...]] = (
             }
         ),
         handler=_search_schema,
+        follow_up_tools=(
+            "get_schema_element",
+            "get_schema_values",
+            "get_schema_cardinality",
+        ),
     ),
     LocalTool(
         name="get_schema_element",

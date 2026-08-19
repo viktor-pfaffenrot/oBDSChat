@@ -39,7 +39,7 @@
   facts:
     - label: Bedeutung
       answer_any: [höchste erreichte Diagnosesicherheit, Diagnosesicherheit zum Diagnosedatum, höchste zum Diagnosedatum erreichte Sicherheit]
-  expected_source_types: [xsd, umsetzungsleitfaden]
+  expected_source_types: [xsd]
   
 - id: meaning-geschlecht-x-u
   category: field_meaning
@@ -299,7 +299,7 @@
     - label: Pathologiemeldung
       answer_any: [Pathologiemeldung, Pathologie]
     - label: OP-Meldung
-      answer_any: [OP-Meldung, Operationsmeldung]
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
     - label: Verlaufsmeldung
       answer_any: [Verlaufsmeldung, Verlauf]
   expected_source_types: [xsd]
