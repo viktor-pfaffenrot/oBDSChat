@@ -1,9 +1,9 @@
 """FastAPI application for source-grounded oBDS questions."""
 
 from collections.abc import Iterator, Mapping
-from typing import Final, Literal, Self
+from typing import Annotated, Final, Literal, Self
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, status
 from openai import OpenAIError
 from psycopg import Error as PsycopgError
 from pydantic import (
@@ -25,9 +25,14 @@ from backend.llm import (
 )
 from backend.tools import CITATION_ID_FIELD, TOOLS
 from backend.xsd import (
+    SchemaElementNotFoundError,
+    SchemaEnumValue,
     SchemaError,
+    SchemaEvidence,
+    SchemaSourceLine,
     SchemaVersionNotFoundError,
     get_schema_catalog,
+    get_schema_evidence,
 )
 
 MAX_HISTORY_TURNS: Final = 10
@@ -122,6 +127,29 @@ class QueryResponse(BaseModel):
     sources: tuple[SourceReference, ...]
 
 
+class XsdEvidenceResponse(BaseModel):
+    """Public facts and exact source lines for one XSD element occurrence."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    name: str
+    path: str
+    datatype: str
+    base_datatype: str | None = None
+    min_occurs: int = Field(ge=0)
+    max_occurs: int | Literal["unbounded"]
+    allowed_values: tuple[SchemaEnumValue, ...]
+    documentation: str | None = None
+    datatype_documentation: str | None = None
+    version: str
+    xsd_file: str
+    source_url: HttpUrl
+    source_lines: tuple[SchemaSourceLine, ...]
+    declaration_start_line: int | None = Field(default=None, gt=0)
+    declaration_end_line: int | None = Field(default=None, gt=0)
+    declaration_truncated: bool
+
+
 app = FastAPI(title="oBDSChat Backend")
 
 
@@ -164,11 +192,65 @@ def query_obds(request: QueryRequest) -> QueryResponse:
         ) from error
 
 
+@app.get(
+    "/sources/xsd/{version}",
+    response_model=XsdEvidenceResponse,
+    response_model_exclude_none=True,
+)
+def get_xsd_source_evidence(
+    version: str,
+    path: Annotated[str, Query(min_length=1, max_length=10_000)],
+) -> XsdEvidenceResponse:
+    """Return bounded, exact source evidence for one versioned XML path."""
+    try:
+        evidence = get_schema_evidence(path=path, version=version)
+        return _build_xsd_evidence_response(evidence)
+    except (SchemaElementNotFoundError, SchemaVersionNotFoundError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(error),
+        ) from error
+    except SchemaError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Schema source unavailable",
+        ) from error
+
+
 def _build_conversation_history(
     history: tuple[ConversationTurnRequest, ...],
 ) -> tuple[ConversationTurn, ...]:
     return tuple(
         ConversationTurn(question=turn.question, answer=turn.answer) for turn in history
+    )
+
+
+def _build_xsd_evidence_response(
+    evidence: SchemaEvidence,
+) -> XsdEvidenceResponse:
+    element = evidence.element
+    return XsdEvidenceResponse(
+        name=element.name,
+        path=element.path,
+        datatype=element.datatype,
+        base_datatype=element.base_datatype,
+        min_occurs=element.min_occurs,
+        max_occurs=element.max_occurs,
+        allowed_values=element.allowed_values,
+        documentation=element.documentation,
+        datatype_documentation=element.datatype_documentation,
+        version=element.version,
+        xsd_file=element.xsd_file,
+        source_url=element.source_url,
+        source_lines=evidence.source_lines,
+        declaration_start_line=evidence.declaration_start_line,
+        declaration_end_line=evidence.declaration_end_line,
+        declaration_truncated=evidence.declaration_truncated,
     )
 
 
