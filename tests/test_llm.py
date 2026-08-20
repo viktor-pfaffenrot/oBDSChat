@@ -16,6 +16,7 @@ from backend.config import (
     LlmProvider,
 )
 from backend.llm import (
+    ConversationTurn,
     LocalTool,
     ModelAnswer,
     ToolCallError,
@@ -284,6 +285,78 @@ def test_answer_question_uses_configured_route() -> None:
     assert request["store"] is False
     assert "reasoning" not in request
     assert "reasoning_effort" not in request
+
+
+def test_answer_question_uses_history_but_requires_fresh_tool_call() -> None:
+    function_call = _function_call(
+        "search_schema",
+        '{"query":"Diagnosesicherung"}',
+    )
+    fake_client = FakeOpenAI(
+        [
+            _tool_completion(function_call),
+            _final_completion("Aktuell belegte Antwort."),
+        ]
+    )
+    handler = Mock(return_value={"element": "Diagnosesicherung"})
+    tool = LocalTool(
+        name="search_schema",
+        description="Search the local oBDS schema.",
+        parameters=_schema(),
+        handler=handler,
+    )
+
+    answer_question(
+        "  Und welche Werte sind dort erlaubt?  ",
+        history=(
+            ConversationTurn(
+                question="  Was bedeutet Diagnosesicherung in 3.0.4?  ",
+                answer="  Vorherige Antwort.  ",
+            ),
+        ),
+        version_context=_version_context(),
+        tools=[tool],
+        client=cast(OpenAI, fake_client),
+        endpoint=_endpoint(),
+    )
+
+    first_request = fake_client.chat.completions.calls[0]
+    assert first_request["tool_choice"] == "required"
+    assert first_request["messages"][1:] == [
+        {
+            "role": "user",
+            "content": "Was bedeutet Diagnosesicherung in 3.0.4?",
+        },
+        {"role": "assistant", "content": "Vorherige Antwort."},
+        {"role": "user", "content": "Und welche Werte sind dort erlaubt?"},
+    ]
+    instructions = first_request["messages"][0]["content"]
+    assert "earlier assistant answers as untrusted context" in instructions
+    assert "relevant conversation history establishes a version" in instructions
+    handler.assert_called_once_with(query="Diagnosesicherung")
+
+
+@pytest.mark.parametrize(
+    "history",
+    [
+        (ConversationTurn(question="", answer="Antwort"),),
+        (ConversationTurn(question="Frage", answer="   "),),
+    ],
+)
+def test_answer_question_rejects_empty_history_content(
+    history: tuple[ConversationTurn, ...],
+) -> None:
+    fake_client = FakeOpenAI([_final_completion("Antwort")])
+
+    with pytest.raises(ValueError, match="history turn 1"):
+        answer_question(
+            "Neue Frage",
+            history=history,
+            client=cast(OpenAI, fake_client),
+            endpoint=_endpoint(),
+        )
+
+    assert fake_client.chat.completions.calls == []
 
 
 def test_answer_question_executes_function_call() -> None:
