@@ -1,6 +1,9 @@
 """Backend configuration."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
+from enum import StrEnum
 from pathlib import Path
 from typing import Final
 from urllib.parse import quote
@@ -12,10 +15,32 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
+
+class LlmProvider(StrEnum):
+    """Supported OpenAI-compatible model providers."""
+
+    OPENAI = "openai"
+    REQUESTY = "requesty"
+
+
+OPENAI_BASE_URL: Final = "https://api.openai.com/v1"
+REQUESTY_BASE_URL: Final = "https://router.eu.requesty.ai/v1"
+DEFAULT_LLM_PROVIDER: Final = LlmProvider.OPENAI
 DEFAULT_OPENAI_MODEL: Final = "gpt-5.6-terra"
+REQUESTY_POLICY_ROUTE: Final = "policy/obdschat"
 DEFAULT_DB_PASSWORD_FILE: Final = (
     Path("config") / "secrets" / "obdschat_db_password.txt"
 )
+
+
+@dataclass(frozen=True, slots=True)
+class LlmEndpoint:
+    """Resolved connection details for one OpenAI-compatible endpoint."""
+
+    provider: LlmProvider
+    base_url: str
+    route: str
+    api_key: str = dataclass_field(repr=False)
 
 
 class Settings(BaseSettings):
@@ -30,6 +55,10 @@ class Settings(BaseSettings):
         validate_by_name=True,
     )
 
+    llm_provider: LlmProvider = Field(
+        default=DEFAULT_LLM_PROVIDER,
+        validation_alias="LLM_PROVIDER",
+    )
     openai_api_key: str | None = Field(
         default=None,
         repr=False,
@@ -38,6 +67,11 @@ class Settings(BaseSettings):
     openai_model: str = Field(
         default=DEFAULT_OPENAI_MODEL,
         validation_alias="OPENAI_MODEL",
+    )
+    requesty_api_key: str | None = Field(
+        default=None,
+        repr=False,
+        validation_alias="REQUESTY_API_KEY",
     )
     base_dir: Path = Field(
         default_factory=Path.cwd,
@@ -72,7 +106,15 @@ class Settings(BaseSettings):
         validation_alias="OBDSCHAT_DB_NAME",
     )
 
-    @field_validator("openai_api_key", mode="after")
+    @field_validator("llm_provider", mode="before")
+    @classmethod
+    def normalize_llm_provider(cls, value: object) -> object:
+        """Accept provider names with harmless surrounding whitespace or casing."""
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    @field_validator("openai_api_key", "requesty_api_key", mode="after")
     @classmethod
     def normalize_api_key(cls, value: str | None) -> str | None:
         """Normalize an optional API key without exposing it."""
@@ -82,8 +124,8 @@ class Settings(BaseSettings):
 
     @field_validator("openai_model", mode="after")
     @classmethod
-    def validate_model(cls, value: str) -> str:
-        """Normalize and validate the configured model name."""
+    def validate_openai_model(cls, value: str) -> str:
+        """Normalize and validate the temporary direct-OpenAI model name."""
         model = value.strip()
         if not model:
             raise ValueError("OPENAI_MODEL must not be empty")
@@ -112,11 +154,29 @@ class Settings(BaseSettings):
         """Resolve the application base directory."""
         return value.expanduser().resolve()
 
-    def require_openai_api_key(self) -> str:
-        """Return the configured API key or fail before making a request."""
-        if self.openai_api_key is None:
-            raise RuntimeError("OPENAI_API_KEY is required by the backend")
-        return self.openai_api_key
+    def resolve_llm_endpoint(self) -> LlmEndpoint:
+        """Resolve the selected provider without leaking branching into LLM code."""
+        if self.llm_provider is LlmProvider.OPENAI:
+            api_key = self.openai_api_key
+            api_key_variable = "OPENAI_API_KEY"
+            base_url = OPENAI_BASE_URL
+            route = self.openai_model
+        elif self.llm_provider is LlmProvider.REQUESTY:
+            api_key = self.requesty_api_key
+            api_key_variable = "REQUESTY_API_KEY"
+            base_url = REQUESTY_BASE_URL
+            route = REQUESTY_POLICY_ROUTE
+        else:
+            raise AssertionError(f"Unsupported LLM provider: {self.llm_provider}")
+
+        if api_key is None:
+            raise RuntimeError(f"{api_key_variable} is required by the backend")
+        return LlmEndpoint(
+            provider=self.llm_provider,
+            base_url=base_url,
+            route=route,
+            api_key=api_key,
+        )
 
     def require_database_password(self) -> str:
         """Return the configured database password."""

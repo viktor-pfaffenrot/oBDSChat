@@ -1,4 +1,4 @@
-"""Tests for registered OpenAI tools and their local adapters."""
+"""Tests for registered model tools and their local adapters."""
 
 import json
 from unittest.mock import Mock
@@ -49,13 +49,15 @@ def test_all_required_tools_are_registered_once() -> None:
     assert len({tool.name for tool in tools.TOOLS}) == len(tools.TOOLS)
 
 
-def test_all_registered_tools_use_strict_openai_schemas() -> None:
+def test_all_registered_tools_use_strict_chat_completion_schemas() -> None:
     for tool in tools.TOOLS:
-        definition = tool.as_openai_tool()
+        definition = tool.as_chat_completion_tool()
+        function = definition["function"]
         properties = tool.parameters["properties"]
         required = tool.parameters["required"]
 
-        assert definition["strict"] is True
+        assert function["strict"] is True
+        assert function["parameters"] is tool.parameters
         assert tool.parameters["additionalProperties"] is False
         assert isinstance(properties, dict)
         assert isinstance(required, list)

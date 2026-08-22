@@ -2,22 +2,65 @@ from pathlib import Path
 
 import pytest
 
-from backend.config import DEFAULT_OPENAI_MODEL, Settings, load_settings
+from backend.config import (
+    DEFAULT_OPENAI_MODEL,
+    OPENAI_BASE_URL,
+    REQUESTY_BASE_URL,
+    REQUESTY_POLICY_ROUTE,
+    LlmProvider,
+    Settings,
+    load_settings,
+)
 
 
-def test_load_settings_uses_default_model() -> None:
+def test_load_settings_uses_default_openai_endpoint() -> None:
     settings = load_settings({"OPENAI_API_KEY": " secret "})
+    endpoint = settings.resolve_llm_endpoint()
 
+    assert settings.llm_provider is LlmProvider.OPENAI
     assert settings.openai_api_key == "secret"
     assert settings.openai_model == DEFAULT_OPENAI_MODEL
+    assert endpoint.provider is LlmProvider.OPENAI
+    assert endpoint.base_url == OPENAI_BASE_URL
+    assert endpoint.route == DEFAULT_OPENAI_MODEL
     assert "secret" not in repr(settings)
+    assert "secret" not in repr(endpoint)
 
 
-def test_missing_api_key_fails_when_required() -> None:
-    settings = load_settings({})
+def test_requesty_provider_resolves_requesty_endpoint() -> None:
+    settings = load_settings(
+        {
+            "LLM_PROVIDER": " Requesty ",
+            "REQUESTY_API_KEY": " requesty-secret ",
+            "REQUESTY_MODEL": "ignored/concrete-model",
+        }
+    )
+    endpoint = settings.resolve_llm_endpoint()
 
-    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
-        settings.require_openai_api_key()
+    assert settings.llm_provider is LlmProvider.REQUESTY
+    assert endpoint.provider is LlmProvider.REQUESTY
+    assert endpoint.base_url == REQUESTY_BASE_URL
+    assert endpoint.route == REQUESTY_POLICY_ROUTE
+    assert endpoint.api_key == "requesty-secret"
+    assert "requesty-secret" not in repr(settings)
+    assert "requesty-secret" not in repr(endpoint)
+
+
+@pytest.mark.parametrize(
+    ("environment", "missing_variable"),
+    [
+        ({}, "OPENAI_API_KEY"),
+        ({"LLM_PROVIDER": "requesty"}, "REQUESTY_API_KEY"),
+    ],
+)
+def test_selected_provider_requires_its_api_key(
+    environment: dict[str, str],
+    missing_variable: str,
+) -> None:
+    settings = load_settings(environment)
+
+    with pytest.raises(RuntimeError, match=missing_variable):
+        settings.resolve_llm_endpoint()
 
 
 def test_postgres_uri_uses_encoded_environment_values() -> None:

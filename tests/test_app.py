@@ -6,8 +6,20 @@ import pytest
 from fastapi.testclient import TestClient
 
 import backend.app as app_module
-from backend.llm import QuestionAnswer, ToolCallError, ToolExecution, VersionContext
-from backend.xsd import SchemaVersionNotFoundError
+from backend.llm import (
+    ConversationTurn,
+    QuestionAnswer,
+    ToolCallError,
+    ToolExecution,
+    VersionContext,
+)
+from backend.xsd import (
+    SchemaElement,
+    SchemaElementNotFoundError,
+    SchemaEvidence,
+    SchemaSourceLine,
+    SchemaVersionNotFoundError,
+)
 
 client = TestClient(app_module.app)
 
@@ -30,6 +42,91 @@ def test_health_reports_liveness() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_xsd_evidence_returns_exact_source_lines(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence = SchemaEvidence(
+        element=SchemaElement(
+            name="Diagnosesicherung",
+            path="/oBDS/Diagnose/Diagnosesicherung",
+            datatype="xs:string",
+            min_occurs=1,
+            max_occurs=1,
+            allowed_values=(),
+            documentation="Höchste erreichte Diagnosesicherheit",
+            version="3.0.5",
+            xsd_file="oBDS_v3.0.5.xsd",
+            source_url="https://www.basisdatensatz.de/xml/oBDS_v3.0.5.xsd",
+        ),
+        source_lines=(
+            SchemaSourceLine(
+                number=3992,
+                content='<xs:element name="Diagnosesicherung">',
+                highlighted=True,
+            ),
+        ),
+        declaration_start_line=3992,
+        declaration_end_line=4055,
+    )
+
+    def fake_get_schema_evidence(path: str, version: str) -> SchemaEvidence:
+        assert path == "/oBDS/Diagnose/Diagnosesicherung"
+        assert version == "3.0.5"
+        return evidence
+
+    monkeypatch.setattr(
+        app_module,
+        "get_schema_evidence",
+        fake_get_schema_evidence,
+    )
+
+    response = client.get(
+        "/sources/xsd/3.0.5",
+        params={"path": "/oBDS/Diagnose/Diagnosesicherung"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "name": "Diagnosesicherung",
+        "path": "/oBDS/Diagnose/Diagnosesicherung",
+        "datatype": "xs:string",
+        "min_occurs": 1,
+        "max_occurs": 1,
+        "allowed_values": [],
+        "documentation": "Höchste erreichte Diagnosesicherheit",
+        "version": "3.0.5",
+        "xsd_file": "oBDS_v3.0.5.xsd",
+        "source_url": "https://www.basisdatensatz.de/xml/oBDS_v3.0.5.xsd",
+        "source_lines": [
+            {
+                "number": 3992,
+                "content": '<xs:element name="Diagnosesicherung">',
+                "highlighted": True,
+            }
+        ],
+        "declaration_start_line": 3992,
+        "declaration_end_line": 4055,
+        "declaration_truncated": False,
+    }
+
+
+def test_xsd_evidence_reports_unknown_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail(*args: object, **kwargs: object) -> SchemaEvidence:
+        raise SchemaElementNotFoundError("Element path unavailable")
+
+    monkeypatch.setattr(app_module, "get_schema_evidence", fail)
+
+    response = client.get(
+        "/sources/xsd/3.0.5",
+        params={"path": "/oBDS/Unbekannt"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Element path unavailable"}
 
 
 def test_query_returns_answer_default_version_and_deduplicated_sources(
@@ -94,6 +191,7 @@ def test_query_returns_answer_default_version_and_deduplicated_sources(
 
     def fake_answer_question(question: str, **kwargs: object) -> QuestionAnswer:
         assert question == "Welche Werte darf Diagnosesicherung haben?"
+        assert kwargs["history"] == ()
         assert kwargs["version_context"] == VersionContext(
             default_version="3.0.5",
             available_versions=("3.0.4", "3.0.5"),
@@ -130,6 +228,47 @@ def test_query_returns_answer_default_version_and_deduplicated_sources(
         "xsd_file": "oBDS_v3.0.5.xsd",
         "element": "Diagnosesicherung",
         "path": "/oBDS/Diagnose/Diagnosesicherung",
+    }
+
+
+def test_query_forwards_normalized_conversation_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(app_module, "get_schema_catalog", _Catalog)
+    answer = QuestionAnswer(answer="Neue Antwort.", tool_executions=())
+
+    def fake_answer_question(question: str, **kwargs: object) -> QuestionAnswer:
+        assert question == "Und welche Werte sind dort erlaubt?"
+        assert kwargs["history"] == (
+            ConversationTurn(
+                question="Was bedeutet Diagnosesicherung?",
+                answer="Diagnosesicherung beschreibt die diagnostische Grundlage.",
+            ),
+        )
+        return answer
+
+    monkeypatch.setattr(app_module, "answer_question", fake_answer_question)
+
+    response = client.post(
+        "/query",
+        json={
+            "question": "  Und welche Werte sind dort erlaubt?  ",
+            "history": [
+                {
+                    "question": "  Was bedeutet Diagnosesicherung?  ",
+                    "answer": (
+                        "  Diagnosesicherung beschreibt die diagnostische Grundlage.  "
+                    ),
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "answer": "Neue Antwort.",
+        "used_versions": [],
+        "sources": [],
     }
 
 
@@ -305,5 +444,46 @@ def test_query_sanitizes_dependency_errors(
 @pytest.mark.parametrize("question", ["", "   "])
 def test_query_rejects_empty_questions(question: str) -> None:
     response = client.post("/query", json={"question": question})
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "history",
+    [
+        [{"question": "", "answer": "Antwort"}],
+        [{"question": "Frage", "answer": "   "}],
+        [{"question": "Frage", "answer": "Antwort", "role": "assistant"}],
+    ],
+)
+def test_query_rejects_invalid_conversation_turns(
+    history: list[dict[str, str]],
+) -> None:
+    response = client.post(
+        "/query",
+        json={"question": "Neue Frage", "history": history},
+    )
+
+    assert response.status_code == 422
+
+
+def test_query_rejects_more_than_ten_history_turns() -> None:
+    history = [{"question": "Frage", "answer": "Antwort"}] * 11
+
+    response = client.post(
+        "/query",
+        json={"question": "Neue Frage", "history": history},
+    )
+
+    assert response.status_code == 422
+
+
+def test_query_rejects_history_over_character_limit() -> None:
+    history = [{"question": "f" * 2_501, "answer": "a" * 2_500} for _ in range(10)]
+
+    response = client.post(
+        "/query",
+        json={"question": "Neue Frage", "history": history},
+    )
 
     assert response.status_code == 422

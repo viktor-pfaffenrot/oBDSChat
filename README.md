@@ -2,6 +2,15 @@
 
 Local, source-grounded chat for the German oBDS.
 
+## Model provider
+
+Set `LLM_PROVIDER` to `openai` or `requesty`, configure the matching API key in
+`.env`, then restart the backend. Requesty uses the stable `policy/obdschat`
+route; concrete models and routing behavior stay in Requesty. Direct OpenAI
+testing uses `OPENAI_MODEL`. Both providers use the OpenAI-compatible Chat
+Completions API at `/v1/chat/completions`. Every model behind the Requesty policy
+must support function calling and structured JSON output through that endpoint.
+
 ## Source synchronization
 
 Copy `.env.example` to `.env`, set the database values, and place the password

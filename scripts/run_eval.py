@@ -20,7 +20,7 @@ from matplotlib.figure import Figure
 from openai import OpenAI
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
-from backend.config import Settings, load_settings
+from backend.config import LlmEndpoint, LlmProvider, load_settings
 from backend.llm import (
     QuestionAnswer,
     ToolExecution,
@@ -163,7 +163,8 @@ class EvaluationReport(_FrozenModel):
     """Serializable record of one production evaluation run."""
 
     generated_at: datetime
-    model: str
+    provider: LlmProvider
+    route: str
     questions_path: str
     summary: EvaluationSummary
     results: tuple[EvaluationResult, ...]
@@ -173,7 +174,7 @@ class EvaluationReport(_FrozenModel):
 class ProductionAnswerer:
     """Call the same model and local tools used by the production query path."""
 
-    settings: Settings
+    endpoint: LlmEndpoint
     client: OpenAI
     catalog: SchemaCatalog
 
@@ -191,7 +192,7 @@ class ProductionAnswerer:
             version_context=version_context,
             tools=TOOLS,
             client=self.client,
-            settings=self.settings,
+            endpoint=self.endpoint,
         )
 
 
@@ -412,9 +413,10 @@ def run_production_evaluation(
 ) -> tuple[EvaluationReport, Figure]:
     """Execute selected cases against production dependencies and save artifacts."""
     settings = load_settings()
+    endpoint = settings.resolve_llm_endpoint()
     answerer = ProductionAnswerer(
-        settings=settings,
-        client=create_client(settings),
+        endpoint=endpoint,
+        client=create_client(endpoint),
         catalog=get_schema_catalog(),
     )
     all_cases = load_evaluation_cases(questions_path)
@@ -428,7 +430,8 @@ def run_production_evaluation(
     summary = summarize_results(results)
     report = EvaluationReport(
         generated_at=datetime.now(ZoneInfo("Europe/Berlin")),
-        model=settings.openai_model,
+        provider=endpoint.provider,
+        route=endpoint.route,
         questions_path=str(questions_path.resolve()),
         summary=summary,
         results=results,

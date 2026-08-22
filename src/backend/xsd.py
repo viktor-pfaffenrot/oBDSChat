@@ -11,6 +11,7 @@ from threading import RLock
 from typing import Any, Final, Literal
 
 import xmlschema
+from lxml import etree  # ty: ignore[unresolved-import]
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.config import load_settings
@@ -19,6 +20,8 @@ XSD_NAMESPACE: Final = "http://www.w3.org/2001/XMLSchema"
 ENUMERATION_FACET: Final = f"{{{XSD_NAMESPACE}}}enumeration"
 OFFICIAL_XSD_BASE_URL: Final = "https://www.basisdatensatz.de/xml"
 VERSION_PATTERN: Final = re.compile(r"^\d+\.\d+\.\d+$")
+SOURCE_CONTEXT_LINES: Final = 3
+MAX_SOURCE_EXCERPT_LINES: Final = 160
 
 MaxOccurs = int | Literal["unbounded"]
 
@@ -29,6 +32,10 @@ class SchemaError(RuntimeError):
 
 class SchemaVersionNotFoundError(SchemaError):
     """Raised when a requested oBDS schema version is unavailable."""
+
+
+class SchemaElementNotFoundError(SchemaError):
+    """Raised when an exact XML path does not exist in a schema version."""
 
 
 class SchemaEnumValue(BaseModel):
@@ -91,6 +98,37 @@ class SchemaCardinality(BaseModel):
     source_type: Literal["xsd"] = "xsd"
 
 
+class SchemaSourceLine(BaseModel):
+    """One numbered XSD source line and its evidence-highlight state."""
+
+    model_config = ConfigDict(frozen=True)
+
+    number: int = Field(gt=0)
+    content: str
+    highlighted: bool
+
+
+class SchemaEvidence(BaseModel):
+    """Exact schema facts with a bounded excerpt of their source declaration."""
+
+    model_config = ConfigDict(frozen=True)
+
+    element: SchemaElement
+    source_lines: tuple[SchemaSourceLine, ...]
+    declaration_start_line: int | None = Field(default=None, gt=0)
+    declaration_end_line: int | None = Field(default=None, gt=0)
+    declaration_truncated: bool = False
+
+
+class _SourceLocation(BaseModel):
+    """Line range for one element declaration in the original XSD."""
+
+    model_config = ConfigDict(frozen=True)
+
+    start_line: int = Field(gt=0)
+    end_line: int = Field(gt=0)
+
+
 class _SchemaIndex(BaseModel):
     """Parsed element indexes for one schema version."""
 
@@ -99,6 +137,8 @@ class _SchemaIndex(BaseModel):
     elements: tuple[SchemaElement, ...]
     by_name: dict[str, tuple[SchemaElement, ...]]
     by_path: dict[str, SchemaElement]
+    source_lines: tuple[str, ...]
+    source_locations: dict[str, _SourceLocation]
 
 
 class SchemaCatalog:
@@ -213,6 +253,48 @@ class SchemaCatalog:
             for element in self.get_element(name=name, path=path, version=version)
         ]
 
+    def get_evidence(self, *, path: str, version: str) -> SchemaEvidence:
+        """Return facts and original XSD lines for one exact XML path."""
+        normalized_path = _normalize_lookup_value(path, "Element path")
+        assert normalized_path is not None
+        canonical_path = _canonicalize_path(normalized_path)
+        index = self._get_index(version)
+        path_key = canonical_path.casefold()
+        element = index.by_path.get(path_key)
+        if element is None:
+            raise SchemaElementNotFoundError(
+                f"Element path {canonical_path!r} is unavailable in oBDS {version}"
+            )
+
+        location = index.source_locations.get(path_key)
+        if location is None:
+            return SchemaEvidence(element=element, source_lines=())
+
+        excerpt_start = max(1, location.start_line - SOURCE_CONTEXT_LINES)
+        requested_end = min(
+            len(index.source_lines),
+            location.end_line + SOURCE_CONTEXT_LINES,
+        )
+        excerpt_end = min(
+            requested_end,
+            excerpt_start + MAX_SOURCE_EXCERPT_LINES - 1,
+        )
+        lines = tuple(
+            SchemaSourceLine(
+                number=line_number,
+                content=index.source_lines[line_number - 1],
+                highlighted=location.start_line <= line_number <= location.end_line,
+            )
+            for line_number in range(excerpt_start, excerpt_end + 1)
+        )
+        return SchemaEvidence(
+            element=element,
+            source_lines=lines,
+            declaration_start_line=location.start_line,
+            declaration_end_line=location.end_line,
+            declaration_truncated=excerpt_end < location.end_line,
+        )
+
     def resolve_version(self, version: str | None) -> str:
         """Resolve an optional version, defaulting to the newest schema."""
         if version is None:
@@ -287,6 +369,11 @@ def get_schema_cardinality(
     )
 
 
+def get_schema_evidence(path: str, version: str) -> SchemaEvidence:
+    """Return exact facts and source lines for one configured schema element."""
+    return get_schema_catalog().get_evidence(path=path, version=version)
+
+
 @lru_cache(maxsize=1)
 def get_schema_catalog() -> SchemaCatalog:
     """Return the process-wide schema catalog."""
@@ -332,7 +419,12 @@ def _build_index(schema_path: Path, version: str) -> _SchemaIndex:
             f"expected {version!r}"
         )
 
+    source_lines, source_positions, parsed_source_root = _load_source_map(
+        schema_path,
+        schema.source.root,
+    )
     elements: list[SchemaElement] = []
+    source_locations: dict[str, _SourceLocation] = {}
     source_url = f"{OFFICIAL_XSD_BASE_URL}/{schema_path.name}"
     for root_element in schema.elements.values():
         _collect_element(
@@ -342,8 +434,11 @@ def _build_index(schema_path: Path, version: str) -> _SchemaIndex:
             version=version,
             xsd_file=schema_path.name,
             source_url=source_url,
+            source_positions=source_positions,
+            parsed_source_root=parsed_source_root,
             type_stack=frozenset(),
             output=elements,
+            source_locations=source_locations,
         )
 
     by_name: defaultdict[str, list[SchemaElement]] = defaultdict(list)
@@ -361,6 +456,8 @@ def _build_index(schema_path: Path, version: str) -> _SchemaIndex:
         elements=tuple(elements),
         by_name={name: tuple(matches) for name, matches in by_name.items()},
         by_path=by_path,
+        source_lines=source_lines,
+        source_locations=source_locations,
     )
 
 
@@ -372,8 +469,11 @@ def _collect_element(
     version: str,
     xsd_file: str,
     source_url: str,
+    source_positions: dict[int, tuple[int, ...]],
+    parsed_source_root: Any,
     type_stack: frozenset[int],
     output: list[SchemaElement],
+    source_locations: dict[str, _SourceLocation],
 ) -> None:
     xsd_type = element.type
     model_group = getattr(xsd_type, "model_group", None)
@@ -382,26 +482,30 @@ def _collect_element(
     child_elements = list(model_group.iter_elements()) if can_descend else []
     child_paths = tuple(f"{path}/{child.local_name}" for child in child_elements)
 
-    output.append(
-        SchemaElement(
-            name=element.local_name,
-            path=path,
-            datatype=_datatype_name(xsd_type),
-            base_datatype=_base_datatype_name(xsd_type),
-            min_occurs=element.min_occurs,
-            max_occurs=(
-                "unbounded" if element.max_occurs is None else element.max_occurs
-            ),
-            allowed_values=_enum_values(xsd_type),
-            documentation=_annotation_text(element.annotation),
-            datatype_documentation=_annotation_text(xsd_type.annotation),
-            parent_path=parent_path,
-            child_paths=child_paths,
-            version=version,
-            xsd_file=xsd_file,
-            source_url=source_url,
-        )
+    schema_element = SchemaElement(
+        name=element.local_name,
+        path=path,
+        datatype=_datatype_name(xsd_type),
+        base_datatype=_base_datatype_name(xsd_type),
+        min_occurs=element.min_occurs,
+        max_occurs=("unbounded" if element.max_occurs is None else element.max_occurs),
+        allowed_values=_enum_values(xsd_type),
+        documentation=_annotation_text(element.annotation),
+        datatype_documentation=_annotation_text(xsd_type.annotation),
+        parent_path=parent_path,
+        child_paths=child_paths,
+        version=version,
+        xsd_file=xsd_file,
+        source_url=source_url,
     )
+    output.append(schema_element)
+    source_location = _locate_source_element(
+        element.elem,
+        source_positions,
+        parsed_source_root,
+    )
+    if source_location is not None:
+        source_locations[schema_element.path.casefold()] = source_location
 
     next_type_stack = type_stack | {type_identity}
     for child, child_path in zip(child_elements, child_paths, strict=True):
@@ -412,9 +516,69 @@ def _collect_element(
             version=version,
             xsd_file=xsd_file,
             source_url=source_url,
+            source_positions=source_positions,
+            parsed_source_root=parsed_source_root,
             type_stack=next_type_stack,
             output=output,
+            source_locations=source_locations,
         )
+
+
+def _load_source_map(
+    schema_path: Path,
+    schema_root: Any,
+) -> tuple[tuple[str, ...], dict[int, tuple[int, ...]], Any]:
+    try:
+        source_text = schema_path.read_text(encoding="utf-8")
+        parser = etree.XMLParser(
+            no_network=True,
+            remove_comments=True,
+            remove_pis=True,
+            resolve_entities=False,
+        )
+        parsed_source_root = etree.parse(str(schema_path), parser).getroot()
+    except (OSError, UnicodeError, etree.XMLSyntaxError) as error:
+        raise SchemaError(f"Failed to read schema source: {schema_path}") from error
+
+    positions: dict[int, tuple[int, ...]] = {}
+
+    def collect_positions(node: Any, position: tuple[int, ...]) -> None:
+        positions[id(node)] = position
+        for child_index, child in enumerate(node):
+            collect_positions(child, (*position, child_index))
+
+    collect_positions(schema_root, ())
+    return tuple(source_text.splitlines()), positions, parsed_source_root
+
+
+def _locate_source_element(
+    schema_element: Any,
+    source_positions: dict[int, tuple[int, ...]],
+    parsed_source_root: Any,
+) -> _SourceLocation | None:
+    position = source_positions.get(id(schema_element))
+    if position is None:
+        return None
+
+    source_element = parsed_source_root
+    try:
+        for child_index in position:
+            source_element = source_element[child_index]
+    except IndexError:
+        return None
+
+    start_line = source_element.sourceline
+    if not isinstance(start_line, int):
+        return None
+    serialized_element = etree.tostring(
+        source_element,
+        encoding="unicode",
+        with_tail=False,
+    )
+    return _SourceLocation(
+        start_line=start_line,
+        end_line=start_line + serialized_element.count("\n"),
+    )
 
 
 def _datatype_name(xsd_type: Any) -> str:

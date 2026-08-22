@@ -4,7 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from backend.xsd import SchemaCatalog, SchemaError, SchemaVersionNotFoundError
+from backend.xsd import (
+    MAX_SOURCE_EXCERPT_LINES,
+    SchemaCatalog,
+    SchemaElementNotFoundError,
+    SchemaError,
+    SchemaVersionNotFoundError,
+)
 
 SCHEMA_DIRECTORY = Path(__file__).parents[1] / "data" / "xsd"
 SCHEMA_VERSIONS = (
@@ -155,3 +161,36 @@ def test_catalog_reports_unknown_version(catalog: SchemaCatalog) -> None:
 def test_catalog_reports_missing_schema_directory(tmp_path: Path) -> None:
     with pytest.raises(SchemaError, match="Schema directory not found"):
         SchemaCatalog(tmp_path / "missing")
+
+
+def test_get_evidence_maps_xml_path_to_exact_xsd_declaration(
+    catalog: SchemaCatalog,
+) -> None:
+    diagnosis = catalog.get_evidence(path=DIAGNOSIS_PATH, version="3.0.5")
+    pathology = catalog.get_evidence(path=PATHOLOGY_PATH, version="3.0.5")
+
+    assert diagnosis.element.name == pathology.element.name == "Diagnosesicherung"
+    assert diagnosis.declaration_start_line == 3992
+    assert pathology.declaration_start_line == 4116
+    highlighted_lines = [line for line in diagnosis.source_lines if line.highlighted]
+    assert highlighted_lines[0].number == 3992
+    assert '<xs:element name="Diagnosesicherung">' in highlighted_lines[0].content
+    assert diagnosis.declaration_truncated is False
+
+
+def test_get_evidence_bounds_large_declarations(catalog: SchemaCatalog) -> None:
+    evidence = catalog.get_evidence(
+        path=(
+            "/oBDS/Menge_Patient/Patient/Menge_Meldung/Meldung/OP/"
+            "Komplikationen/Menge_Komplikation/Komplikation/Kuerzel"
+        ),
+        version="3.0.5",
+    )
+
+    assert len(evidence.source_lines) == MAX_SOURCE_EXCERPT_LINES
+    assert evidence.declaration_truncated is True
+
+
+def test_get_evidence_rejects_unknown_path(catalog: SchemaCatalog) -> None:
+    with pytest.raises(SchemaElementNotFoundError, match="/oBDS/Unbekannt"):
+        catalog.get_evidence(path="/oBDS/Unbekannt", version="3.0.5")
