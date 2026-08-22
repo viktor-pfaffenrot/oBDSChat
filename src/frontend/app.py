@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from html import escape
 from pathlib import Path
+from textwrap import dedent
 from typing import Annotated, Final, Literal
 from urllib.parse import quote, urlencode
 
@@ -24,6 +25,92 @@ CSS_PATH: Final = Path(__file__).with_name("assets") / "styles.css"
 STYLESHEET: Final = CSS_PATH.read_text(encoding="utf-8")
 MAX_HISTORY_TURNS: Final = 10
 MAX_HISTORY_CHARACTERS: Final = 50_000
+COPY_TO_CLIPBOARD_JS: Final = """
+async (text) => {
+  if (!text) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch (error) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+}
+"""
+SAME_TAB_XSD_LINKS_HEAD: Final = """
+<script>
+const xsdViewerFrameId = "xsd-viewer-frame";
+
+function closeXsdViewer() {
+  document.getElementById(xsdViewerFrameId)?.remove();
+  document.body.classList.remove("xsd-viewer-open");
+}
+
+window.addEventListener("message", (event) => {
+  if (
+    event.origin !== window.location.origin ||
+    event.data !== "obds-close-xsd-viewer"
+  ) {
+    return;
+  }
+
+  const frame = document.getElementById(xsdViewerFrameId);
+  if (!(frame instanceof HTMLIFrameElement) || event.source !== frame.contentWindow) {
+    return;
+  }
+
+  closeXsdViewer();
+});
+
+document.addEventListener("click", (event) => {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+
+  const clickedElement = event.target;
+  if (!(clickedElement instanceof Element)) {
+    return;
+  }
+
+  const link = clickedElement.closest(
+    '#conversation a[href^="/xsd-viewer/"]'
+  );
+  if (!(link instanceof HTMLAnchorElement)) {
+    return;
+  }
+
+  event.preventDefault();
+  const existingFrame = document.getElementById(xsdViewerFrameId);
+  if (existingFrame instanceof HTMLIFrameElement) {
+    existingFrame.src = link.href;
+    existingFrame.focus();
+    return;
+  }
+
+  const frame = document.createElement("iframe");
+  frame.id = xsdViewerFrameId;
+  frame.title = "XSD-Feldansicht";
+  frame.src = link.href;
+  document.body.classList.add("xsd-viewer-open");
+  document.body.appendChild(frame);
+  frame.focus();
+}, true);
+</script>
+"""
+BACK_TO_CHAT_ONCLICK: Final = (
+    "if (window.parent !== window) { event.preventDefault(); "
+    "window.parent.postMessage('obds-close-xsd-viewer', window.location.origin); "
+    "} else if (history.length > 1) { event.preventDefault(); history.back(); }"
+)
 
 
 class FrontendHealthResponse(BaseModel):
@@ -136,6 +223,44 @@ def build_backend_history(
     return tuple(selected_turns)
 
 
+def format_conversation_for_clipboard(
+    state: ConversationState | None,
+) -> str:
+    """Render the visible conversation as readable plain text."""
+    current_state = state or ConversationState()
+    messages: list[str] = []
+    for turn in current_state.turns:
+        messages.append(f"User: {turn.question.strip()}")
+        messages.append(f"Chatbot: {_clipboard_answer(turn)}")
+    if current_state.pending_question is not None:
+        messages.append(f"User: {current_state.pending_question.strip()}")
+    return "\n\n".join(messages)
+
+
+def _clipboard_answer(turn: CompletedTurn) -> str:
+    answer = turn.answer.strip()
+    if not turn.sources:
+        return answer
+    return f"{answer}\n\n{_clipboard_sources(turn.sources)}"
+
+
+def _clipboard_sources(sources: tuple[SourceReference, ...]) -> str:
+    source_entries = "\n".join(_clipboard_source(source) for source in sources)
+    return f"Quellen:\n{source_entries}"
+
+
+def _clipboard_source(source: SourceReference) -> str:
+    lines = [f"- {source.title}", f"  Typ: {source.source_type.upper()}"]
+    if source.obds_version:
+        lines.append(f"  Version: {source.obds_version}")
+    if source.path:
+        lines.append(f"  XML-Pfad: {source.path}")
+    if source.section and source.section != source.path:
+        lines.append(f"  Abschnitt: {source.section}")
+    lines.append(f"  URL: {source.url}")
+    return "\n".join(lines)
+
+
 def render_conversation(state: ConversationState) -> list[gr.ChatMessage]:
     """Render completed turns and one optional pending status message."""
     messages: list[gr.ChatMessage] = []
@@ -198,10 +323,7 @@ def _source_card(source: SourceReference) -> str:
 
     if source.source_type == "xsd" and source.obds_version and source.path:
         viewer_url = _xsd_viewer_url(source.obds_version, source.path)
-        primary_link = (
-            f'<a href="{escape(viewer_url, quote=True)}" target="_blank" '
-            'rel="noopener noreferrer">Feld anzeigen</a>'
-        )
+        primary_link = f'<a href="{escape(viewer_url, quote=True)}">Feld anzeigen</a>'
         secondary_link = (
             f'<a href="{official_url}" target="_blank" '
             'rel="noopener noreferrer">Offizielle XSD</a>'
@@ -241,18 +363,19 @@ def _error_message(message: str) -> str:
 
 def build_interface() -> gr.Blocks:
     """Build the production Gradio conversation interface."""
-    with gr.Blocks(title="oBDS Schema Desk") as interface:
+    with gr.Blocks(title="oBDS CHAT") as interface:
         state = gr.State(ConversationState())
+        clipboard_text = gr.Textbox(visible=False)
         gr.HTML(
             """
             <header class="masthead">
-              <a class="wordmark" href="/" aria-label="oBDS Schema Desk Startseite">
+              <a class="wordmark" href="/" aria-label="oBDS Chat Startseite">
                 <span class="wordmark__index">§65c</span>
-                <span class="wordmark__name">oBDS<br>Schema Desk</span>
+                <span class="wordmark__name">oBDS Chat</span>
               </a>
               <div class="masthead__status">
                 <span class="status-dot"></span>
-                Quellengebundene Auskunft
+                Powered by LAS
               </div>
             </header>
             """
@@ -262,10 +385,9 @@ def build_interface() -> gr.Blocks:
                 gr.HTML(
                     """
                     <section class="rail-copy">
-                      <p class="rail-copy__kicker">Technische Auskunft</p>
                       <h1>Fragen an den<br><em>onkologischen</em><br>Basisdatensatz.</h1>
                       <p class="rail-copy__intro">
-                        Antworten werden gegen XSD und Umsetzungsleitfaden geprüft.
+                        Antworten werden gegen XML-Schema und Umsetzungsleitfaden geprüft.
                         Jede verwendete Quelle bleibt direkt am Ergebnis sichtbar.
                       </p>
                     </section>
@@ -283,15 +405,15 @@ def build_interface() -> gr.Blocks:
                     height="65vh",
                     min_height=460,
                     layout="panel",
-                    buttons=["copy"],
+                    buttons=[],
                     feedback_options=None,
                     sanitize_html=True,
                     elem_id="conversation",
                     placeholder=(
                         '<div class="empty-desk">'
                         '<span class="empty-desk__rule"></span>'
-                        "<strong>Aktenblatt ist leer.</strong>"
-                        "<p>Stellen Sie eine Frage zu Feldern, Kardinalitäten, "
+                        "<strong>Chat ist leer.</strong>"
+                        "<p>Stellen Sie eine Frage zu Feldern, Meldungstypen, "
                         "Werten oder Umsetzungshinweisen.</p>"
                         "</div>"
                     ),
@@ -301,7 +423,7 @@ def build_interface() -> gr.Blocks:
                         label="Frage",
                         show_label=False,
                         placeholder="Zum Beispiel: Welche Werte darf Diagnosesicherung haben?",
-                        lines=2,
+                        lines=1,
                         max_lines=5,
                         max_length=10_000,
                         autofocus=False,
@@ -317,13 +439,20 @@ def build_interface() -> gr.Blocks:
                         elem_id="submit-question",
                     )
                 with gr.Row(elem_classes="conversation-tools"):
-                    gr.HTML(
-                        "<p><span>HTTP</span> Frontend und Fachlogik strikt getrennt</p>"
+                    copy_chat = gr.Button(
+                        "Chat kopieren",
+                        variant="secondary",
+                        size="md",
+                        scale=0,
+                        min_width=0,
+                        elem_id="copy-conversation",
                     )
                     clear = gr.Button(
-                        "Gespräch leeren",
+                        "Chat leeren",
                         variant="secondary",
-                        size="sm",
+                        size="md",
+                        scale=0,
+                        min_width=0,
                         elem_id="clear-conversation",
                     )
 
@@ -349,7 +478,24 @@ def build_interface() -> gr.Blocks:
             inputs=state,
             outputs=(chatbot, state),
         )
+        copy_event = copy_chat.click(
+            format_conversation_for_clipboard,
+            inputs=state,
+            outputs=clipboard_text,
+            queue=False,
+        )
+        copy_event.then(
+            fn=None,
+            inputs=clipboard_text,
+            js=COPY_TO_CLIPBOARD_JS,
+            queue=False,
+        )
         clear.click(
+            clear_conversation,
+            outputs=(question, chatbot, state),
+            queue=False,
+        )
+        chatbot.clear(
             clear_conversation,
             outputs=(question, chatbot, state),
             queue=False,
@@ -362,6 +508,7 @@ def _render_viewer(evidence: XsdEvidence) -> str:
     source_markup = _source_markup(evidence)
     allowed_values = _allowed_values_markup(evidence)
     documentation = _documentation_markup(evidence)
+    occurrence = _occurrence_label(evidence.min_occurs, evidence.max_occurs)
     path_parts = [part for part in evidence.path.split("/") if part]
     breadcrumb = '<span aria-hidden="true">/</span>'.join(
         f"<span>{escape(part)}</span>" for part in path_parts
@@ -379,7 +526,7 @@ def _render_viewer(evidence: XsdEvidence) -> str:
   <header class="viewer-masthead">
     <a class="wordmark" href="/">
       <span class="wordmark__index">§65c</span>
-      <span class="wordmark__name">oBDS<br>Schema Desk</span>
+      <span class="wordmark__name">oBDS Chat</span>
     </a>
     <span class="viewer-version">XSD · Version {escape(evidence.version)}</span>
   </header>
@@ -388,10 +535,13 @@ def _render_viewer(evidence: XsdEvidence) -> str:
     <section class="viewer-heading">
       <div>
         <p class="viewer-kicker">Exakter Feldnachweis</p>
-        <h1>{escape(evidence.name)}</h1>
+        <h2 class="medium-heading">{escape(evidence.name)}</h2>
       </div>
       <div class="viewer-actions">
-        <a class="button-link button-link--quiet" href="/">Zurück zum Chat</a>
+        <a class="button-link button-link--quiet" href="/"
+           onclick="{BACK_TO_CHAT_ONCLICK}">
+          Zurück zum Chat
+        </a>
         <a class="button-link" href="{source_url}" target="_blank"
            rel="noopener noreferrer">Offizielle XSD öffnen</a>
       </div>
@@ -412,7 +562,7 @@ def _render_viewer(evidence: XsdEvidence) -> str:
         <dl>
           <div><dt>Datentyp</dt><dd>{escape(evidence.datatype)}</dd></div>
           <div><dt>Basistyp</dt><dd>{escape(evidence.base_datatype or "–")}</dd></div>
-          <div><dt>Kardinalität</dt><dd>{evidence.min_occurs}…{evidence.max_occurs}</dd></div>
+          <div><dt>Vorkommen</dt><dd>{occurrence}</dd></div>
           <div><dt>XML-Pfad</dt><dd><code>{_path_markup(evidence.path)}</code></dd></div>
         </dl>
         {allowed_values}
@@ -431,14 +581,17 @@ def _source_markup(evidence: XsdEvidence) -> str:
             "<p>Die strukturierten Feldfakten bleiben gültig. Nutzen Sie die "
             "offizielle XSD für den vollständigen Quelltext.</p></div>"
         )
+    source_contents = dedent(
+        "\n".join(line.content for line in evidence.source_lines)
+    ).split("\n")
     rendered_lines = "".join(
         '<span class="code-line{}"><span class="code-line__number">{}</span>'
         '<span class="code-line__content">{}</span></span>'.format(
             " code-line--target" if line.highlighted else "",
             line.number,
-            escape(line.content),
+            escape(content),
         )
-        for line in evidence.source_lines
+        for line, content in zip(evidence.source_lines, source_contents, strict=True)
     )
     truncation = ""
     if evidence.declaration_truncated:
@@ -481,6 +634,23 @@ def _line_range(evidence: XsdEvidence) -> str:
     return f"Zeilen {evidence.declaration_start_line}–{evidence.declaration_end_line}"
 
 
+def _occurrence_label(
+    min_occurs: int,
+    max_occurs: int | Literal["unbounded"],
+) -> str:
+    match min_occurs, max_occurs:
+        case 0, 1:
+            return "Optional, höchstens einmal"
+        case 1, 1:
+            return "Pflichtfeld, genau einmal"
+        case 0, "unbounded":
+            return "Optional, mehrfach möglich"
+        case 1, "unbounded":
+            return "Pflichtfeld, mehrfach möglich"
+        case _:
+            return f"{min_occurs}…{max_occurs}"
+
+
 def _path_markup(path: str) -> str:
     parts = [escape(part) for part in path.split("/") if part]
     return "<wbr>/" + "<wbr>/".join(parts)
@@ -492,7 +662,7 @@ def _render_viewer_error(message: str) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nachweis nicht verfügbar · oBDS Schema Desk</title>
+  <title>Nachweis nicht verfügbar · oBDS Chat</title>
   <style>{STYLESHEET}</style>
 </head>
 <body class="viewer-body">
@@ -500,7 +670,10 @@ def _render_viewer_error(message: str) -> str:
     <p class="viewer-kicker">Quellennachweis</p>
     <h1>Feldansicht nicht verfügbar.</h1>
     <p>{escape(message)}</p>
-    <a class="button-link" href="/">Zurück zum Chat</a>
+    <a class="button-link" href="/"
+       onclick="{BACK_TO_CHAT_ONCLICK}">
+      Zurück zum Chat
+    </a>
   </main>
 </body>
 </html>"""
@@ -541,6 +714,8 @@ theme = gr.themes.Base(
 ).set(
     body_background_fill="#eee9df",
     body_background_fill_dark="#eee9df",
+    code_background_fill="#c8c0b1",
+    code_background_fill_dark="#c8c0b1",
     body_text_color="#17252d",
     body_text_color_dark="#17252d",
     background_fill_primary="#eee9df",
@@ -567,4 +742,5 @@ app = gr.mount_gradio_app(
     footer_links=[],
     theme=theme,
     css_paths=CSS_PATH,
+    head=SAME_TAB_XSD_LINKS_HEAD,
 )

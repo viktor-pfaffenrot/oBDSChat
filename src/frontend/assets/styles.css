@@ -5,15 +5,20 @@
   --desk-ink: #17252d;
   --desk-muted: #647078;
   --desk-rule: #c8c0b1;
-  --desk-signal: #df4a22;
-  --desk-signal-dark: #a82e11;
+  --desk-signal: #00a1acff;
+  --desk-signal-dark: #02303aff;
   --desk-navy: #102f3b;
-  --desk-code: #0f2027;
-  --desk-code-ink: #dce8e7;
+  --desk-user: #004172ff;
+  --desk-user-ink: #fffdf7; 
+  --desk-code:  #0f2027; /*#dce8e7 */ 
+  --desk-code-ink: #c8c0b1;
   --desk-highlight: #ffda72;
   --desk-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
   --desk-sans: "Avenir Next", Avenir, "Century Gothic", sans-serif;
   --desk-mono: "IBM Plex Mono", "Cascadia Mono", "Liberation Mono", monospace;
+  --desk-body-size: 0.92rem;
+  --desk-body-size-small: 0.82rem;
+  
 }
 
 * {
@@ -75,6 +80,8 @@ body {
 
 .wordmark__name {
   color: var(--desk-ink);
+  align-items: center;
+  display: flex;
   font-size: 0.77rem;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -111,16 +118,6 @@ body {
   min-width: 0 !important;
 }
 
-.rail-copy__kicker,
-.viewer-kicker {
-  color: var(--desk-signal-dark);
-  font-size: 0.69rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  margin: 0 0 1.15rem;
-  text-transform: uppercase;
-}
-
 .rail-copy h1 {
   color: var(--desk-ink);
   font-family: var(--desk-serif);
@@ -139,7 +136,7 @@ body {
 .rail-copy__intro {
   border-left: 2px solid var(--desk-signal);
   color: var(--desk-muted);
-  font-size: 0.92rem;
+  font-size: var(--desk-body-size);
   line-height: 1.65;
   margin: 2rem 0 0;
   max-width: 28rem;
@@ -163,12 +160,12 @@ body {
 .rail-notes span {
   color: var(--desk-signal-dark);
   font-family: var(--desk-mono);
-  font-size: 0.62rem;
+  font-size: 0.92rem;
 }
 
 .rail-notes p {
   color: var(--desk-muted);
-  font-size: 0.78rem;
+  font-size: 0.92rem;
   margin: 0;
 }
 
@@ -188,7 +185,23 @@ body {
 
 #conversation .message.bot,
 #conversation .message-row.bot-row .message {
-  border-left: 3px solid var(--desk-signal) !important;
+  border-left: 0 !important;
+}
+
+#conversation .message.user,
+#conversation .message-row.user-row.panel {
+  background: var(--desk-user) !important;
+}
+
+#conversation .message-row.user-row .message,
+#conversation .message-row.user-row .message-content,
+#conversation .message-row.user-row .message-content * {
+  color: var(--desk-user-ink) !important;
+}
+
+#conversation button,
+#conversation button svg {
+  color: var(--desk-ink) !important;
 }
 
 .empty-desk {
@@ -258,8 +271,13 @@ body {
 
 .conversation-tools {
   align-items: center;
-  justify-content: space-between;
+  gap: 0.85rem !important;
+  justify-content: flex-end;
   margin-top: 0.65rem;
+}
+
+.conversation-tools > div:first-child {
+  margin-right: auto;
 }
 
 .conversation-tools p {
@@ -276,12 +294,16 @@ body {
   padding: 0.12rem 0.25rem;
 }
 
+#copy-conversation,
 #clear-conversation {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-  color: var(--desk-muted) !important;
+  color: var(--desk-ink) !important;
+  flex: 0 0 auto !important;
   font-size: 0.69rem !important;
+  min-width: 0 !important;
+  padding-inline: 0 !important;
   text-decoration: underline;
   text-underline-offset: 0.25rem;
 }
@@ -482,6 +504,15 @@ body {
   margin: 0;
 }
 
+.medium-heading {
+  font-family: var(--desk-serif);
+  font-size: clamp(2rem, 5vw, 5rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  margin: 0;
+}
+
 .viewer-actions {
   display: flex;
   flex-wrap: wrap;
@@ -592,6 +623,7 @@ body {
 }
 
 .code-line__content {
+  tab-size: 2;
   white-space: pre;
 }
 
@@ -615,7 +647,7 @@ body {
 .fact-sheet__index {
   color: var(--desk-signal-dark);
   font-family: var(--desk-mono);
-  font-size: 0.62rem;
+  font-size: var(--desk-body-size);
   letter-spacing: 0.12em;
   margin: 0.75rem 0 1.5rem;
 }
@@ -634,14 +666,14 @@ body {
 
 .fact-sheet dt {
   color: var(--desk-muted);
-  font-size: 0.66rem;
+  font-size: var(--desk-body-size-small);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .fact-sheet dd {
   font-family: var(--desk-mono);
-  font-size: 0.75rem;
+  font-size: var(--desk-body-size);
   margin: 0;
   overflow-wrap: anywhere;
 }
@@ -660,7 +692,7 @@ body {
 
 .fact-section p {
   color: var(--desk-muted);
-  font-size: 0.82rem;
+  font-size: var(--desk-body-size);
   line-height: 1.55;
   margin: 0;
 }
@@ -678,7 +710,7 @@ body {
   background: var(--desk-navy);
   color: var(--desk-white);
   font-family: var(--desk-mono);
-  font-size: 0.68rem;
+  font-size: var(--desk-body-size);
   padding: 0.35rem 0.5rem;
 }
 
@@ -783,4 +815,18 @@ body {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+#xsd-viewer-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  background: var(--paper);
+}
+
+body.xsd-viewer-open {
+  overflow: hidden;
 }
