@@ -5,17 +5,32 @@ description = "Source-grounded chat for the German oBDS"
 readme = "README.md"
 requires-python = ">=3.13.9"
 dependencies = [
-    "beautifulsoup4>=4.15.0",
     "fastapi>=0.141.1",
-    "gradio>=6.22.0",
     "httpx>=0.28.1",
+    "pydantic>=2.13.4",
+    "uvicorn>=0.52.1",
+]
+
+[dependency-groups]
+backend = [
+    "beautifulsoup4>=4.15.0",
     "lxml>=6.1.1",
     "openai>=2.53.0",
     "psycopg[binary]>=3.3.4",
-    "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",
-    "uvicorn>=0.52.1",
     "xmlschema>=4.3.2",
+]
+frontend = [
+    "gradio>=6.22.0",
+]
+dev = [
+    { include-group = "backend" },
+    { include-group = "frontend" },
+    "matplotlib>=3.11.1",
+    "pytest",
+    "pyyaml>=6.0.3",
+    "ruff",
+    "ty",
 ]
 
 [project.scripts]
@@ -24,15 +39,6 @@ obdschat-sync-sources = "scripts.sync_sources:main"
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
-
-[dependency-groups]
-dev = [
-    "matplotlib>=3.11.1",
-    "pytest",
-    "pyyaml>=6.0.3",
-    "ruff",
-    "ty",
-]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]

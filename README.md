@@ -2,19 +2,37 @@
 
 Local, source-grounded chat for the German oBDS.
 
+## Docker Compose
+
+Copy `.env.example` to `.env`, configure one model provider, and write the
+database and selected provider keys to these gitignored files:
+
+```text
+config/secrets/obdschat_db_password.txt
+config/secrets/llm_api_key.txt
+```
+
+Then start the stack:
+
+```bash
+docker compose up --build
+```
+
+Compose starts ParadeDB, synchronizes official sources once, then starts the
+backend and frontend. The UI is available at `http://localhost:17860`; the
+backend API is available at `http://localhost:18000`.
+
 ## Model provider
 
-Set `LLM_PROVIDER` to `openai` or `requesty`, configure the matching API key in
-`.env`, then restart the backend. Requesty uses the stable `policy/obdschat`
-route; concrete models and routing behavior stay in Requesty. Direct OpenAI
-testing uses `OPENAI_MODEL`. Both providers use the OpenAI-compatible Chat
-Completions API at `/v1/chat/completions`. Every model behind the Requesty policy
-must support function calling and structured JSON output through that endpoint.
+Set `LLM_PROVIDER` to `openai` or `requesty` and place its key in the configured
+`LLM_API_KEY_SOURCE` file. Requesty uses the stable `policy/obdschat` route;
+concrete models and routing behavior stay in Requesty. Direct OpenAI testing
+uses `OPENAI_MODEL`. Both providers use the OpenAI-compatible Chat Completions
+API at `/v1/chat/completions`.
 
 ## Source synchronization
 
-Copy `.env.example` to `.env`, set the database values, and place the password
-in `config/secrets/obdschat_db_password.txt`. Then run:
+For local development outside Compose, set the database values and run:
 
 ```bash
 uv run obdschat-sync-sources

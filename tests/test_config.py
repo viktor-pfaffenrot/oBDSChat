@@ -46,6 +46,31 @@ def test_requesty_provider_resolves_requesty_endpoint() -> None:
     assert "requesty-secret" not in repr(endpoint)
 
 
+def test_mounted_llm_api_key_takes_precedence(tmp_path: Path) -> None:
+    api_key_file = tmp_path / "llm_api_key"
+    api_key_file.write_text(" mounted-secret\n", encoding="utf-8")
+    settings = load_settings(
+        {
+            "LLM_PROVIDER": "requesty",
+            "REQUESTY_API_KEY": "environment-secret",
+            "LLM_API_KEY_FILE": str(api_key_file),
+        }
+    )
+
+    endpoint = settings.resolve_llm_endpoint()
+
+    assert endpoint.api_key == "mounted-secret"
+    assert "mounted-secret" not in repr(settings)
+    assert "mounted-secret" not in repr(endpoint)
+
+
+def test_missing_llm_api_key_file_is_reported(tmp_path: Path) -> None:
+    settings = load_settings({"LLM_API_KEY_FILE": str(tmp_path / "missing-secret")})
+
+    with pytest.raises(RuntimeError, match="LLM API key file not found"):
+        settings.resolve_llm_endpoint()
+
+
 @pytest.mark.parametrize(
     ("environment", "missing_variable"),
     [

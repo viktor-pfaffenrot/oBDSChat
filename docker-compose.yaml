@@ -1,49 +1,132 @@
 name: obdschat
 
-networks:
-  obdschat-network:
-    driver: bridge
-
-secrets:
-  obdschat_db_password:
-    file: ${OBDSCHAT_BASE_DIR}/config/secrets/obdschat_db_password.txt
-
-
 services:
   obdschat-db:
-    image: paradedb/paradedb:0.25.2-pg18 #postgres:18
+    image: paradedb/paradedb:0.25.3-pg18
     command:
       - postgres
       - -c
       - shared_preload_libraries=pg_search
-    container_name: oBDSChat_postgres_db
-    restart: unless-stopped #on-failure:5 #unless-stopped
-    environment:
-      POSTGRES_USER: ${OBDSCHAT_DB_USER}
-      POSTGRES_PASSWORD_FILE: /run/secrets/obdschat_db_password
-      POSTGRES_DB: ${OBDSCHAT_DB_NAME}
-      TZ: ${OBDSCHAT_TZ}
+    restart: unless-stopped
+    env_file: .env
     secrets:
       - obdschat_db_password
     volumes:
-      # Init script to create extra users using secrets
-      #- ./postgres/init-users.sh:/docker-entrypoint-initdb.d/init-users.sh:ro
-      - ${OBDSCHAT_INIT_DATA}:/docker-entrypoint-initdb.d
-      # Persist entire /var/lib/postgresql so Postgres 18+ can manage subdirectories
-      - ${OBDSCHAT_BASE_DIR}/data/obdschat_db/data:/var/lib/postgresql
-      - ${OBDSCHAT_BASE_DIR}/data/obdschat_db/logs:/var/log/postgresql
+      - ${OBDSCHAT_INIT_DATA:-./db}:/docker-entrypoint-initdb.d:ro
+      - ${OBDSCHAT_DB_DATA_DIR:-./data/obdschat_db/data}:/var/lib/postgresql
+      - ${OBDSCHAT_DB_LOG_DIR:-./data/obdschat_db/logs}:/var/log/postgresql
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\" -p 5432",
-        ]
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -p 5432
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    ports:
+      - "127.0.0.1:${OBDSCHAT_DB_PUBLISHED_PORT:-55434}:5432"
+    networks:
+      default:
+        aliases:
+          - db
+    security_opt:
+      - no-new-privileges:true
+
+  source-sync:
+    image: obdschat-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command:
+      - python
+      - -m
+      - scripts.sync_sources
+    restart: on-failure:3
+    env_file: .env
+    secrets:
+      - obdschat_db_password
+    volumes:
+      - xsd-data:/app/data/xsd
+    depends_on:
+      obdschat-db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    image: obdschat-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    env_file: .env
+    secrets:
+      - obdschat_db_password
+      - llm_api_key
+    volumes:
+      - xsd-data:/app/data/xsd:ro
+    depends_on:
+      source-sync:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     ports:
-      - "${OBDSCHAT_DB_PORT}:5432"
+      - "${OBDSCHAT_BACKEND_PORT:-18000}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
     security_opt:
       - no-new-privileges:true
-    networks:
-      - obdschat-network
+
+  frontend:
+    image: obdschat-frontend:local
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:7860/health', timeout=5).read()
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    ports:
+      - "${OBDSCHAT_FRONTEND_PORT:-17860}:7860"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  obdschat_db_password:
+    file: ${OBDSCHAT_DB_PASSWORD_SOURCE:-./config/secrets/obdschat_db_password.txt}
+  llm_api_key:
+    file: ${LLM_API_KEY_SOURCE:-./config/secrets/llm_api_key.txt}
+
+volumes:
+  xsd-data:

@@ -13,33 +13,6 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}"
             }
-        },
-        {
-            "name": "Attach PhysioIQ Backend",
-            "type": "debugpy",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 5678
-                },
-            "pathMappings": [
-            {
-                "localRoot": "${workspaceFolder}/backend",
-                "remoteRoot": "/app/backend"
-            }
-            ]
-        },
-        {
-            "name": "Frontend: Dash app",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/frontend/app.py",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/frontend:${env:PYTHONPATH}",
-                "PORT": "8051"
-            },
-            "justMyCode": false
         }
     ]
 }
