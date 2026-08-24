@@ -73,6 +73,11 @@ class Settings(BaseSettings):
         repr=False,
         validation_alias="REQUESTY_API_KEY",
     )
+    llm_api_key_file: Path | None = Field(
+        default=None,
+        repr=False,
+        validation_alias="LLM_API_KEY_FILE",
+    )
     base_dir: Path = Field(
         default_factory=Path.cwd,
         validation_alias="OBDSCHAT_BASE_DIR",
@@ -169,13 +174,39 @@ class Settings(BaseSettings):
         else:
             raise AssertionError(f"Unsupported LLM provider: {self.llm_provider}")
 
-        if api_key is None:
-            raise RuntimeError(f"{api_key_variable} is required by the backend")
+        api_key = self._resolve_llm_api_key(api_key, api_key_variable)
         return LlmEndpoint(
             provider=self.llm_provider,
             base_url=base_url,
             route=route,
             api_key=api_key,
+        )
+
+    def _resolve_llm_api_key(
+        self,
+        provider_api_key: str | None,
+        provider_variable: str,
+    ) -> str:
+        """Prefer a mounted secret while retaining direct-key compatibility."""
+        if self.llm_api_key_file is not None:
+            api_key_file = self.llm_api_key_file.expanduser()
+            if not api_key_file.is_absolute():
+                api_key_file = self.base_dir / api_key_file
+
+            try:
+                api_key = api_key_file.read_text(encoding="utf-8").strip()
+            except FileNotFoundError as error:
+                raise RuntimeError(
+                    f"LLM API key file not found: {api_key_file}"
+                ) from error
+            if not api_key:
+                raise RuntimeError(f"LLM API key file is empty: {api_key_file}")
+            return api_key
+
+        if provider_api_key is not None:
+            return provider_api_key
+        raise RuntimeError(
+            f"{provider_variable} or LLM_API_KEY_FILE is required by the backend"
         )
 
     def require_database_password(self) -> str:
