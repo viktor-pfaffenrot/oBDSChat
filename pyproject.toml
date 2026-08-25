@@ -32,6 +32,10 @@ dev = [
     "ruff",
     "ty",
 ]
+docs = [
+    "mkdocs-material>=9,<10",
+    "mkdocs-render-swagger-plugin>=0.1.2,<0.2",
+]
 
 [project.scripts]
 obdschat-sync-sources = "scripts.sync_sources:main"
