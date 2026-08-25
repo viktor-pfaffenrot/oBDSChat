@@ -11,6 +11,7 @@ variables.
 - Python 3.13.9 or newer
 - `uv`
 - `make` for documentation commands
+- Docker access for the generated database reference
 - an OpenAI or Requesty API key
 - outbound HTTPS access to the selected model provider and official oBDS sources
 
@@ -29,8 +30,10 @@ variables.
 3. Open `config/secrets/llm_api_key.txt` and add the key for the provider selected
    by `LLM_PROVIDER` in `.env`.
 
-4. Review `.env`. Keep container-internal values such as `OBDSCHAT_DB_HOST=db`
-   and `/run/secrets/...` file paths for Compose.
+4. Review `.env` against the
+   [runtime configuration reference](../reference/runtime-configuration.md).
+   Keep container-internal values such as `OBDSCHAT_DB_HOST=db` and
+   `/run/secrets/...` file paths for Compose.
 
 5. Build and start the stack:
 
@@ -123,8 +126,10 @@ reuse the Compose-oriented file without changing container paths.
 make docs-serve
 ```
 
-Open <http://127.0.0.1:8000>. If the backend already uses port 8000, stop it or
-run MkDocs directly with a different address.
+The command exports OpenAPI, starts a disposable PostgreSQL instance, regenerates
+the tbls database reference, stops the instance, and starts MkDocs. Open
+<http://127.0.0.1:8000>. If the backend already uses port 8000, stop it or run
+MkDocs directly with a different address.
 
 ## Stop local services
 

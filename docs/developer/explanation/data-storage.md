@@ -57,10 +57,10 @@ schema-version table. Any schema-changing feature must define both:
 - desired bootstrap state for new databases;
 - an explicit forward migration for existing databases.
 
-Generated table/column documentation and ER diagrams are intentionally deferred
-to the database-reference phase. Until then, `db/init.sql` is the canonical
-bootstrap definition and this page explains its role rather than duplicating a
-full generated schema reference.
+The [database reference](../database/README.md) is generated from a disposable
+database initialized with `db/init.sql`. It contains table and column facts plus
+a Mermaid ER diagram. `db/init.sql` remains the canonical bootstrap definition;
+run `make docs-db` after changing it and commit the regenerated reference.
 
 ## Synchronization consistency
 

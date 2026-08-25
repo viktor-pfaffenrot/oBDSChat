@@ -54,3 +54,10 @@ nav:
       - Change stored data: developer/how-to/change-stored-data.md
       - Test changes: developer/how-to/test-changes.md
   - REST API reference: developer/reference/rest-api.md
+  - Database reference:
+      - Schema overview: developer/database/README.md
+      - documents table: developer/database/public.documents.md
+  - Operations:
+      - Runtime configuration: developer/reference/runtime-configuration.md
+      - Deploy and upgrade: developer/how-to/deploy.md
+      - Logging and troubleshooting: developer/how-to/troubleshoot-operations.md

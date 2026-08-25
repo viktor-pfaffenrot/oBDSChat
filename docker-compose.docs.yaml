@@ -1,0 +1,38 @@
+name: obdschat-docs
+
+services:
+  database:
+    image: paradedb/paradedb:0.25.3-pg18
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_search
+    environment:
+      POSTGRES_DB: obdschat_docs
+      POSTGRES_PASSWORD: obdschat_docs
+      POSTGRES_USER: obdschat_docs
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U obdschat_docs -d obdschat_docs -p 5432
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+
+  tbls:
+    image: ghcr.io/k1low/tbls:v1.95.0
+    depends_on:
+      database:
+        condition: service_healthy
+    working_dir: /work
+    volumes:
+      - .:/work
+    security_opt:
+      - no-new-privileges:true

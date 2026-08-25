@@ -27,6 +27,11 @@ The Compose deployment contains four services:
 | `backend` | Validate requests, retrieve evidence, orchestrate the model, validate citations | Reads PostgreSQL and XSD volume |
 | `frontend` | Render chat and XSD evidence views | Browser-session conversation state only |
 
+Use [How to deploy and upgrade oBDSChat](../how-to/deploy.md) for the supported
+single-host Compose procedure and
+[How to diagnose an oBDSChat deployment](../how-to/troubleshoot-operations.md)
+for service-level failures.
+
 ## Startup dependency chain
 
 ```mermaid
