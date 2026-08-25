@@ -1,5 +1,6 @@
 """FastAPI application for source-grounded oBDS questions."""
 
+import asyncio
 from collections.abc import Iterator, Mapping
 from importlib.metadata import version as distribution_version
 from typing import Annotated, Final, Literal, Self
@@ -309,7 +310,7 @@ def health() -> HealthResponse:
     summary="Answer an oBDS question",
     operation_id="query_obds",
 )
-def query_obds(request: QueryRequest) -> QueryResponse:
+async def query_obds(request: QueryRequest) -> QueryResponse:
     """Answer one question using current-request evidence from local tools.
 
     An explicit `obds_version` constrains every version-aware lookup. Conversation
@@ -317,8 +318,11 @@ def query_obds(request: QueryRequest) -> QueryResponse:
     official evidence retrieved during this request.
     """
     try:
-        version_context = _build_version_context(request.obds_version)
-        result = answer_question(
+        version_context = await asyncio.to_thread(
+            _build_version_context,
+            request.obds_version,
+        )
+        result = await answer_question(
             request.question,
             history=_build_conversation_history(request.history),
             version_context=version_context,

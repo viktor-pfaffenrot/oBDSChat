@@ -1,5 +1,6 @@
 """Tests for deterministic production evaluation and reporting."""
 
+import asyncio
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -192,12 +193,14 @@ def test_run_continues_and_summarizes_each_category() -> None:
         update={"category": "cardinality"}
     )
 
-    def answerer(case: EvaluationCase) -> QuestionAnswer:
+    async def answerer(case: EvaluationCase) -> QuestionAnswer:
         if case.id == "fails":
             raise RuntimeError("dependency unavailable")
         return _supported_answer()
 
-    results = run_evaluation((working_case, failing_case), answerer, progress=None)
+    results = asyncio.run(
+        run_evaluation((working_case, failing_case), answerer, progress=None)
+    )
     summary = summarize_results(results)
 
     assert len(results) == 2

@@ -1,12 +1,14 @@
+import asyncio
 import json
 from copy import deepcopy
+from threading import get_ident
 from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import Mock, call
 
 import httpx
 import pytest
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from backend.config import (
     OPENAI_BASE_URL,
@@ -19,10 +21,13 @@ from backend.llm import (
     ConversationTurn,
     LocalTool,
     ModelAnswer,
+    QuestionAnswer,
     ToolCallError,
     VersionContext,
-    answer_question,
     create_client,
+)
+from backend.llm import (
+    answer_question as answer_question_async,
 )
 
 
@@ -31,7 +36,7 @@ class FakeChatCompletions:
         self._completions = iter(completions)
         self.calls: list[dict[str, Any]] = []
 
-    def parse(self, **kwargs: Any) -> SimpleNamespace:
+    async def parse(self, **kwargs: Any) -> SimpleNamespace:
         self.calls.append(deepcopy(kwargs))
         return next(self._completions)
 
@@ -44,6 +49,10 @@ class FakeChat:
 class FakeOpenAI:
     def __init__(self, completions: list[SimpleNamespace]) -> None:
         self.chat = FakeChat(completions)
+
+
+def answer_question(*args: Any, **kwargs: Any) -> QuestionAnswer:
+    return asyncio.run(answer_question_async(*args, **kwargs))
 
 
 def _endpoint(route: str = "gpt-5.6-terra") -> LlmEndpoint:
@@ -175,7 +184,7 @@ def test_create_client_uses_resolved_endpoint() -> None:
 
     assert str(client.base_url) == f"{REQUESTY_BASE_URL}/"
     assert client.api_key == "requesty-key"
-    client.close()
+    asyncio.run(client.close())
 
 
 def test_answer_question_uses_chat_completions_wire_protocol() -> None:
@@ -223,8 +232,8 @@ def test_answer_question_uses_chat_completions_wire_protocol() -> None:
         requests.append(json.loads(request.content))
         return httpx.Response(200, json=next(responses))
 
-    http_client = httpx.Client(transport=httpx.MockTransport(handle_request))
-    client = OpenAI(
+    http_client = httpx.AsyncClient(transport=httpx.MockTransport(handle_request))
+    client = AsyncOpenAI(
         api_key="test-key",
         base_url="https://example.test/v1",
         http_client=http_client,
@@ -244,7 +253,7 @@ def test_answer_question_uses_chat_completions_wire_protocol() -> None:
             endpoint=_endpoint("test-model"),
         )
     finally:
-        client.close()
+        asyncio.run(client.close())
 
     assert result.answer == "Belegte Antwort."
     assert request_paths == ["/v1/chat/completions", "/v1/chat/completions"]
@@ -267,7 +276,7 @@ def test_answer_question_uses_configured_route() -> None:
 
     result = answer_question(
         "Was bedeutet Diagnosesicherung?",
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -316,7 +325,7 @@ def test_answer_question_uses_history_but_requires_fresh_tool_call() -> None:
         ),
         version_context=_version_context(),
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -352,7 +361,7 @@ def test_answer_question_rejects_empty_history_content(
         answer_question(
             "Neue Frage",
             history=history,
-            client=cast(OpenAI, fake_client),
+            client=cast(AsyncOpenAI, fake_client),
             endpoint=_endpoint(),
         )
 
@@ -384,7 +393,7 @@ def test_answer_question_executes_function_call() -> None:
     result = answer_question(
         "Welche Werte sind erlaubt?",
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -423,6 +432,39 @@ def test_answer_question_executes_function_call() -> None:
     }
 
 
+def test_answer_question_offloads_sync_tool_handler() -> None:
+    fake_client = FakeOpenAI(
+        [
+            _tool_completion(_function_call("search_schema", '{"query":"Diagnose"}')),
+            _final_completion("Antwort."),
+        ]
+    )
+    caller_thread = get_ident()
+    handler_thread: int | None = None
+
+    def handler(query: str) -> dict[str, str]:
+        nonlocal handler_thread
+        handler_thread = get_ident()
+        return {"element": query}
+
+    tool = LocalTool(
+        name="search_schema",
+        description="Search the local oBDS schema.",
+        parameters=_schema(),
+        handler=handler,
+    )
+
+    answer_question(
+        "Was bedeutet Diagnose?",
+        tools=[tool],
+        client=cast(AsyncOpenAI, fake_client),
+        endpoint=_endpoint(),
+    )
+
+    assert handler_thread is not None
+    assert handler_thread != caller_thread
+
+
 def test_answer_question_supports_dependent_tool_rounds() -> None:
     first_call = _function_call(
         "search_schema",
@@ -452,7 +494,7 @@ def test_answer_question_supports_dependent_tool_rounds() -> None:
     result = answer_question(
         "Was bedeutet Diagnosesicherung?",
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -507,7 +549,7 @@ def test_answer_question_enforces_tool_round_limit() -> None:
         answer_question(
             "Test",
             tools=[tool],
-            client=cast(OpenAI, fake_client),
+            client=cast(AsyncOpenAI, fake_client),
             endpoint=_endpoint(),
             max_tool_rounds=1,
         )
@@ -538,7 +580,7 @@ def test_answer_question_enforces_version_constraint_on_tool_calls() -> None:
         "Welche Werte sind erlaubt?",
         version_context=_version_context(constraint="3.0.5"),
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -571,7 +613,7 @@ def test_answer_question_applies_default_version_to_null_tool_argument() -> None
         "Welche Werte sind erlaubt?",
         version_context=_version_context(),
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -606,7 +648,7 @@ def test_answer_question_preserves_versions_for_comparison() -> None:
         "Vergleiche 3.0.4 und 3.0.5.",
         version_context=_version_context(),
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -643,7 +685,7 @@ def test_answer_question_returns_unsupported_version_to_model() -> None:
         "Was gilt in Version 9.9.9?",
         version_context=_version_context(),
         tools=[tool],
-        client=cast(OpenAI, fake_client),
+        client=cast(AsyncOpenAI, fake_client),
         endpoint=_endpoint(),
     )
 
@@ -670,7 +712,7 @@ def test_answer_question_rejects_unknown_tool_call() -> None:
     with pytest.raises(ToolCallError, match="Unknown tool"):
         answer_question(
             "Test",
-            client=cast(OpenAI, fake_client),
+            client=cast(AsyncOpenAI, fake_client),
             endpoint=_endpoint(),
         )
 
@@ -681,6 +723,6 @@ def test_answer_question_rejects_supported_answer_without_citations() -> None:
     with pytest.raises(ToolCallError, match="without citations"):
         answer_question(
             "Test",
-            client=cast(OpenAI, fake_client),
+            client=cast(AsyncOpenAI, fake_client),
             endpoint=_endpoint(),
         )

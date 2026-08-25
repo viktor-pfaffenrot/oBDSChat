@@ -99,6 +99,7 @@ services:
     restart: unless-stopped
     environment:
       BACKEND_URL: http://backend:8000
+      OBDSCHAT_QUERY_CONCURRENCY: ${OBDSCHAT_QUERY_CONCURRENCY:-8}
     depends_on:
       backend:
         condition: service_healthy
