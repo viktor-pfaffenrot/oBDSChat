@@ -17,8 +17,8 @@ schema facts. It assumes you understand [How source data is stored](../explanati
    fields. Choose literal versus stemmed text behavior explicitly.
 7. Update `tests/test_sync_sources.py`, `tests/test_search.py`, and
    `tests/test_db_smoke.py`.
-8. Run `make docs-db` and review the generated
-   [database reference](../database/README.md).
+8. Run `make docs-check` and review the rendered
+   [database reference](../database/index.md).
 9. Test the forward migration on a disposable copy of an existing database, then
    test fresh bootstrap separately.
 
@@ -81,4 +81,4 @@ produces a deterministic in-memory index.
 - Remote content is validated before persistence.
 - SQL stays parameterized.
 - Search semantics are proven with real ParadeDB.
-- Generated database reference matches `db/init.sql`.
+- Database reference matches the current `db/init.sql`.

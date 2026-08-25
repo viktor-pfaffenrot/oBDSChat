@@ -3,8 +3,7 @@
 Local, source-grounded chat for the German oBDS.
 
 User and developer documentation lives in `docs/`. Build it with `make docs` or
-preview it with `make docs-serve`. Both commands require Docker to generate the
-database reference from a disposable PostgreSQL instance.
+preview it with `make docs-serve`.
 
 ## Docker Compose
 

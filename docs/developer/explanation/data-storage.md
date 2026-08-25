@@ -57,10 +57,10 @@ schema-version table. Any schema-changing feature must define both:
 - desired bootstrap state for new databases;
 - an explicit forward migration for existing databases.
 
-The [database reference](../database/README.md) is generated from a disposable
-database initialized with `db/init.sql`. It contains table and column facts plus
-a Mermaid ER diagram. `db/init.sql` remains the canonical bootstrap definition;
-run `make docs-db` after changing it and commit the regenerated reference.
+The [database reference](../database/index.md) summarizes the current table,
+column, constraint, and index definitions. `db/init.sql` remains canonical; keep
+the reference aligned and run `make docs-check` after changing the bootstrap
+definition.
 
 ## Synchronization consistency
 

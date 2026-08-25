@@ -19,8 +19,6 @@ Use this map to locate ownership before making a change.
 | `scripts/run_eval.py` | Production-style question evaluation and report generation |
 | `db/init.sql` | Current PostgreSQL bootstrap schema and ParadeDB index |
 | `docker-compose.yaml` | Runtime topology, dependency ordering, health checks, ports, volumes, and secrets |
-| `docker-compose.docs.yaml` | Disposable ParadeDB and pinned tbls services used by documentation generation |
-| `.tbls.yml` | Database reference scope, output, Mermaid, and lint configuration |
 | `Dockerfile.backend` | Backend and source-sync image |
 | `Dockerfile.frontend` | Frontend image |
 | `.env.example` | Compose-oriented runtime configuration template |
@@ -32,7 +30,7 @@ Use this map to locate ownership before making a change.
 | `docs/developer/how-to/deploy.md` | Single-host deployment and upgrade procedure |
 | `docs/developer/how-to/troubleshoot-operations.md` | Logging, diagnosis, and service recovery procedure |
 | `docs/developer/reference/openapi.json` | Generated REST contract rendered by MkDocs |
-| `docs/developer/database/` | Generated PostgreSQL table, column, index, and ER reference |
+| `docs/developer/database/` | Authored PostgreSQL table, column, constraint, and index reference |
 | `mkdocs.yml` | Documentation theme, navigation, Markdown extensions, and link validation |
 | `Makefile` | Documentation build, preview, and strict-check entry points |
 

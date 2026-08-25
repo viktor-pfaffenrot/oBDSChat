@@ -11,7 +11,6 @@ variables.
 - Python 3.13.9 or newer
 - `uv`
 - `make` for documentation commands
-- Docker access for the generated database reference
 - an OpenAI or Requesty API key
 - outbound HTTPS access to the selected model provider and official oBDS sources
 
@@ -126,10 +125,9 @@ reuse the Compose-oriented file without changing container paths.
 make docs-serve
 ```
 
-The command exports OpenAPI, starts a disposable PostgreSQL instance, regenerates
-the tbls database reference, stops the instance, and starts MkDocs. Open
-<http://127.0.0.1:8000>. If the backend already uses port 8000, stop it or run
-MkDocs directly with a different address.
+The command exports OpenAPI and starts MkDocs. Open <http://127.0.0.1:8000>. If
+the backend already uses port 8000, stop it or run MkDocs directly with a
+different address.
 
 ## Stop local services
 
