@@ -9,7 +9,8 @@ Umsetzungsleitfaden, then exposes the evidence used for the answer.
 - **Using the application:** start with [Get started](user/tutorials/get-started.md),
   then use the [workflow guides](user/how-to/use-obdschat.md).
 - **Changing the application:** read [System architecture](developer/explanation/system-architecture.md)
-  and [Local development](developer/how-to/local-development.md).
+  and the [architecture decision records](developer/explanation/ADR.md) before
+  using [Local development](developer/how-to/local-development.md).
 - **Changing backend behavior:** read [Backend architecture](developer/explanation/backend-architecture.md)
   and [Extend the backend](developer/how-to/extend-backend.md).
 - **Changing PostgreSQL or synchronized sources:** read [Data storage](developer/explanation/data-storage.md)
@@ -24,10 +25,11 @@ Umsetzungsleitfaden, then exposes the evidence used for the answer.
 
 This documentation currently covers user workflows, developer-facing
 architecture, setup, testing, common change paths, and embedded REST API
-reference. The PostgreSQL reference describes the canonical bootstrap schema.
-Compose deployment, configuration, logging, and troubleshooting are covered for
-operators. FastAPI's generated OpenAPI schema remains the canonical description
-of the HTTP contract.
+reference. Architecture decision records explain why the main dependencies and
+system boundaries were chosen. The PostgreSQL reference describes the canonical
+bootstrap schema. Compose deployment, configuration, logging, and
+troubleshooting are covered for operators. FastAPI's generated OpenAPI schema
+remains the canonical description of the HTTP contract.
 
 ## Build these docs
 

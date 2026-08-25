@@ -59,3 +59,5 @@ nav:
       - Runtime configuration: developer/reference/runtime-configuration.md
       - Deploy and upgrade: developer/how-to/deploy.md
       - Logging and troubleshooting: developer/how-to/troubleshoot-operations.md
+  - Architecture Decision Records:
+      - Decisions and rationale: developer/explanation/ADR.md
