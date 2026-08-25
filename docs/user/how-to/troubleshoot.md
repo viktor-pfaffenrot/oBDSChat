@@ -19,7 +19,8 @@ the running services.
    and exact error text. Do not send secret values.
 
 The frontend allows long backend work because one request can include source
-search, several model tool rounds, and final answer validation.
+search, several model tool rounds, and final answer validation. A request can
+also wait briefly when all query slots configured by the maintainer are active.
 
 ## `Backend ist derzeit nicht erreichbar.`
 

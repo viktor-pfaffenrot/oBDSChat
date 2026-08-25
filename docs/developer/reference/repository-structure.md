@@ -7,12 +7,12 @@ Use this map to locate ownership before making a change.
 | `src/backend/app.py` | FastAPI routes, public request/response models, HTTP error mapping, source selection |
 | `src/backend/config.py` | Validated environment configuration, secrets, provider and PostgreSQL URI resolution |
 | `src/backend/db.py` | PostgreSQL connection factory |
-| `src/backend/llm.py` | Provider-neutral Chat Completions loop, strict local tool execution, answer and citation policy |
+| `src/backend/llm.py` | Asynchronous provider-neutral Chat Completions loop, strict local tool execution, answer and citation policy |
 | `src/backend/tools.py` | Tool schemas, adapters, citation IDs, and `TOOLS` registry |
 | `src/backend/search.py` | ParadeDB BM25 queries and typed prose search results |
-| `src/backend/xsd.py` | XSD discovery, parsing, caching, search, exact lookup, and source-line evidence |
+| `src/backend/xsd.py` | XSD discovery, parsing, caching, ranked search, exhaustive concept lookup, exact lookup, and source-line evidence |
 | `src/frontend/api.py` | Typed HTTP client and frontend copy of backend boundary models |
-| `src/frontend/app.py` | Gradio state/events, answer rendering, source cards, XSD viewer, frontend health route |
+| `src/frontend/app.py` | Gradio state/events and query concurrency, answer rendering, source cards, XSD viewer, frontend health route |
 | `src/frontend/assets/styles.css` | Gradio and XSD viewer presentation |
 | `scripts/sync_sources.py` | Official XSD and Confluence ingestion, validation, extraction, and replacement |
 | `scripts/export_openapi.py` | Deterministic FastAPI OpenAPI export and freshness check |

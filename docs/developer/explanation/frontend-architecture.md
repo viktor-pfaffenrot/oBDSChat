@@ -16,6 +16,7 @@ successful JSON response.
 
 - immutable conversation state models;
 - Gradio event handlers;
+- bounded query-event concurrency configuration;
 - chat and source-card rendering;
 - clipboard formatting;
 - an HTML XSD evidence viewer;
@@ -39,6 +40,12 @@ stateDiagram-v2
 renders a visible progress state without waiting for HTTP. A chained Gradio event
 runs `complete_question`, which performs one backend request and replaces the
 pending state with either a completed turn or an error card.
+
+The button-click and Enter-key completion events share the `backend-queries`
+concurrency group. `OBDSCHAT_QUERY_CONCURRENCY` sets its positive per-process
+limit and defaults to eight. This permits requests from different frontend
+sessions to overlap while bounding work initiated by one frontend process. It
+does not limit clients that call the backend API directly.
 
 Completed turns retain the answer and source metadata. Before each request, the
 frontend selects the newest complete turns within backend count and character
@@ -69,5 +76,7 @@ consumption. A contract change must update both sides and their boundary tests.
 The client creates a new `httpx.Client` for each operation. This avoids shared
 client lifecycle concerns but does not reuse connections. Conversation state is
 session-local and has no durable store. Answers are atomic rather than streamed.
-These constraints keep the frontend small, but they are explicit design points
-to revisit for higher request volume, saved conversations, or streaming output.
+Query concurrency is bounded per frontend process rather than across a
+multi-instance deployment. These constraints keep the frontend small, but they
+are explicit design points to revisit for higher request volume, saved
+conversations, or streaming output.
