@@ -9,6 +9,7 @@ from backend.llm import LocalTool
 from backend.search import get_source_excerpt, search_umsetzungsleitfaden
 from backend.xsd import (
     get_schema_cardinality,
+    get_schema_concept_locations,
     get_schema_element,
     get_schema_values,
     search_schema,
@@ -109,6 +110,13 @@ def _get_schema_element(
     return _dump_models(get_schema_element(name=name, path=path, version=version))
 
 
+def _get_schema_concept_locations(
+    concept: str,
+    version: str | None,
+) -> list[dict[str, object]]:
+    return _dump_models(get_schema_concept_locations(concept, version=version))
+
+
 def _get_schema_values(
     name: str | None,
     path: str | None,
@@ -161,6 +169,31 @@ TOOLS: Final[tuple[LocalTool, ...]] = (
             }
         ),
         handler=_search_schema,
+    ),
+    LocalTool(
+        name="get_schema_concept_locations",
+        description=(
+            "Exhaustively find every oBDS XSD location related to a domain "
+            "concept and identify its containing message type. Use this for "
+            "questions asking how or where something can be reported, in which "
+            "message types it occurs, or for all occurrences. Unlike "
+            "search_schema, this tool has no result limit and matches element "
+            "names and named custom datatypes. When no structural match exists, "
+            "it falls back to documentation and enumeration meanings."
+        ),
+        parameters=_object_schema(
+            {
+                "concept": {
+                    "type": "string",
+                    "description": (
+                        "Short canonical singular domain concept, for example "
+                        "TNM, Rezidiv, Fernmetastase, Histologie, or Genetik."
+                    ),
+                },
+                "version": _version_property(),
+            }
+        ),
+        handler=_get_schema_concept_locations,
     ),
     LocalTool(
         name="get_schema_element",

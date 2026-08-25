@@ -10,6 +10,7 @@ from backend import tools
 
 EXPECTED_TOOL_NAMES = (
     "search_schema",
+    "get_schema_concept_locations",
     "get_schema_element",
     "get_schema_values",
     "get_schema_cardinality",
@@ -29,6 +30,11 @@ class _SchemaResult(BaseModel):
     version: str
     source_url: HttpUrl
     source_type: str = "xsd"
+
+
+class _SchemaConceptResult(_SchemaResult):
+    message_type: str
+    matched_fields: tuple[str, ...]
 
 
 class _DocumentResult(BaseModel):
@@ -67,6 +73,7 @@ def test_all_registered_tools_use_strict_chat_completion_schemas() -> None:
 def test_optional_arguments_are_nullable_in_strict_schemas() -> None:
     expected_nullable_properties = {
         "search_schema": {"version", "limit"},
+        "get_schema_concept_locations": {"version"},
         "get_schema_element": {"name", "path", "version"},
         "get_schema_values": {"name", "path", "version"},
         "get_schema_cardinality": {"name", "path", "version"},
@@ -95,6 +102,12 @@ def test_optional_arguments_are_nullable_in_strict_schemas() -> None:
             "search_schema",
             {"query": "Diagnose", "version": None, "limit": None},
             (("Diagnose",), {"version": None}),
+        ),
+        (
+            "get_schema_concept_locations",
+            "get_schema_concept_locations",
+            {"concept": "TNM", "version": "3.0.5"},
+            (("TNM",), {"version": "3.0.5"}),
         ),
         (
             "get_schema_element",
@@ -231,3 +244,29 @@ def test_schema_tool_results_include_stable_citation_ids(
 
     assert isinstance(result, list)
     assert result[0]["citation_id"] == ("xsd:3.0.5:/oBDS/Diagnose/Diagnosesicherung")
+
+
+def test_concept_location_tool_preserves_coverage_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    schema_result = _SchemaConceptResult(
+        name="TNM",
+        path="/oBDS/Meldung/OP/TNM",
+        version="3.0.5",
+        source_url="https://www.basisdatensatz.de/xml/oBDS_v3.0.5.xsd",
+        message_type="OP",
+        matched_fields=("name", "datatype"),
+    )
+    concept_lookup = Mock(return_value=[schema_result])
+    monkeypatch.setattr(tools, "get_schema_concept_locations", concept_lookup)
+
+    result = _registered_tool("get_schema_concept_locations").handler(
+        concept="TNM",
+        version="3.0.5",
+    )
+
+    concept_lookup.assert_called_once_with("TNM", version="3.0.5")
+    assert isinstance(result, list)
+    assert result[0]["citation_id"] == "xsd:3.0.5:/oBDS/Meldung/OP/TNM"
+    assert result[0]["message_type"] == "OP"
+    assert result[0]["matched_fields"] == ["name", "datatype"]
