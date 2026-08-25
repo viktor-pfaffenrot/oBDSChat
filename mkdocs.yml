@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: oBDSChat documentation
+site_description: User and developer documentation for oBDSChat
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+
+plugins:
+  - search
+  - render_swagger
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+  - User documentation:
+      - Get started: user/tutorials/get-started.md
+      - Use oBDSChat: user/how-to/use-obdschat.md
+      - Configuration: user/reference/configuration.md
+      - Troubleshoot: user/how-to/troubleshoot.md
+  - Developer documentation:
+      - System architecture: developer/explanation/system-architecture.md
+      - Repository structure: developer/reference/repository-structure.md
+      - Local development: developer/how-to/local-development.md
+      - Backend architecture: developer/explanation/backend-architecture.md
+      - Frontend architecture: developer/explanation/frontend-architecture.md
+      - Request and data flows: developer/explanation/request-data-flows.md
+      - Data storage: developer/explanation/data-storage.md
+      - Extend the backend: developer/how-to/extend-backend.md
+      - Change stored data: developer/how-to/change-stored-data.md
+      - Test changes: developer/how-to/test-changes.md
+  - REST API reference: developer/reference/rest-api.md
+  - Database reference: developer/database/index.md
+  - Operations:
+      - Runtime configuration: developer/reference/runtime-configuration.md
+      - Deploy and upgrade: developer/how-to/deploy.md
+      - Logging and troubleshooting: developer/how-to/troubleshoot-operations.md
+  - Architecture Decision Records:
+      - Decisions and rationale: developer/explanation/ADR.md

@@ -43,8 +43,11 @@ class SchemaEnumValue(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    value: str
-    documentation: str | None = None
+    value: str = Field(description="Allowed lexical value from the XSD enumeration.")
+    documentation: str | None = Field(
+        default=None,
+        description="Documentation attached to this enumeration value.",
+    )
 
 
 class SchemaElement(BaseModel):
@@ -103,9 +106,11 @@ class SchemaSourceLine(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    number: int = Field(gt=0)
-    content: str
-    highlighted: bool
+    number: int = Field(gt=0, description="One-based source line number.")
+    content: str = Field(description="Original XSD source line content.")
+    highlighted: bool = Field(
+        description="Whether this line belongs to the selected declaration."
+    )
 
 
 class SchemaEvidence(BaseModel):

@@ -2,6 +2,9 @@
 
 Local, source-grounded chat for the German oBDS.
 
+User and developer documentation lives in `docs/`. Build it with `make docs` or
+preview it with `make docs-serve`.
+
 ## Docker Compose
 
 Copy `.env.example` to `.env`, configure one model provider, and write the

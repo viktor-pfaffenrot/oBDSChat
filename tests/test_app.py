@@ -22,6 +22,17 @@ from backend.xsd import (
 )
 
 client = TestClient(app_module.app)
+PUBLIC_SCHEMA_NAMES = (
+    "ConversationTurnRequest",
+    "ErrorResponse",
+    "HealthResponse",
+    "QueryRequest",
+    "QueryResponse",
+    "SchemaEnumValue",
+    "SchemaSourceLine",
+    "SourceReference",
+    "XsdEvidenceResponse",
+)
 
 
 class _Catalog:
@@ -42,6 +53,34 @@ def test_health_reports_liveness() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_openapi_operations_have_reference_metadata() -> None:
+    schema = app_module.app.openapi()
+
+    assert schema["info"]["summary"]
+    assert schema["info"]["description"]
+    assert [tag["name"] for tag in schema["tags"]] == [
+        "System",
+        "Questions",
+        "Source evidence",
+    ]
+    for path_item in schema["paths"].values():
+        for operation in path_item.values():
+            assert operation["operationId"]
+            assert operation["summary"]
+            assert operation["description"]
+            assert operation["tags"]
+
+
+def test_public_openapi_schema_fields_have_descriptions() -> None:
+    component_schemas = app_module.app.openapi()["components"]["schemas"]
+
+    for schema_name in PUBLIC_SCHEMA_NAMES:
+        model_schema = component_schemas[schema_name]
+        assert model_schema["description"]
+        for field_schema in model_schema["properties"].values():
+            assert field_schema["description"]
 
 
 def test_xsd_evidence_returns_exact_source_lines(
