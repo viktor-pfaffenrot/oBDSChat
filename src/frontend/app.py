@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from html import escape
 from pathlib import Path
 from textwrap import dedent
@@ -25,6 +26,26 @@ CSS_PATH: Final = Path(__file__).with_name("assets") / "styles.css"
 STYLESHEET: Final = CSS_PATH.read_text(encoding="utf-8")
 MAX_HISTORY_TURNS: Final = 10
 MAX_HISTORY_CHARACTERS: Final = 50_000
+QUERY_CONCURRENCY_ENV: Final = "OBDSCHAT_QUERY_CONCURRENCY"
+DEFAULT_QUERY_CONCURRENCY: Final = 8
+
+
+def _load_query_concurrency() -> int:
+    configured_value = os.environ.get(QUERY_CONCURRENCY_ENV)
+    if configured_value is None:
+        return DEFAULT_QUERY_CONCURRENCY
+    try:
+        concurrency = int(configured_value)
+    except ValueError as error:
+        raise RuntimeError(
+            f"{QUERY_CONCURRENCY_ENV} must be a positive integer"
+        ) from error
+    if concurrency < 1:
+        raise RuntimeError(f"{QUERY_CONCURRENCY_ENV} must be a positive integer")
+    return concurrency
+
+
+QUERY_CONCURRENCY: Final = _load_query_concurrency()
 COPY_TO_CLIPBOARD_JS: Final = """
 async (text) => {
   if (!text) {
@@ -466,6 +487,8 @@ def build_interface() -> gr.Blocks:
             complete_question,
             inputs=state,
             outputs=(chatbot, state),
+            concurrency_limit=QUERY_CONCURRENCY,
+            concurrency_id="backend-queries",
         )
         question_event = question.submit(
             prepare_question,
@@ -477,6 +500,8 @@ def build_interface() -> gr.Blocks:
             complete_question,
             inputs=state,
             outputs=(chatbot, state),
+            concurrency_limit=QUERY_CONCURRENCY,
+            concurrency_id="backend-queries",
         )
         copy_event = copy_chat.click(
             format_conversation_for_clipboard,

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import re
 import sys
 import time
 import unicodedata
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +18,7 @@ from zoneinfo import ZoneInfo
 import matplotlib.pyplot as plt
 import yaml
 from matplotlib.figure import Figure
-from openai import OpenAI
+from openai import AsyncOpenAI
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from backend.config import LlmEndpoint, LlmProvider, load_settings
@@ -175,10 +176,10 @@ class ProductionAnswerer:
     """Call the same model and local tools used by the production query path."""
 
     endpoint: LlmEndpoint
-    client: OpenAI
+    client: AsyncOpenAI
     catalog: SchemaCatalog
 
-    def __call__(self, case: EvaluationCase) -> QuestionAnswer:
+    async def __call__(self, case: EvaluationCase) -> QuestionAnswer:
         constraint = None
         if case.obds_version is not None:
             constraint = self.catalog.resolve_version(case.obds_version)
@@ -187,7 +188,7 @@ class ProductionAnswerer:
             available_versions=self.catalog.versions,
             constraint=constraint,
         )
-        return answer_question(
+        return await answer_question(
             case.question,
             version_context=version_context,
             tools=TOOLS,
@@ -196,7 +197,7 @@ class ProductionAnswerer:
         )
 
 
-Answerer = Callable[[EvaluationCase], QuestionAnswer]
+Answerer = Callable[[EvaluationCase], Awaitable[QuestionAnswer]]
 
 
 def load_evaluation_cases(
@@ -235,7 +236,7 @@ def select_evaluation_cases(
     return selected_cases
 
 
-def run_evaluation(
+async def run_evaluation(
     cases: Sequence[EvaluationCase],
     answerer: Answerer,
     *,
@@ -249,7 +250,7 @@ def run_evaluation(
             progress(f"[{index}/{case_count}] {case.id}: {case.question}")
         started_at = time.monotonic()
         try:
-            answer = answerer(case)
+            answer = await answerer(case)
             duration = time.monotonic() - started_at
             result = score_evaluation_case(
                 case,
@@ -402,7 +403,7 @@ def write_report(report: EvaluationReport, output_path: Path) -> None:
     output_path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
 
 
-def run_production_evaluation(
+async def run_production_evaluation(
     *,
     questions_path: Path = DEFAULT_QUESTIONS_PATH,
     output_directory: Path = DEFAULT_OUTPUT_DIRECTORY,
@@ -414,11 +415,6 @@ def run_production_evaluation(
     """Execute selected cases against production dependencies and save artifacts."""
     settings = load_settings()
     endpoint = settings.resolve_llm_endpoint()
-    answerer = ProductionAnswerer(
-        endpoint=endpoint,
-        client=create_client(endpoint),
-        catalog=get_schema_catalog(),
-    )
     all_cases = load_evaluation_cases(questions_path)
     cases = select_evaluation_cases(
         all_cases,
@@ -426,7 +422,13 @@ def run_production_evaluation(
         case_ids=case_ids,
         limit=limit,
     )
-    results = run_evaluation(cases, answerer)
+    async with create_client(endpoint) as client:
+        answerer = ProductionAnswerer(
+            endpoint=endpoint,
+            client=client,
+            catalog=get_schema_catalog(),
+        )
+        results = await run_evaluation(cases, answerer)
     summary = summarize_results(results)
     report = EvaluationReport(
         generated_at=datetime.now(ZoneInfo("Europe/Berlin")),
@@ -593,13 +595,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run production evaluation from the command line."""
     arguments = _parse_arguments(argv)
     try:
-        report, _ = run_production_evaluation(
-            questions_path=arguments.questions,
-            output_directory=arguments.output_directory,
-            categories=frozenset(arguments.category),
-            case_ids=frozenset(arguments.case_id),
-            limit=arguments.limit,
-            show_plot=not arguments.no_show,
+        report, _ = asyncio.run(
+            run_production_evaluation(
+                questions_path=arguments.questions,
+                output_directory=arguments.output_directory,
+                categories=frozenset(arguments.category),
+                case_ids=frozenset(arguments.case_id),
+                limit=arguments.limit,
+                show_plot=not arguments.no_show,
+            )
         )
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Evaluation could not start: {error}", file=sys.stderr)

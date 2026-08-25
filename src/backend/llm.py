@@ -1,11 +1,12 @@
 """Provider-neutral Chat Completions integration for the backend."""
 
+import asyncio
 import json
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Self
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
     ChatCompletionMessageFunctionToolCall,
@@ -109,95 +110,110 @@ class LocalTool(BaseModel):
         }
 
 
-def create_client(endpoint: LlmEndpoint | None = None) -> OpenAI:
+def create_client(endpoint: LlmEndpoint | None = None) -> AsyncOpenAI:
     """Create an OpenAI-compatible client for the resolved endpoint."""
-    resolved_endpoint = endpoint or load_settings().resolve_llm_endpoint()
-    return OpenAI(
+    resolved_endpoint = endpoint or _resolve_endpoint()
+    return AsyncOpenAI(
         api_key=resolved_endpoint.api_key,
         base_url=resolved_endpoint.base_url,
     )
 
 
-def answer_question(
+async def answer_question(
     question: str,
     *,
     history: Sequence[ConversationTurn] = (),
     version_context: VersionContext | None = None,
     tools: Sequence[LocalTool] = (),
-    client: OpenAI | None = None,
+    client: AsyncOpenAI | None = None,
     endpoint: LlmEndpoint | None = None,
     max_tool_rounds: int = 10,
 ) -> QuestionAnswer:
-    """Answer a question, executing local function calls requested by the model."""
+    """Answer a question without blocking other request tasks."""
     normalized_question = question.strip()
     if not normalized_question:
         raise ValueError("question must not be empty")
     if max_tool_rounds < 1:
         raise ValueError("max_tool_rounds must be at least 1")
 
-    resolved_endpoint = endpoint or load_settings().resolve_llm_endpoint()
+    resolved_endpoint = endpoint
+    if resolved_endpoint is None:
+        resolved_endpoint = await asyncio.to_thread(_resolve_endpoint)
     resolved_client = client or create_client(resolved_endpoint)
+    owns_client = client is None
     tools_by_name = _index_tools(tools)
     tool_definitions = [tool.as_chat_completion_tool() for tool in tools]
     messages = _build_messages(normalized_question, history, version_context)
     tool_executions: list[ToolExecution] = []
     tool_rounds = 0
 
-    while True:
-        tool_choice = "required" if tool_definitions and tool_rounds == 0 else "auto"
-        completion = resolved_client.chat.completions.parse(
-            model=resolved_endpoint.route,
-            messages=messages,
-            response_format=ModelAnswer,
-            tool_choice=tool_choice,
-            tools=tool_definitions,
-            store=False,
-        )
-        if not completion.choices:
-            raise ToolCallError("Model returned no completion choice")
-
-        message = completion.choices[0].message
-        tool_calls = message.tool_calls or []
-        if not tool_calls:
-            model_answer = message.parsed
-            if model_answer is None:
-                raise ToolCallError("Model returned no structured answer")
-            answer = model_answer.answer.strip()
-            if not answer:
-                raise ToolCallError("Model returned an empty answer")
-            citation_ids = _normalize_citation_ids(model_answer.citation_ids)
-            _validate_citation_policy(model_answer.supported, citation_ids)
-            return QuestionAnswer(
-                answer=answer,
-                tool_executions=tuple(tool_executions),
-                citation_ids=citation_ids,
+    try:
+        while True:
+            tool_choice = (
+                "required" if tool_definitions and tool_rounds == 0 else "auto"
             )
-
-        function_calls: list[ChatCompletionMessageFunctionToolCall] = []
-        for tool_call in tool_calls:
-            if tool_call.type != "function":
-                raise ToolCallError(f"Unsupported tool-call type: {tool_call.type}")
-            function_calls.append(tool_call)
-
-        messages.append(_build_assistant_tool_message(message.content, function_calls))
-        if tool_rounds >= max_tool_rounds:
-            raise ToolCallError("Model tool-call limit exceeded")
-        tool_rounds += 1
-
-        for function_call in function_calls:
-            execution = _execute_tool_call(
-                function_call,
-                tools_by_name,
-                version_context=version_context,
+            completion = await resolved_client.chat.completions.parse(
+                model=resolved_endpoint.route,
+                messages=messages,
+                response_format=ModelAnswer,
+                tool_choice=tool_choice,
+                tools=tool_definitions,
+                store=False,
             )
-            tool_executions.append(execution)
+            if not completion.choices:
+                raise ToolCallError("Model returned no completion choice")
+
+            message = completion.choices[0].message
+            tool_calls = message.tool_calls or []
+            if not tool_calls:
+                model_answer = message.parsed
+                if model_answer is None:
+                    raise ToolCallError("Model returned no structured answer")
+                answer = model_answer.answer.strip()
+                if not answer:
+                    raise ToolCallError("Model returned an empty answer")
+                citation_ids = _normalize_citation_ids(model_answer.citation_ids)
+                _validate_citation_policy(model_answer.supported, citation_ids)
+                return QuestionAnswer(
+                    answer=answer,
+                    tool_executions=tuple(tool_executions),
+                    citation_ids=citation_ids,
+                )
+
+            function_calls: list[ChatCompletionMessageFunctionToolCall] = []
+            for tool_call in tool_calls:
+                if tool_call.type != "function":
+                    raise ToolCallError(f"Unsupported tool-call type: {tool_call.type}")
+                function_calls.append(tool_call)
+
             messages.append(
-                {
-                    "role": "tool",
-                    "tool_call_id": function_call.id,
-                    "content": execution.output,
-                }
+                _build_assistant_tool_message(message.content, function_calls)
             )
+            if tool_rounds >= max_tool_rounds:
+                raise ToolCallError("Model tool-call limit exceeded")
+            tool_rounds += 1
+
+            for function_call in function_calls:
+                execution = await _execute_tool_call(
+                    function_call,
+                    tools_by_name,
+                    version_context=version_context,
+                )
+                tool_executions.append(execution)
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": function_call.id,
+                        "content": execution.output,
+                    }
+                )
+    finally:
+        if owns_client:
+            await resolved_client.close()
+
+
+def _resolve_endpoint() -> LlmEndpoint:
+    return load_settings().resolve_llm_endpoint()
 
 
 def _build_messages(
@@ -257,7 +273,7 @@ def _index_tools(tools: Sequence[LocalTool]) -> dict[str, LocalTool]:
     return tools_by_name
 
 
-def _execute_tool_call(
+async def _execute_tool_call(
     function_call: ChatCompletionMessageFunctionToolCall,
     tools: dict[str, LocalTool],
     *,
@@ -293,7 +309,7 @@ def _execute_tool_call(
         )
 
     try:
-        result = tool.handler(**arguments)
+        result = await asyncio.to_thread(tool.handler, **arguments)
     except (TypeError, ValueError) as error:
         raise ToolCallError(f"Invalid arguments for tool {tool_name}") from error
 

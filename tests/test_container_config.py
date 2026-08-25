@@ -25,7 +25,10 @@ def test_compose_loads_runtime_configuration_from_dotenv() -> None:
     for service_name in ("obdschat-db", "source-sync", "backend"):
         assert services[service_name]["env_file"] == ".env"
         assert "environment" not in services[service_name]
-    assert services["frontend"]["environment"] == {"BACKEND_URL": "http://backend:8000"}
+    assert services["frontend"]["environment"] == {
+        "BACKEND_URL": "http://backend:8000",
+        "OBDSCHAT_QUERY_CONCURRENCY": "${OBDSCHAT_QUERY_CONCURRENCY:-8}",
+    }
 
 
 def test_compose_mounts_secrets_only_where_required() -> None:

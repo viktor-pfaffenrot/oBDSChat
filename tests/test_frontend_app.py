@@ -83,6 +83,50 @@ def test_frontend_health_is_independent_from_backend() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_query_events_allow_bounded_parallel_requests() -> None:
+    query_functions = [
+        block_function
+        for block_function in app_module.interface.fns.values()
+        if block_function.fn is app_module.complete_question
+    ]
+
+    assert len(query_functions) == 2
+    assert app_module.QUERY_CONCURRENCY > 1
+    assert {block_function.concurrency_limit for block_function in query_functions} == {
+        app_module.QUERY_CONCURRENCY
+    }
+    assert {block_function.concurrency_id for block_function in query_functions} == {
+        "backend-queries"
+    }
+
+
+def test_query_concurrency_defaults_to_eight(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(app_module.QUERY_CONCURRENCY_ENV, raising=False)
+
+    assert app_module._load_query_concurrency() == 8
+
+
+def test_query_concurrency_is_configurable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(app_module.QUERY_CONCURRENCY_ENV, "12")
+
+    assert app_module._load_query_concurrency() == 12
+
+
+@pytest.mark.parametrize("configured_value", ["0", "-1", "many"])
+def test_query_concurrency_rejects_invalid_values(
+    monkeypatch: pytest.MonkeyPatch,
+    configured_value: str,
+) -> None:
+    monkeypatch.setenv(app_module.QUERY_CONCURRENCY_ENV, configured_value)
+
+    with pytest.raises(RuntimeError, match="must be a positive integer"):
+        app_module._load_query_concurrency()
+
+
 def test_xsd_viewer_links_have_same_tab_navigation_override() -> None:
     assert app_module.interface.head == app_module.SAME_TAB_XSD_LINKS_HEAD
     assert 'a[href^="/xsd-viewer/"]' in app_module.SAME_TAB_XSD_LINKS_HEAD

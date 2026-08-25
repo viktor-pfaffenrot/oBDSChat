@@ -1,7 +1,10 @@
 """Tests for the FastAPI backend boundary."""
 
+import asyncio
 from collections.abc import Callable
+from unittest.mock import AsyncMock
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -53,6 +56,43 @@ def test_health_reports_liveness() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_query_requests_run_concurrently(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def run_requests() -> tuple[httpx.Response, httpx.Response]:
+        both_requests_started = asyncio.Event()
+        started_requests = 0
+
+        async def fake_answer_question(
+            question: str,
+            **kwargs: object,
+        ) -> QuestionAnswer:
+            nonlocal started_requests
+            started_requests += 1
+            if started_requests == 2:
+                both_requests_started.set()
+            await asyncio.wait_for(both_requests_started.wait(), timeout=1)
+            return QuestionAnswer(answer=f"Antwort: {question}", tool_executions=())
+
+        monkeypatch.setattr(app_module, "get_schema_catalog", _Catalog)
+        monkeypatch.setattr(app_module, "answer_question", fake_answer_question)
+        transport = httpx.ASGITransport(app=app_module.app)
+        async with httpx.AsyncClient(
+            transport=transport,
+            base_url="http://testserver",
+        ) as async_client:
+            return await asyncio.gather(
+                async_client.post("/query", json={"question": "Frage A"}),
+                async_client.post("/query", json={"question": "Frage B"}),
+            )
+
+    responses = asyncio.run(run_requests())
+
+    assert [response.status_code for response in responses] == [200, 200]
+    assert [response.json()["answer"] for response in responses] == [
+        "Antwort: Frage A",
+        "Antwort: Frage B",
+    ]
 
 
 def test_openapi_operations_have_reference_metadata() -> None:
@@ -228,7 +268,10 @@ def test_query_returns_answer_default_version_and_deduplicated_sources(
         ),
     )
 
-    def fake_answer_question(question: str, **kwargs: object) -> QuestionAnswer:
+    async def fake_answer_question(
+        question: str,
+        **kwargs: object,
+    ) -> QuestionAnswer:
         assert question == "Welche Werte darf Diagnosesicherung haben?"
         assert kwargs["history"] == ()
         assert kwargs["version_context"] == VersionContext(
@@ -276,7 +319,10 @@ def test_query_forwards_normalized_conversation_history(
     monkeypatch.setattr(app_module, "get_schema_catalog", _Catalog)
     answer = QuestionAnswer(answer="Neue Antwort.", tool_executions=())
 
-    def fake_answer_question(question: str, **kwargs: object) -> QuestionAnswer:
+    async def fake_answer_question(
+        question: str,
+        **kwargs: object,
+    ) -> QuestionAnswer:
         assert question == "Und welche Werte sind dort erlaubt?"
         assert kwargs["history"] == (
             ConversationTurn(
@@ -326,7 +372,10 @@ def test_query_forwards_explicit_version(monkeypatch: pytest.MonkeyPatch) -> Non
         ),
     )
 
-    def fake_answer_question(question: str, **kwargs: object) -> QuestionAnswer:
+    async def fake_answer_question(
+        question: str,
+        **kwargs: object,
+    ) -> QuestionAnswer:
         assert kwargs["version_context"] == VersionContext(
             default_version="3.0.5",
             available_versions=("3.0.4", "3.0.5"),
@@ -390,7 +439,7 @@ def test_query_reports_multiple_versions_selected_by_tools(
     monkeypatch.setattr(
         app_module,
         "answer_question",
-        lambda *args, **kwargs: answer,
+        AsyncMock(return_value=answer),
     )
 
     response = client.post(
@@ -421,7 +470,7 @@ def test_query_rejects_unknown_model_citation(
     monkeypatch.setattr(
         app_module,
         "answer_question",
-        lambda *args, **kwargs: answer,
+        AsyncMock(return_value=answer),
     )
 
     response = client.post("/query", json={"question": "Frage"})
@@ -469,7 +518,7 @@ def test_query_sanitizes_dependency_errors(
 ) -> None:
     monkeypatch.setattr(app_module, "get_schema_catalog", _Catalog)
 
-    def fail(*args: object, **kwargs: object) -> QuestionAnswer:
+    async def fail(*args: object, **kwargs: object) -> QuestionAnswer:
         raise error_factory()
 
     monkeypatch.setattr(app_module, "answer_question", fail)
