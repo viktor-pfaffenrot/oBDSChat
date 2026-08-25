@@ -234,7 +234,7 @@
       answer_any: [genau einmal, maxOccurs 1]
   expected_source_types: [xsd]
 
-# XML hierarchy (5)
+# XML hierarchy (9)
 - id: tnm-quelle
   category: xml_hierarchy
   question: In welcher Meldung darf ein TNM gemeldet werden?
@@ -245,7 +245,7 @@
     - label: Pathologiemeldung
       answer_any: [Pathologiemeldung, Pathologie]
     - label: OP-Meldung
-      answer_any: [OP-Meldung, Operationsmeldung]
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
     - label: Verlaufsmeldung
       answer_any: [Verlaufsmeldung, Verlauf]
   expected_source_types: [xsd]
@@ -271,7 +271,7 @@
     - label: Pathologiemeldung
       answer_any: [Pathologiemeldung, Pathologie]
     - label: OP-Meldung
-      answer_any: [OP-Meldung, Operationsmeldung]
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
     - label: Verlaufsmeldung
       answer_any: [Verlaufsmeldung, Verlauf]
   expected_source_types: [xsd]
@@ -299,7 +299,71 @@
     - label: Pathologiemeldung
       answer_any: [Pathologiemeldung, Pathologie]
     - label: OP-Meldung
-      answer_any: [OP-Meldung, Operationsmeldung]
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
+
+- id: meldungstypen-tnm-alle
+  category: xml_hierarchy
+  question: In welchen Meldungstypen kann ein TNM gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: OP-Meldung
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
+
+- id: meldungswege-rezidiv
+  category: xml_hierarchy
+  question: Wie kann ein Rezidiv gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: TNM-Rezidivsymbol
+      answer_any: [r_Symbol, r-Symbol]
+    - label: Verlauf-Tumorstatus
+      answer_any: [Gesamtbeurteilung_Tumorstatus, Tumorstatus]
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: OP-Meldung
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
+
+- id: meldungswege-fernmetastase
+  category: xml_hierarchy
+  question: Wie kann eine Fernmetastase gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: XML-Struktur
+      answer_any: [Menge_FM, Fernmetastase]
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: Verlaufsmeldung
+      answer_any: [Verlaufsmeldung, Verlauf]
+  expected_source_types: [xsd]
+
+- id: meldungstypen-histologie
+  category: xml_hierarchy
+  question: Wo kann überall eine Histologie gemeldet werden?
+  obds_version: 3.0.5
+  facts:
+    - label: Diagnosemeldung
+      answer_any: [Diagnosemeldung, Diagnose]
+    - label: Pathologiemeldung
+      answer_any: [Pathologiemeldung, Pathologie]
+    - label: OP-Meldung
+      answer_any: [OP-Meldung, Operationsmeldung, OP]
     - label: Verlaufsmeldung
       answer_any: [Verlaufsmeldung, Verlauf]
   expected_source_types: [xsd]

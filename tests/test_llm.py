@@ -291,6 +291,8 @@ def test_answer_question_uses_configured_route() -> None:
     }
     assert request["messages"][0]["role"] == "system"
     assert "Answer questions about the German oBDS" in request["messages"][0]["content"]
+    assert "must call get_schema_concept_locations" in request["messages"][0]["content"]
+    assert "Citation IDs belong exclusively" in request["messages"][0]["content"]
     assert request["store"] is False
     assert "reasoning" not in request
     assert "reasoning_effort" not in request
@@ -430,6 +432,36 @@ def test_answer_question_executes_function_call() -> None:
         "tool_call_id": "call_1",
         "content": '{"element": "Diagnosesicherung"}',
     }
+
+
+def test_answer_question_removes_inline_citation_ids() -> None:
+    fake_client = FakeOpenAI(
+        [
+            _final_completion(
+                (
+                    "Belegte Antwort."
+                    "【xsd:3.0.5:/oBDS/Meldung/Diagnose/cTNM】 "
+                    "[umsetzungsleitfaden:42]"
+                ),
+                (
+                    "xsd:3.0.5:/oBDS/Meldung/Diagnose/cTNM",
+                    "umsetzungsleitfaden:42",
+                ),
+            )
+        ]
+    )
+
+    result = answer_question(
+        "Test",
+        client=cast(AsyncOpenAI, fake_client),
+        endpoint=_endpoint(),
+    )
+
+    assert result.answer == "Belegte Antwort."
+    assert result.citation_ids == (
+        "xsd:3.0.5:/oBDS/Meldung/Diagnose/cTNM",
+        "umsetzungsleitfaden:42",
+    )
 
 
 def test_answer_question_offloads_sync_tool_handler() -> None:

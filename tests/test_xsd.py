@@ -148,6 +148,66 @@ def test_search_prefers_exact_element_name_and_defaults_to_latest(
     }
 
 
+@pytest.mark.parametrize(
+    ("concept", "expected_message_types", "expected_location_count"),
+    [
+        ("TNM", {"Diagnose", "Pathologie", "OP", "Verlauf"}, 6),
+        ("Rezidiv", {"Diagnose", "Pathologie", "OP", "Verlauf"}, 10),
+        ("Fernmetastase", {"Diagnose", "Pathologie", "Verlauf"}, 4),
+        ("Histologie", {"Diagnose", "Pathologie", "OP", "Verlauf"}, 4),
+    ],
+)
+def test_get_concept_locations_covers_every_relevant_message_type(
+    catalog: SchemaCatalog,
+    concept: str,
+    expected_message_types: set[str],
+    expected_location_count: int,
+) -> None:
+    locations = catalog.get_concept_locations(concept, version="3.0.5")
+
+    assert len(locations) == expected_location_count
+    assert {location.message_type for location in locations} == (expected_message_types)
+    assert [location.path for location in locations] == sorted(
+        location.path for location in locations
+    )
+    assert all(location.matched_fields for location in locations)
+
+
+def test_get_concept_locations_matches_semantic_enumeration_documentation(
+    catalog: SchemaCatalog,
+) -> None:
+    locations = catalog.get_concept_locations("Rezidiv", version="3.0.5")
+
+    assert any(
+        location.name == "r_Symbol" and "enumeration" in location.matched_fields
+        for location in locations
+    )
+    assert any(
+        location.name == "Gesamtbeurteilung_Tumorstatus"
+        and "enumeration" in location.matched_fields
+        for location in locations
+    )
+
+
+def test_get_concept_locations_includes_plural_structural_name(
+    catalog: SchemaCatalog,
+) -> None:
+    locations = catalog.get_concept_locations("Fernmetastase", version="3.0.5")
+
+    assert any(
+        location.name == "Verlauf_Tumorstatus_Fernmetastasen"
+        and "name" in location.matched_fields
+        for location in locations
+    )
+
+
+def test_get_concept_locations_rejects_empty_concept(
+    catalog: SchemaCatalog,
+) -> None:
+    with pytest.raises(ValueError, match="concept"):
+        catalog.get_concept_locations("  ", version="3.0.5")
+
+
 def test_lookup_rejects_missing_selector(catalog: SchemaCatalog) -> None:
     with pytest.raises(ValueError, match="Either element name or path is required"):
         catalog.get_element(version="3.0.5")

@@ -24,6 +24,7 @@ SOURCE_CONTEXT_LINES: Final = 3
 MAX_SOURCE_EXCERPT_LINES: Final = 160
 
 MaxOccurs = int | Literal["unbounded"]
+ConceptMatchField = Literal["name", "datatype", "documentation", "enumeration"]
 
 
 class SchemaError(RuntimeError):
@@ -70,6 +71,13 @@ class SchemaElement(BaseModel):
     xsd_file: str
     source_url: str
     source_type: Literal["xsd"] = "xsd"
+
+
+class SchemaConceptLocation(SchemaElement):
+    """One exhaustive concept match and its containing oBDS message type."""
+
+    message_type: str | None = None
+    matched_fields: tuple[ConceptMatchField, ...] = Field(min_length=1)
 
 
 class SchemaValues(BaseModel):
@@ -217,6 +225,41 @@ class SchemaCatalog:
             if element.name.casefold() == normalized_name.casefold()
         ]
 
+    def get_concept_locations(
+        self,
+        concept: str,
+        version: str | None = None,
+    ) -> list[SchemaConceptLocation]:
+        """Find every schema location directly related to a domain concept."""
+        normalized_concept = _normalize_search_text(concept)
+        if not normalized_concept:
+            raise ValueError("Schema concept must not be empty")
+
+        index = self._get_index(version)
+        locations: list[SchemaConceptLocation] = []
+        for element in index.elements:
+            matched_fields = _concept_match_fields(element, normalized_concept)
+            if not matched_fields:
+                continue
+            locations.append(
+                SchemaConceptLocation(
+                    **element.model_dump(),
+                    message_type=_containing_message_type(element.path),
+                    matched_fields=matched_fields,
+                )
+            )
+
+        structural_locations = [
+            location
+            for location in locations
+            if "name" in location.matched_fields
+            or "datatype" in location.matched_fields
+        ]
+        if structural_locations:
+            locations = structural_locations
+        locations.sort(key=lambda location: location.path)
+        return locations
+
     def get_values(
         self,
         *,
@@ -350,6 +393,14 @@ def get_schema_element(
 ) -> list[SchemaElement]:
     """Find configured schema elements by exact name, path, or both."""
     return get_schema_catalog().get_element(name=name, path=path, version=version)
+
+
+def get_schema_concept_locations(
+    concept: str,
+    version: str | None = None,
+) -> list[SchemaConceptLocation]:
+    """Find all configured schema locations related to a domain concept."""
+    return get_schema_catalog().get_concept_locations(concept, version=version)
 
 
 def get_schema_values(
@@ -661,6 +712,73 @@ def _canonicalize_path(path: str) -> str:
 def _normalize_search_text(value: str) -> str:
     normalized_value = unicodedata.normalize("NFKC", value).casefold()
     return " ".join(re.sub(r"[^\w]+", " ", normalized_value).split())
+
+
+def _concept_match_fields(
+    element: SchemaElement,
+    normalized_concept: str,
+) -> tuple[ConceptMatchField, ...]:
+    matched_fields: list[ConceptMatchField] = []
+    if _name_matches_concept(element.name, normalized_concept):
+        matched_fields.append("name")
+
+    normalized_datatype = _normalize_search_text(element.datatype)
+    if (
+        _is_custom_datatype(element.datatype)
+        and normalized_concept in normalized_datatype
+    ):
+        matched_fields.append("datatype")
+
+    normalized_documentation = _normalize_search_text(
+        " ".join(
+            text
+            for text in (element.documentation, element.datatype_documentation)
+            if text
+        )
+    )
+    if normalized_concept in normalized_documentation:
+        matched_fields.append("documentation")
+
+    if any(
+        normalized_concept
+        in _normalize_search_text(f"{value.value} {value.documentation or ''}")
+        for value in element.allowed_values
+    ):
+        matched_fields.append("enumeration")
+
+    return tuple(matched_fields)
+
+
+def _name_matches_concept(name: str, normalized_concept: str) -> bool:
+    normalized_name_parts = _normalize_search_text(name.replace("_", " ")).split()
+    compact_concept = normalized_concept.replace(" ", "")
+    final_name_part = normalized_name_parts[-1]
+    if final_name_part == compact_concept:
+        return True
+    if not final_name_part.startswith(compact_concept):
+        return False
+    return final_name_part.removeprefix(compact_concept) in {
+        "e",
+        "en",
+        "er",
+        "n",
+        "s",
+    }
+
+
+def _is_custom_datatype(datatype: str) -> bool:
+    return not datatype.startswith("xs:") and datatype not in {
+        "complexType",
+        "simpleType",
+    }
+
+
+def _containing_message_type(path: str) -> str | None:
+    path_parts = tuple(part for part in path.split("/") if part)
+    for index, part in enumerate(path_parts[:-1]):
+        if part == "Meldung":
+            return path_parts[index + 1]
+    return None
 
 
 def _search_score(element: SchemaElement, normalized_query: str) -> int:
