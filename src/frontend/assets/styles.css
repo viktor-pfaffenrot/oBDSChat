@@ -56,26 +56,19 @@ body {
 }
 
 .wordmark {
-  align-items: stretch;
+  align-items: center;
   color: var(--desk-ink) !important;
   display: inline-flex;
   font-family: var(--desk-sans);
   text-decoration: none !important;
 }
 
-.wordmark__index {
-  align-items: center;
-  background: var(--desk-signal);
-  color: var(--desk-white);
-  display: flex;
-  font-family: var(--desk-serif);
-  font-size: 0.8rem;
-  font-weight: 700;
-  justify-content: center;
-  letter-spacing: 0.03em;
+.wordmark__logo {
+  display: block;
+  height: 5rem;
   margin-right: 0.65rem;
-  padding: 0.5rem;
-  transform: rotate(-2deg);
+  object-fit: contain;
+  width: 5rem;
 }
 
 .wordmark__name {

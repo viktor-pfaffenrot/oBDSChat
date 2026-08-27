@@ -12,6 +12,7 @@ from urllib.parse import quote, urlencode
 import gradio as gr
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict
 
 from frontend.api import (
@@ -22,7 +23,11 @@ from frontend.api import (
     XsdEvidence,
 )
 
-CSS_PATH: Final = Path(__file__).with_name("assets") / "styles.css"
+ASSETS_PATH: Final = Path(__file__).with_name("assets")
+ASSET_URL_PREFIX: Final = "/app-assets"
+CSS_PATH: Final = ASSETS_PATH / "styles.css"
+FAVICON_PATH: Final = ASSETS_PATH / "favicons" / "favicon-symbol.ico"
+LOGO_URL: Final = f"{ASSET_URL_PREFIX}/obdschat-logo-transparent.png"
 STYLESHEET: Final = CSS_PATH.read_text(encoding="utf-8")
 MAX_HISTORY_TURNS: Final = 10
 MAX_HISTORY_CHARACTERS: Final = 50_000
@@ -388,10 +393,10 @@ def build_interface() -> gr.Blocks:
         state = gr.State(ConversationState())
         clipboard_text = gr.Textbox(visible=False)
         gr.HTML(
-            """
+            f"""
             <header class="masthead">
               <a class="wordmark" href="/" aria-label="oBDS Chat Startseite">
-                <span class="wordmark__index">§65c</span>
+                <img class="wordmark__logo" src="{LOGO_URL}" alt="">
                 <span class="wordmark__name">oBDS Chat</span>
               </a>
               <div class="masthead__status">
@@ -550,7 +555,7 @@ def _render_viewer(evidence: XsdEvidence) -> str:
 <body class="viewer-body">
   <header class="viewer-masthead">
     <a class="wordmark" href="/">
-      <span class="wordmark__index">§65c</span>
+      <img class="wordmark__logo" src="{LOGO_URL}" alt="">
       <span class="wordmark__name">oBDS Chat</span>
     </a>
     <span class="viewer-version">XSD · Version {escape(evidence.version)}</span>
@@ -705,6 +710,11 @@ def _render_viewer_error(message: str) -> str:
 
 
 frontend_app = FastAPI(title="oBDSChat Frontend")
+frontend_app.mount(
+    ASSET_URL_PREFIX,
+    StaticFiles(directory=ASSETS_PATH),
+    name="frontend-assets",
+)
 
 
 @frontend_app.get("/health", response_model=FrontendHealthResponse)
@@ -764,6 +774,7 @@ app = gr.mount_gradio_app(
     frontend_app,
     interface,
     path="/",
+    favicon_path=str(FAVICON_PATH),
     footer_links=[],
     theme=theme,
     css_paths=CSS_PATH,
