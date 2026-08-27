@@ -15,7 +15,8 @@ takes precedence over `OBDSCHAT_DB_PASSWORD_FILE`.
 
 Compose uses `.env` twice: for `${...}` interpolation in `docker-compose.yaml`
 and as `env_file` input for the database, source synchronizer, and backend.
-The frontend receives only the explicit `BACKEND_URL` declared by Compose.
+The frontend receives the explicit `BACKEND_URL` and
+`OBDSCHAT_QUERY_CONCURRENCY` values declared by Compose.
 
 ## Model provider
 
@@ -78,10 +79,16 @@ rename an existing PostgreSQL user or database.
 | Variable | Default | Required | Description |
 | --- | --- | --- | --- |
 | `BACKEND_URL` | `http://localhost:8000` | No | Absolute HTTP(S) backend base URL used by the frontend process. Compose fixes it to `http://backend:8000`. |
+| `OBDSCHAT_QUERY_CONCURRENCY` | `8` | No | Positive integer limiting simultaneous query-completion events in one frontend process. Compose interpolates the value from `.env` and also defaults to `8`. |
 
 `BACKEND_URL` is not currently interpolated from `.env` in the supplied Compose
 file. Change the Compose service or use an override file when the frontend must
 reach a different backend.
+
+The query concurrency limit is read when the frontend module starts; zero,
+negative, and non-integer values fail startup. It covers both submission paths
+through their shared Gradio concurrency group. It does not cap direct backend API
+traffic or set the number of model tool rounds within one request.
 
 ## Security invariants
 

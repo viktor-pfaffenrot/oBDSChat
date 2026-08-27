@@ -66,7 +66,7 @@ HTTP client.
 flowchart TD
     External[External input] --> Pydantic[Pydantic validation]
     Pydantic --> Domain[Backend domain functions]
-    Domain --> Tools[Bounded local tools]
+    Domain --> Tools[Scoped local tools]
     Tools --> Evidence[Official evidence data]
     Evidence --> Model[Model reasoning]
     Model --> Structured[Structured answer validation]
@@ -92,10 +92,17 @@ auth boundary is added.
 
 ## Design trade-offs
 
-The application uses synchronous request handling. One query can perform several
-model calls and local tool executions, so frontend HTTP timeouts are deliberately
-long. This is simple and keeps each result atomic, but it ties up one worker for
-the duration and does not provide partial output.
+The question path uses asynchronous request handling. Provider I/O is awaited,
+while version resolution and synchronous local tool handlers run in worker
+threads. Separate queries can therefore progress concurrently. The frontend
+limits its own query-completion events per process with
+`OBDSCHAT_QUERY_CONCURRENCY`, defaulting to eight; direct backend clients are not
+covered by that limit.
+
+Within one query, model rounds and tool executions remain ordered and the answer
+is returned atomically. There is no partial streaming, so frontend HTTP timeouts
+remain deliberately long. Raising frontend concurrency may increase provider,
+database, and worker-thread load.
 
 Source synchronization is fail-before-write for network fetching: all schemas,
 pages, and extracted documents are fetched and validated before local writes.

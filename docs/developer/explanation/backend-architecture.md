@@ -1,9 +1,9 @@
 # How the backend works
 
-The backend is a synchronous FastAPI application. It owns public validation,
-version resolution, evidence retrieval, model orchestration, citation enforcement,
-and response shaping. Route handlers remain thin; specialized modules own each
-domain concern.
+The backend is a FastAPI application with an asynchronous question-answering
+path. It owns public validation, version resolution, evidence retrieval, model
+orchestration, citation enforcement, and response shaping. Route handlers remain
+thin; specialized modules own each domain concern.
 
 ## Module boundaries
 
@@ -32,6 +32,11 @@ The backend exposes liveness, question answering, and exact XSD evidence routes.
 Do not maintain a second hand-written signature reference: FastAPI's generated
 OpenAPI schema is canonical and renders the
 [REST API reference](../reference/rest-api.md).
+
+The `/query` route awaits the model provider through `AsyncOpenAI`. Version
+resolution and synchronous local tool handlers run in worker threads through
+`asyncio.to_thread`, leaving the event loop available for other query tasks.
+The liveness and exact-evidence routes remain synchronous FastAPI handlers.
 
 Expected domain failures are translated at the route boundary:
 
@@ -76,6 +81,12 @@ The process-wide catalog and per-version indexes are cached. A lock prevents two
 threads from building the same version index concurrently. Tests or in-process
 source refreshes must clear the catalog cache before expecting new files.
 
+Concept-location lookup scans the complete index for one version. It returns
+every structural match by normalized element name or named custom datatype,
+annotated with the containing message type and the fields that matched. If no
+structural match exists, it falls back to schema documentation and enumeration
+meanings. Results are sorted by XML path and deliberately have no result limit.
+
 ## Prose search
 
 `backend.search` sends fixed parameterized SQL to ParadeDB. Search boosts title
@@ -93,6 +104,10 @@ Every tool has a strict JSON schema and one Python handler. Optional arguments
 are represented as required nullable properties because strict Chat Completions
 tools require all declared properties.
 
+Ranked discovery tools use result limits. `get_schema_concept_locations` is the
+intentional exception: questions about all locations or message types require
+complete schema coverage rather than a ranked sample.
+
 Source-bearing results receive deterministic citation IDs:
 
 - XSD evidence: source type, version, and XML path;
@@ -104,9 +119,16 @@ public response.
 ## Model loop and citation policy
 
 The first model round must call a tool when tools are available. Later rounds may
-call more tools or return a structured `ModelAnswer`. Tool names and arguments
-are validated; unknown tools, invalid JSON, bad argument types, and excessive
-rounds fail the request.
+call more tools or return a structured `ModelAnswer`. Provider calls are awaited;
+synchronous tool handlers are dispatched to worker threads. Model rounds and
+tool calls within one request remain ordered, while separate requests can
+progress concurrently. A client created for one answer is closed even when the
+loop fails.
+
+Tool names and arguments are validated; unknown tools, invalid JSON, bad argument
+types, and excessive rounds fail the request. System instructions require
+exhaustive concept lookup for questions asking where or how a concept can be
+reported, which message types contain it, or for all occurrences.
 
 Conversation history is context only. System instructions require the model to
 re-establish every answer from tool results produced during the current request.
@@ -115,7 +137,10 @@ Final validation enforces two states:
 - supported answer: at least one current citation ID;
 - unsupported answer: no citation IDs.
 
-`backend.app` then resolves those IDs against actual tool results, rejects unknown
+Citation IDs belong in the structured `citation_ids` field, not the user-facing
+answer. The model loop removes known inline citation-token forms before returning
+the answer and rejects content that becomes empty after removal. `backend.app`
+then resolves the structured IDs against actual tool results, rejects unknown
 IDs, removes duplicates, and returns only cited source metadata. This prevents
 the model from attaching unrelated search hits to a plausible answer.
 

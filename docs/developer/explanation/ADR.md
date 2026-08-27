@@ -108,15 +108,22 @@ public tool boundary includes functions such as:
 
 ```python
 search_schema(...)
+get_schema_concept_locations(...)
 get_schema_element(...)
 get_schema_values(...)
 get_schema_cardinality(...)
 ```
 
+`search_schema` remains ranked and limited for discovery.
+`get_schema_concept_locations` instead returns every location for questions about
+where a concept can be reported. It identifies the containing message type and
+prefers element-name or named-datatype matches, falling back to documentation and
+enumeration meanings only when no structural match exists.
+
 The implementation lives in `src/backend/xsd.py`, while `src/backend/tools.py`
-exposes the bounded functions to the model. This thin layer delegates XSD
-semantics to established libraries, gives the model domain-oriented operations,
-and makes schema answers exact and testable.
+exposes focused functions to the model. This thin layer delegates XSD semantics
+to established libraries, gives the model domain-oriented operations, and makes
+schema answers exact and testable.
 
 ### Alternatives considered
 
@@ -133,6 +140,11 @@ Formal schema facts remain separate from prose guidance and can be verified
 deterministically. The wrapper still has to handle versions, namespaces,
 references, paths, and source locations correctly. Its design is described in
 [How the backend works](backend-architecture.md#versioned-xsd-catalog).
+
+Exhaustive concept lookup can return more data than ranked discovery; omitting a
+result limit is deliberate because truncation would make message-type coverage
+incorrect. Prompts and tests must keep coverage questions on the exhaustive tool
+and ordinary discovery on the limited search tool.
 
 ## ADR-004: Use Requesty as the model-routing boundary
 

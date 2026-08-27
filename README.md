@@ -1,64 +1,181 @@
-# oBDSChat
+# oBDSChat <a href="docs/index.md"><img src="src/frontend/assets/obdschat-logo-transparent.png" align="right" height="138" alt="oBDSChat documentation" /></a>
 
-Local, source-grounded chat for the German oBDS.
+## Overview
 
-User and developer documentation lives in `docs/`. Build it with `make docs` or
-preview it with `make docs-serve`.
+oBDSChat is a source-grounded chat application for questions about the German
+oncological basic data set (oBDS). It combines versioned official oBDS XML
+schemas with the public Umsetzungsleitfaden, lets a language model retrieve
+evidence through controlled local tools, and returns the sources used for each
+supported answer.
 
-## Docker Compose
+The browser interface supports contextual follow-up questions, version-aware
+schema answers, expandable source cards, and an exact XSD field view with
+datatype, cardinality, allowed values, documentation, and original source lines.
 
-Copy `.env.example` to `.env`, configure one model provider, and write the
-database and selected provider keys to these gitignored files:
+## Installation
+
+The supported installation uses Docker Compose. It requires Git, Docker with
+Compose, outbound HTTPS access, and an OpenAI or Requesty API key.
+
+```bash
+git clone https://github.com/viktor-pfaffenrot/oBDSChat.git
+cd oBDSChat
+cp .env.example .env
+mkdir -p config/secrets
+chmod 700 config/secrets
+```
+
+Create these two gitignored files. The first contains one strong database
+password; the second contains the API key for the provider selected in `.env`.
 
 ```text
 config/secrets/obdschat_db_password.txt
 config/secrets/llm_api_key.txt
 ```
 
-Then start the stack:
+Restrict the files, then build and start the stack:
 
 ```bash
-docker compose up --build
+chmod 600 config/secrets/obdschat_db_password.txt
+chmod 600 config/secrets/llm_api_key.txt
+docker compose up -d --build
+docker compose ps -a
 ```
 
-Compose starts ParadeDB, synchronizes official sources once, then starts the
-backend and frontend. The UI is available at `http://localhost:17860`; the
-backend API is available at `http://localhost:18000`.
+Compose starts ParadeDB, synchronizes the official sources, then starts the
+backend and frontend. Open <http://localhost:17860> for the chat or
+<http://localhost:18000/docs> for the interactive backend API.
+
+The application has no built-in authentication or authorization. Do not expose
+the supplied frontend or backend ports to an untrusted network without an
+external access-control boundary.
+
+## Usage
+
+Ask a precise question and include an oBDS version when it matters:
+
+```text
+Welche Werte darf Diagnosesicherung in oBDS 3.0.5 haben?
+```
+
+oBDSChat searches official schema structure and implementation guidance,
+validates the model's citation selection, and displays only evidence used by the
+answer. Expand `Beleglage` to inspect sources. For XSD evidence, use
+`Feld anzeigen` to inspect the exact schema declaration.
 
 ## Model provider
 
-Set `LLM_PROVIDER` to `openai` or `requesty` and place its key in the configured
-`LLM_API_KEY_SOURCE` file. Requesty uses the stable `policy/obdschat` route;
-concrete models and routing behavior stay in Requesty. Direct OpenAI testing
-uses `OPENAI_MODEL`. Both providers use the OpenAI-compatible Chat Completions
-API at `/v1/chat/completions`.
+oBDSChat uses the OpenAI-compatible Chat Completions API. `LLM_PROVIDER` selects
+`requesty` or `openai`; the mounted `LLM_API_KEY_FILE` takes precedence over a
+direct environment key.
+
+### Requesty
+
+The supplied `.env.example` selects Requesty:
+
+```dotenv
+LLM_PROVIDER=requesty
+LLM_API_KEY_SOURCE=config/secrets/llm_api_key.txt
+```
+
+The backend connects to the Requesty EU router and calls the fixed
+`policy/obdschat` route. Put the Requesty API key in
+`config/secrets/llm_api_key.txt`.
+
+> **Requesty setup placeholder:** Create a Requesty account and API key, then
+> configure a policy named `obdschat` with the required models, routing rules,
+> fallbacks, and regional constraints. Replace this paragraph with the final
+> project-specific Requesty setup procedure.
+
+For direct OpenAI use, change `.env` and keep the selected provider key in the
+same secret file:
+
+```dotenv
+LLM_PROVIDER=openai
+OPENAI_MODEL=gpt-5.6-terra
+```
+
+See the [runtime configuration reference](docs/developer/reference/runtime-configuration.md)
+for all provider, database, path, port, and concurrency settings.
 
 ## Source synchronization
 
-For local development outside Compose, set the database values and run:
+Source synchronization downloads every official oBDS 3.x schema and replaces
+the searchable Umsetzungsleitfaden sections in PostgreSQL. Remote content is
+fetched and validated before local writes begin.
+
+### Local development
+
+Install the development environment and start only the Compose database:
 
 ```bash
-uv run obdschat-sync-sources
+uv sync --group backend --group frontend --group dev
+docker compose up -d obdschat-db
 ```
 
-The command downloads all official oBDS 3.x schemas into `data/xsd/<version>/`
-and atomically replaces Umsetzungsleitfaden sections in PostgreSQL.
-`--database-url` remains available as an explicit override.
-
-Run the optional database smoke test against a disposable PostgreSQL database:
+Run the synchronizer from the repository root with host-reachable database and
+secret paths. Database name and user continue to load from `.env`.
 
 ```bash
-TEST_DATABASE_URL=postgresql://... uv run pytest -m db_smoke
+env \
+  OBDSCHAT_BASE_DIR="$PWD" \
+  OBDSCHAT_DB_HOST=127.0.0.1 \
+  OBDSCHAT_DB_PORT=55434 \
+  OBDSCHAT_DB_PASSWORD_FILE="$PWD/config/secrets/obdschat_db_password.txt" \
+  uv run obdschat-sync-sources
+```
+
+Schemas are written below `data/xsd/<version>/`; guide sections are replaced in
+the local ParadeDB instance.
+
+### Production
+
+The first `docker compose up` runs the one-shot `source-sync` service before the
+backend starts. To refresh an existing deployment, run:
+
+```bash
+docker compose run --rm source-sync
+```
+
+After synchronization succeeds, restart the backend so its in-memory XSD catalog
+is rebuilt from the refreshed volume:
+
+```bash
+docker compose restart backend
 ```
 
 ## Evaluation
 
-With production configuration, PostgreSQL, and source data available, run:
+Evaluation uses the production model, tools, PostgreSQL data, and synchronized
+XSD files. Start the Compose stack first, wait for `source-sync` to finish, and
+run this command from the repository root:
 
 ```bash
-uv run python -m scripts.run_eval
+env \
+  PYTHONPATH=src \
+  OBDSCHAT_BASE_DIR="$PWD" \
+  OBDSCHAT_DB_HOST=127.0.0.1 \
+  OBDSCHAT_DB_PORT=55434 \
+  OBDSCHAT_DB_PASSWORD_FILE="$PWD/config/secrets/obdschat_db_password.txt" \
+  LLM_API_KEY_FILE="$PWD/config/secrets/llm_api_key.txt" \
+  uv run python -m scripts.run_eval
 ```
 
-Detailed results and a PNG summary are written to `evaluation-results/`. In a
-notebook, `run_production_evaluation()` returns the report and matplotlib figure
-for inline inspection. Use `--no-show` in headless environments.
+The command reads provider, database user, and database name from `.env`, then
+writes a timestamped JSON report and PNG summary to `evaluation-results/`. Add
+`--no-show` in a headless environment, or use `--limit`, `--case-id`, and
+`--category` for focused runs.
+
+## Documentation
+
+New users should start with [Ask your first oBDS question](docs/user/tutorials/get-started.md).
+Developers and operators can continue with:
+
+1. [Local development](docs/developer/how-to/local-development.md)
+2. [System architecture](docs/developer/explanation/system-architecture.md)
+3. [Runtime configuration](docs/developer/reference/runtime-configuration.md)
+4. [Deployment and upgrades](docs/developer/how-to/deploy.md)
+5. [Testing changes](docs/developer/how-to/test-changes.md)
+
+Build the complete documentation site with `make docs`, preview it with
+`make docs-serve`, or run the strict documentation check with `make docs-check`.

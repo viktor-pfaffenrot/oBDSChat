@@ -41,10 +41,10 @@ sequenceDiagram
     U->>F: Submit question
     F->>F: Store pending state and render progress
     F->>A: Typed question plus bounded history
-    A->>A: Validate input and resolve version context
-    A->>M: System policy, history, question, strict tools
+    A->>A: Validate input; resolve version in worker thread
+    A->>M: Await model with policy, history, question, strict tools
     M->>T: Required first tool call
-    T->>E: Exact lookup or bounded search
+    T->>E: Run synchronous evidence handler in worker thread
     E-->>T: Official source facts
     T-->>M: JSON result with citation IDs
     loop Optional additional tool rounds
@@ -53,7 +53,7 @@ sequenceDiagram
         E-->>M: Serialized result
     end
     M-->>A: Structured answer and selected citation IDs
-    A->>A: Validate citation policy and resolve current evidence
+    A->>A: Remove inline citation tokens; validate current evidence
     A-->>F: Answer, used versions, deduplicated sources
     F-->>U: Complete answer and expandable evidence cards
 ```
@@ -61,6 +61,17 @@ sequenceDiagram
 If the API explicitly constrains `obds_version`, every version-aware tool call is
 forced to that version. Otherwise, model tool arguments can select a version;
 missing selection resolves to the newest available XSD version.
+
+Questions asking where or how a concept can be reported, which message types
+contain it, or for all occurrences use exhaustive concept-location lookup. That
+lookup covers every structural match in the selected schema version instead of
+using the ranked, limited schema search.
+
+Provider waits do not block the backend event loop, and synchronous version and
+tool work is offloaded to worker threads. Separate requests can overlap. Within
+one request, model rounds and tool calls remain ordered; answers are not streamed.
+The frontend applies its configured per-process concurrency limit, but direct API
+clients bypass that frontend limit.
 
 The backend returns only sources named by the model and verified against current
 tool executions. Search results that were read but not cited do not appear in the

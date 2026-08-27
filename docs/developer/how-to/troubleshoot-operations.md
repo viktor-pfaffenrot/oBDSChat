@@ -52,6 +52,7 @@ Start with the earliest unhealthy or failed service.
 | Backend unhealthy or restarting | Startup/import failure or unreadable XSD/configuration | Backend logs, mounted XSD volume, resolved Compose configuration |
 | Frontend unhealthy or restarting | Frontend startup failure | Frontend logs and backend health |
 | Health routes pass but questions fail | Health routes test liveness only; database, XSD, or model provider may still fail per request | Backend logs during one request, provider selection/key, database connectivity, synchronized sources |
+| Health routes pass but questions wait before backend access | Frontend query concurrency is saturated | `OBDSCHAT_QUERY_CONCURRENCY`, frontend access logs, provider latency, active user load |
 
 Check PostgreSQL readiness inside its container:
 
@@ -65,6 +66,11 @@ Check application liveness from the host:
 curl -v http://localhost:18000/health
 curl -v http://localhost:17860/health
 ```
+
+`OBDSCHAT_QUERY_CONCURRENCY` limits simultaneous query-completion events in each
+frontend process and defaults to eight. Increase it only after checking model
+provider capacity, database load, and backend latency. The setting does not limit
+clients that call the backend directly.
 
 ## Retry failed source synchronization
 

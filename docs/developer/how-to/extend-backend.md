@@ -10,7 +10,8 @@ or orchestration logic in focused modules.
 2. For external input, set deliberate length/range constraints and decide whether
    unknown fields must be forbidden.
 3. Add a thin route that calls domain functions and converts known exceptions to
-   intentional HTTP responses.
+   intentional HTTP responses. Use `async def` when the route awaits provider or
+   network work; move synchronous blocking work to a worker thread.
 4. Do not expose raw model-provider, database, secret-path, or parser exceptions.
 5. Add boundary tests in `tests/test_app.py` for success, validation, and each
    mapped failure.
@@ -19,7 +20,8 @@ or orchestration logic in focused modules.
    client method, then add frontend boundary tests.
 
 Expected result: the route contract is visible in generated OpenAPI, errors are
-stable, and no domain work is embedded in the handler.
+stable, no domain work is embedded in the handler, and long provider waits do not
+block unrelated asynchronous request tasks.
 
 ## Add a model-callable evidence tool
 
@@ -35,12 +37,13 @@ stable, and no domain work is embedded in the handler.
 6. If results can support public claims, include stable source metadata that
    `_citation_id` can convert into an ID. Extend citation-ID and public-source
    conversion deliberately for a new source type.
-7. Test schema strictness, argument validation, handler output, tool execution,
-   and citation selection.
+7. Test schema strictness, argument validation, handler output, asynchronous tool
+   dispatch, and citation selection.
 
 Expected result: the first model round can select the new tool, outputs are
-bounded and serializable, and cited results can be proven to come from the current
-request.
+serializable and normally bounded, and cited results can be proven to come from
+the current request. An intentionally exhaustive tool must document why
+truncation would be incorrect and test complete deterministic ordering.
 
 ## Add a schema-derived fact
 
@@ -68,14 +71,17 @@ traceable to the official XSD.
    resolution.
 5. Update `.env.example` without adding real credentials.
 
-Expected result: `answer_question` receives one resolved `LlmEndpoint` and does
-not branch on provider.
+Expected result: asynchronous `answer_question` receives one resolved
+`LlmEndpoint`, awaits the provider client, and does not branch on provider.
 
 ## Review checklist
 
 - Public inputs and outputs are typed.
 - Error mapping is specific and tested.
-- Tool results are bounded and JSON-serializable.
+- Tool results are bounded and JSON-serializable, or explicitly exhaustive with
+  deterministic coverage tests.
+- Asynchronous routes do not run blocking provider or local work on the event
+  loop.
 - Source-bearing claims can pass current-request citation validation.
 - Frontend boundary models match changed HTTP responses.
 - [Test changes](test-changes.md) passes.
