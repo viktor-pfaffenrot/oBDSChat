@@ -83,6 +83,30 @@ def test_frontend_health_is_independent_from_backend() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_brand_assets_are_served_and_configured() -> None:
+    logo_response = client.get(app_module.LOGO_URL)
+    favicon_response = client.get("/favicon.ico")
+
+    assert logo_response.status_code == 200
+    assert logo_response.headers["content-type"] == "image/png"
+    assert (
+        logo_response.content
+        == (app_module.ASSETS_PATH / "obdschat-logo-transparent.png").read_bytes()
+    )
+    assert favicon_response.status_code == 200
+    assert favicon_response.content == app_module.FAVICON_PATH.read_bytes()
+    assert app_module.interface.favicon_path == str(app_module.FAVICON_PATH)
+
+
+def test_gradio_masthead_uses_logo() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert app_module.LOGO_URL in response.text
+    assert "wordmark__index" not in response.text
+    assert "§65c" not in response.text
+
+
 def test_query_events_allow_bounded_parallel_requests() -> None:
     query_functions = [
         block_function
@@ -273,6 +297,9 @@ def test_xsd_viewer_renders_highlighted_and_escaped_source(
     assert "Zeilen 3992–4055" in response.text
     assert "obds-close-xsd-viewer" in response.text
     assert "history.back()" in response.text
+    assert app_module.LOGO_URL in response.text
+    assert "wordmark__index" not in response.text
+    assert "§65c" not in response.text
     assert "&lt;xs:element name=&quot;Diagnosesicherung&quot;&gt;" in response.text
     assert "<script>alert(1)</script>" not in response.text
     assert "Höchste &lt;script&gt;alert(1)&lt;/script&gt;" in response.text
