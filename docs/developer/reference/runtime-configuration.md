@@ -57,6 +57,7 @@ and password file paths are also resolved below `OBDSCHAT_BASE_DIR`.
 | `OBDSCHAT_DB_PUBLISHED_PORT` | `55434` | Host PostgreSQL port, bound to `127.0.0.1` only. Application containers continue to use port `5432`. |
 | `OBDSCHAT_BACKEND_PORT` | `18000` | Host port mapped to backend port `8000`. It binds all host interfaces in the supplied Compose file. |
 | `OBDSCHAT_FRONTEND_PORT` | `17860` | Host port mapped to frontend port `7860`. It binds all host interfaces in the supplied Compose file. |
+| `OBDSCHAT_DOCS_PORT` | `8000` | Host port mapped to the documentation server port `8080`. It binds all host interfaces in the supplied Compose file. |
 | `OBDSCHAT_DB_PASSWORD_SOURCE` | `./config/secrets/obdschat_db_password.txt` | Host file mounted as the database-password Compose secret. |
 | `TZ` | Image or host default | Time zone supplied to services using `.env`; the example uses `Europe/Berlin`. |
 
@@ -98,4 +99,5 @@ traffic or set the number of model tool rounds within one request.
 - Keep `OBDSCHAT_DB_USER`/`POSTGRES_USER` and
   `OBDSCHAT_DB_NAME`/`POSTGRES_DB` aligned.
 - The application provides no authentication or authorization. Control network
-  access outside the application before exposing frontend or backend ports.
+  access outside the application before exposing frontend, backend, or
+  documentation ports.

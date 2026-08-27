@@ -123,6 +123,28 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  docs:
+    image: obdschat-docs:local
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O /dev/null http://127.0.0.1:8080/
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    ports:
+      - "${OBDSCHAT_DOCS_PORT:-8000}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
 secrets:
   obdschat_db_password:
     file: ${OBDSCHAT_DB_PASSWORD_SOURCE:-./config/secrets/obdschat_db_password.txt}

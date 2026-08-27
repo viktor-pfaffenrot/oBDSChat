@@ -11,7 +11,7 @@ Before restarting anything, capture service state and recent logs:
 ```bash
 date -Is
 docker compose ps -a
-docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend
+docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend docs
 docker compose config --quiet
 df -h
 ```
@@ -28,6 +28,7 @@ diagnostics.
 | `source-sync` | `docker compose logs source-sync` | None; completion and failure are written to standard output/error |
 | `backend` | `docker compose logs backend` | Uvicorn access, startup, and application errors on standard output/error |
 | `frontend` | `docker compose logs frontend` | Uvicorn access, startup, and application errors on standard output/error |
+| `docs` | `docker compose logs docs` | Nginx access and server errors on standard output/error |
 
 Follow one service while reproducing a problem:
 
@@ -65,6 +66,7 @@ Check application liveness from the host:
 ```bash
 curl -v http://localhost:18000/health
 curl -v http://localhost:17860/health
+curl -v http://localhost:8000/
 ```
 
 `OBDSCHAT_QUERY_CONCURRENCY` limits simultaneous query-completion events in each

@@ -21,6 +21,7 @@ Use this map to locate ownership before making a change.
 | `docker-compose.yaml` | Runtime topology, dependency ordering, health checks, ports, volumes, and secrets |
 | `Dockerfile.backend` | Backend and source-sync image |
 | `Dockerfile.frontend` | Frontend image |
+| `Dockerfile.docs` | Static MkDocs build and unprivileged documentation server image |
 | `.env.example` | Compose-oriented runtime configuration template |
 | `pyproject.toml` | Python requirements, dependency groups, scripts, and tool configuration |
 | `tests/` | Unit, boundary, container configuration, synchronization, and optional DB smoke tests |

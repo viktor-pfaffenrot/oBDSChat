@@ -49,13 +49,16 @@ variables.
    docker compose ps
    curl -fsS http://localhost:18000/health
    curl -fsS http://localhost:17860/health
+   curl -fsS http://localhost:8000/
    ```
 
-7. Open <http://localhost:17860>. FastAPI's interactive backend schema is at
+7. Open <http://localhost:17860>. The documentation site is at
+   <http://localhost:8000>, and FastAPI's interactive backend schema is at
    <http://localhost:18000/docs>.
 
-Expected result: database, backend, and frontend report healthy; source-sync has
-exited successfully; the browser can complete a grounded question.
+Expected result: database, backend, frontend, and documentation service report
+healthy; source-sync has exited successfully; the browser can complete a
+grounded question.
 
 ## Rebuild after code changes
 

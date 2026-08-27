@@ -9,6 +9,7 @@ access: it can request only the local tools registered by the backend.
 ```mermaid
 flowchart LR
     User[Browser user] -->|HTTP| Frontend[Gradio frontend\nFastAPI host]
+    Reader[Documentation reader] -->|HTTP| Docs[Static documentation\nNginx]
     Frontend -->|Typed HTTP| Backend[FastAPI backend]
     Backend -->|Chat Completions| LLM[OpenAI-compatible\nmodel provider]
     Backend -->|BM25 SQL| DB[(ParadeDB\nPostgreSQL 18)]
@@ -18,7 +19,7 @@ flowchart LR
     Official[Official oBDS sites] -->|HTTPS| Sync
 ```
 
-The Compose deployment contains four services:
+The Compose deployment contains five services:
 
 | Service | Responsibility | Persistent input/output |
 | --- | --- | --- |
@@ -26,6 +27,7 @@ The Compose deployment contains four services:
 | `source-sync` | Download and validate official sources before application startup | Writes the XSD volume and `documents` rows |
 | `backend` | Validate requests, retrieve evidence, orchestrate the model, validate citations | Reads PostgreSQL and XSD volume |
 | `frontend` | Render chat and XSD evidence views | Browser-session conversation state only |
+| `docs` | Serve the statically built MkDocs site | None |
 
 Use [How to deploy and upgrade oBDSChat](../how-to/deploy.md) for the supported
 single-host Compose procedure and
@@ -44,7 +46,8 @@ flowchart LR
 This ordering makes missing or invalid source data a startup failure instead of
 allowing the application to answer from a partially updated corpus. The database
 health check tests PostgreSQL readiness. Backend and frontend health checks test
-process liveness and intentionally do not call downstream dependencies.
+process liveness and intentionally do not call downstream dependencies. The
+documentation service starts independently because it serves only static files.
 
 ## Evidence boundary
 

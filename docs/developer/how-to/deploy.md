@@ -11,8 +11,8 @@ deployment.
 ## Protect the network boundary
 
 The application has no authentication or authorization. The database is
-published on loopback only, but the supplied backend and frontend port mappings
-bind all host interfaces.
+published on loopback only, but the supplied backend, frontend, and
+documentation port mappings bind all host interfaces.
 
 Before deployment, choose one of these boundaries:
 
@@ -79,14 +79,16 @@ Do not expose the supplied Compose ports directly to an untrusted network.
    docker compose ps -a
    curl -fsS http://localhost:18000/health
    curl -fsS http://localhost:17860/health
+   curl -fsS http://localhost:8000/
    ```
 
 9. Open `http://localhost:17860` from an allowed client and complete one
-   source-grounded question. Confirm that its evidence opens.
+   source-grounded question. Confirm that its evidence opens. Open
+   `http://localhost:8000` and confirm that the documentation loads.
 
-Expected result: the database, backend, and frontend are healthy;
-`source-sync` has exited with status zero; and the UI completes a request using
-the selected provider.
+Expected result: the database, backend, frontend, and documentation service are
+healthy; `source-sync` has exited with status zero; and the UI completes a
+request using the selected provider.
 
 ## Upgrade an installation
 
@@ -119,7 +121,7 @@ the selected provider.
 
    ```bash
    docker compose ps -a
-   docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend
+   docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend docs
    ```
 
 7. Repeat the health-route and grounded-question checks from the initial
