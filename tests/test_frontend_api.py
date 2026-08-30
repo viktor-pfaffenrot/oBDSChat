@@ -106,6 +106,36 @@ def test_get_xsd_evidence_encodes_path_as_query_parameter() -> None:
     assert evidence.source_lines[0].number == 3992
 
 
+def test_get_xsd_evidence_rejects_unknown_nested_fields() -> None:
+    client = BackendClient(
+        "https://backend.test",
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                json={
+                    "name": "Diagnosesicherung",
+                    "path": "/oBDS/Diagnose/Diagnosesicherung",
+                    "datatype": "xs:string",
+                    "min_occurs": 1,
+                    "max_occurs": 1,
+                    "allowed_values": [{"value": "1", "unexpected": True}],
+                    "version": "3.0.5",
+                    "xsd_file": "oBDS_v3.0.5.xsd",
+                    "source_url": ("https://www.basisdatensatz.de/xml/oBDS_v3.0.5.xsd"),
+                    "source_lines": [],
+                    "declaration_truncated": False,
+                },
+            )
+        ),
+    )
+
+    with pytest.raises(BackendApiError, match="ungültige Antwort"):
+        client.get_xsd_evidence(
+            "3.0.5",
+            "/oBDS/Diagnose/Diagnosesicherung",
+        )
+
+
 def test_client_exposes_backend_error_detail() -> None:
     client = BackendClient(
         "https://backend.test",

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Iterator, Mapping
 from importlib.metadata import version as distribution_version
-from typing import Annotated, Final, Literal, Self
+from typing import Annotated, Final, Self
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi import Path as PathParameter
@@ -13,7 +13,6 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    HttpUrl,
     field_validator,
     model_validator,
 )
@@ -29,13 +28,18 @@ from backend.llm import (
 from backend.tools import CITATION_ID_FIELD, TOOLS
 from backend.xsd import (
     SchemaElementNotFoundError,
-    SchemaEnumValue,
     SchemaError,
     SchemaEvidence,
-    SchemaSourceLine,
     SchemaVersionNotFoundError,
     get_schema_catalog,
     get_schema_evidence,
+)
+from obdschat_api.models import (
+    ErrorResponse,
+    HealthResponse,
+    QueryResponse,
+    SourceReference,
+    XsdEvidenceResponse,
 )
 
 MAX_HISTORY_TURNS: Final = 10
@@ -61,17 +65,6 @@ OPENAPI_TAGS: Final[list[dict[str, str]]] = [
         "description": "Exact evidence retrieved from synchronized official sources.",
     },
 ]
-
-
-class HealthResponse(BaseModel):
-    """Backend liveness response."""
-
-    model_config = ConfigDict(frozen=True)
-
-    status: Literal["ok"] = Field(
-        default="ok",
-        description="Fixed value confirming that the backend process is alive.",
-    )
 
 
 class ConversationTurnRequest(BaseModel):
@@ -155,118 +148,6 @@ class QueryRequest(BaseModel):
                 f"history must not exceed {MAX_HISTORY_CHARACTERS} characters"
             )
         return self
-
-
-class SourceReference(BaseModel):
-    """Public citation metadata derived from one local tool result."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    title: str = Field(description="Human-readable source title.")
-    url: HttpUrl = Field(description="Official public source URL.")
-    source_type: str = Field(
-        description="Evidence source category, such as xsd or umsetzungsleitfaden."
-    )
-    section: str | None = Field(
-        default=None,
-        description="Source section heading when the evidence comes from prose.",
-    )
-    obds_version: str | None = Field(
-        default=None,
-        description="Exact oBDS version, or null for version-independent evidence.",
-    )
-    source_id: int | None = Field(
-        default=None,
-        gt=0,
-        description="Request-local stored document identifier for prose evidence.",
-    )
-    xsd_file: str | None = Field(
-        default=None,
-        description="Official XSD filename for schema evidence.",
-    )
-    element: str | None = Field(
-        default=None,
-        description="XML element name for schema evidence.",
-    )
-    path: str | None = Field(
-        default=None,
-        description="Canonical XML path for schema evidence.",
-    )
-
-
-class QueryResponse(BaseModel):
-    """LLM answer with used schema versions and deduplicated evidence."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    answer: str = Field(
-        description="Complete model answer grounded in the returned sources."
-    )
-    used_versions: tuple[str, ...] = Field(
-        description="oBDS versions used by successful retrieval during the request."
-    )
-    sources: tuple[SourceReference, ...] = Field(
-        description="Deduplicated evidence cited by the answer, in citation order."
-    )
-
-
-class ErrorResponse(BaseModel):
-    """User-safe error returned for an expected backend failure."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    detail: str = Field(description="Stable description of the request failure.")
-
-
-class XsdEvidenceResponse(BaseModel):
-    """Public facts and exact source lines for one XSD element occurrence."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    name: str = Field(description="XML element name.")
-    path: str = Field(description="Canonical path of this element occurrence.")
-    datatype: str = Field(description="Declared or resolved XSD datatype.")
-    base_datatype: str | None = Field(
-        default=None,
-        description="Primitive XSD base datatype when available.",
-    )
-    min_occurs: int = Field(
-        ge=0,
-        description="Minimum number of allowed occurrences.",
-    )
-    max_occurs: int | Literal["unbounded"] = Field(
-        description="Maximum occurrences, or unbounded when no finite limit exists."
-    )
-    allowed_values: tuple[SchemaEnumValue, ...] = Field(
-        description="Enumeration values allowed by the element datatype."
-    )
-    documentation: str | None = Field(
-        default=None,
-        description="Documentation attached directly to the element declaration.",
-    )
-    datatype_documentation: str | None = Field(
-        default=None,
-        description="Documentation inherited from the element datatype.",
-    )
-    version: str = Field(description="Exact oBDS schema version.")
-    xsd_file: str = Field(description="Official XSD filename.")
-    source_url: HttpUrl = Field(description="Official public XSD URL.")
-    source_lines: tuple[SchemaSourceLine, ...] = Field(
-        description="Bounded numbered excerpt around the element declaration."
-    )
-    declaration_start_line: int | None = Field(
-        default=None,
-        gt=0,
-        description="First line of the complete declaration when located.",
-    )
-    declaration_end_line: int | None = Field(
-        default=None,
-        gt=0,
-        description="Last line of the complete declaration when located.",
-    )
-    declaration_truncated: bool = Field(
-        description="Whether the bounded excerpt omits part of the declaration."
-    )
 
 
 app = FastAPI(

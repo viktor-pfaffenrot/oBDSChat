@@ -6,15 +6,15 @@ import pytest
 from fastapi.testclient import TestClient
 
 import frontend.app as app_module
-from frontend.api import (
-    BackendApiError,
+from frontend.api import BackendApiError
+from frontend.app import CompletedTurn, ConversationState
+from obdschat_api.models import (
     QueryResponse,
     SchemaEnumValue,
     SchemaSourceLine,
     SourceReference,
-    XsdEvidence,
+    XsdEvidenceResponse,
 )
-from frontend.app import CompletedTurn, ConversationState
 
 client = TestClient(app_module.app)
 
@@ -24,7 +24,7 @@ class _BackendClient:
         self,
         *,
         query_response: QueryResponse | None = None,
-        evidence: XsdEvidence | None = None,
+        evidence: XsdEvidenceResponse | None = None,
     ) -> None:
         self.query_response = query_response
         self.evidence = evidence
@@ -33,7 +33,7 @@ class _BackendClient:
         assert self.query_response is not None
         return self.query_response
 
-    def get_xsd_evidence(self, version: str, path: str) -> XsdEvidence:
+    def get_xsd_evidence(self, version: str, path: str) -> XsdEvidenceResponse:
         assert version == "3.0.5"
         assert path == "/oBDS/Diagnose/Diagnosesicherung"
         assert self.evidence is not None
@@ -51,8 +51,8 @@ def _xsd_source() -> SourceReference:
     )
 
 
-def _xsd_evidence() -> XsdEvidence:
-    return XsdEvidence(
+def _xsd_evidence() -> XsdEvidenceResponse:
+    return XsdEvidenceResponse(
         name="Diagnosesicherung",
         path="/oBDS/Diagnose/Diagnosesicherung",
         datatype="xs:string",
@@ -309,7 +309,11 @@ def test_xsd_viewer_preserves_backend_error_status(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class _FailingBackendClient:
-        def get_xsd_evidence(self, version: str, path: str) -> XsdEvidence:
+        def get_xsd_evidence(
+            self,
+            version: str,
+            path: str,
+        ) -> XsdEvidenceResponse:
             raise BackendApiError("Element path unavailable", status_code=404)
 
     monkeypatch.setattr(

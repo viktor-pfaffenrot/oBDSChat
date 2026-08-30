@@ -20,9 +20,9 @@ from backend.xsd import (
     SchemaElement,
     SchemaElementNotFoundError,
     SchemaEvidence,
-    SchemaSourceLine,
     SchemaVersionNotFoundError,
 )
+from obdschat_api.models import SchemaSourceLine, XsdEvidenceResponse
 
 client = TestClient(app_module.app)
 PUBLIC_SCHEMA_NAMES = (
@@ -189,6 +189,8 @@ def test_xsd_evidence_returns_exact_source_lines(
         "declaration_end_line": 4055,
         "declaration_truncated": False,
     }
+    parsed_response = XsdEvidenceResponse.model_validate(response.json())
+    assert parsed_response.path == "/oBDS/Diagnose/Diagnosesicherung"
 
 
 def test_xsd_evidence_reports_unknown_path(

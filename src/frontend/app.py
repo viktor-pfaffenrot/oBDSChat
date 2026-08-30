@@ -19,9 +19,8 @@ from frontend.api import (
     BackendApiError,
     BackendClient,
     ConversationTurn,
-    SourceReference,
-    XsdEvidence,
 )
+from obdschat_api.models import SourceReference, XsdEvidenceResponse
 
 ASSETS_PATH: Final = Path(__file__).with_name("assets")
 ASSET_URL_PREFIX: Final = "/app-assets"
@@ -533,7 +532,7 @@ def build_interface() -> gr.Blocks:
     return interface
 
 
-def _render_viewer(evidence: XsdEvidence) -> str:
+def _render_viewer(evidence: XsdEvidenceResponse) -> str:
     line_range = _line_range(evidence)
     source_markup = _source_markup(evidence)
     allowed_values = _allowed_values_markup(evidence)
@@ -604,7 +603,7 @@ def _render_viewer(evidence: XsdEvidence) -> str:
 </html>"""
 
 
-def _source_markup(evidence: XsdEvidence) -> str:
+def _source_markup(evidence: XsdEvidenceResponse) -> str:
     if not evidence.source_lines:
         return (
             '<div class="source-unavailable"><strong>Quellenausschnitt nicht verfügbar.</strong>'
@@ -632,7 +631,7 @@ def _source_markup(evidence: XsdEvidence) -> str:
     return f'<pre class="source-code"><code>{rendered_lines}</code></pre>{truncation}'
 
 
-def _allowed_values_markup(evidence: XsdEvidence) -> str:
+def _allowed_values_markup(evidence: XsdEvidenceResponse) -> str:
     if not evidence.allowed_values:
         return ""
     values = "".join(
@@ -646,7 +645,7 @@ def _allowed_values_markup(evidence: XsdEvidence) -> str:
     )
 
 
-def _documentation_markup(evidence: XsdEvidence) -> str:
+def _documentation_markup(evidence: XsdEvidenceResponse) -> str:
     documentation = evidence.documentation or evidence.datatype_documentation
     if documentation is None:
         return ""
@@ -656,7 +655,7 @@ def _documentation_markup(evidence: XsdEvidence) -> str:
     )
 
 
-def _line_range(evidence: XsdEvidence) -> str:
+def _line_range(evidence: XsdEvidenceResponse) -> str:
     if evidence.declaration_start_line is None:
         return "Zeilen nicht verfügbar"
     if evidence.declaration_end_line == evidence.declaration_start_line:
