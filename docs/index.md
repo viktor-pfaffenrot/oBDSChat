@@ -2,12 +2,11 @@
 
 oBDSChat answers questions about the German oncological basic data set (oBDS).
 It grounds each answer in official oBDS XML schemas and the public
-Umsetzungsleitfaden, then exposes the evidence used for the answer.
+[Umsetzungsleitfaden](https://plattform65c.atlassian.net/wiki/spaces/UMK/overview), then shows the evidence used for the answer.
 
 ## Choose your path
 
-- **Using the application:** start with [Get started](user/tutorials/get-started.md),
-  then use the [workflow guides](user/how-to/use-obdschat.md).
+- **Using the application:** Checkout the [workflow guides](user/how-to/use-obdschat.md).
 - **Changing the application:** read [System architecture](developer/explanation/system-architecture.md)
   and the [architecture decision records](developer/explanation/ADR.md) before
   using [Local development](developer/how-to/local-development.md).
@@ -21,16 +20,6 @@ Umsetzungsleitfaden, then exposes the evidence used for the answer.
   then use [Deploy and upgrade](developer/how-to/deploy.md) and
   [Operational troubleshooting](developer/how-to/troubleshoot-operations.md).
 
-## Documentation scope
-
-This documentation currently covers user workflows, developer-facing
-architecture, setup, testing, common change paths, and embedded REST API
-reference. Architecture decision records explain why the main dependencies and
-system boundaries were chosen. The PostgreSQL reference describes the canonical
-bootstrap schema. Compose deployment, configuration, logging, and
-troubleshooting are covered for operators. FastAPI's generated OpenAPI schema
-remains the canonical description of the HTTP contract.
-
 ## Build these docs
 
 From the repository root:
@@ -39,5 +28,4 @@ From the repository root:
 make docs
 ```
 
-The static site is written to `site/`. Use `make docs-serve` for live preview
-and `make docs-check` for the strict CI-oriented build.
+The static site is written to `site/`. Use `make docs-check` for the strict CI-oriented build.

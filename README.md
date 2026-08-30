@@ -43,12 +43,13 @@ docker compose ps -a
 ```
 
 Compose starts ParadeDB, synchronizes the official sources, then starts the
-backend and frontend. Open <http://localhost:17860> for the chat or
+backend, frontend, and documentation site. Open <http://localhost:17860> for
+the chat, <http://localhost:8000> for the documentation, or
 <http://localhost:18000/docs> for the interactive backend API.
 
 The application has no built-in authentication or authorization. Do not expose
-the supplied frontend or backend ports to an untrusted network without an
-external access-control boundary.
+the supplied frontend, backend, or documentation ports to an untrusted network
+without an external access-control boundary.
 
 ## Usage
 

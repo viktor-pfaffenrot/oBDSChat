@@ -1,7 +1,7 @@
 # How to use oBDSChat
 
-Use these workflows to obtain precise answers and retain their supporting
-evidence. They assume you can already open a running oBDSChat instance.
+Use these workflows to obtain precise answers and inspect their supporting
+evidence. The workflows assume you can already open a running oBDSChat instance.
 
 ## Ask an effective question
 
@@ -14,21 +14,20 @@ evidence. They assume you can already open a running oBDSChat instance.
 For example:
 
 ```text
-Ist Zentrumsfall in oBDS 3.0.5 ein Pflichtfeld, und welche Kardinalität hat es?
+Ist Zentrumsfall in oBDS 3.0.5 ein Pflichtfeld?
 ```
 
 The input accepts up to 10,000 characters. The answer appears only after the
-backend completes its evidence and model work; partial model output is not shown.
+model completes its source-gathering and answer synthesization; partial model output is not shown.
 
 ## Continue a conversation
 
-1. Ask a follow-up that clearly refers to the previous turn.
+1. Ask a follow-up. The application sends the recent complete conversation as context to the model. Confirm that the new answer has its own source list.
 2. Repeat the field or version if ambiguity would change the answer.
 3. Check the new answer's evidence independently.
 
 Up to ten recent completed turns can be supplied as context. Very large turns
-may reduce that number because total history is also bounded. Earlier answers
-help resolve the follow-up but are not accepted as evidence for a new answer.
+may reduce that number because total history is also limited.
 
 ## Inspect XSD evidence
 
@@ -38,9 +37,6 @@ help resolve the follow-up but are not accepted as evidence for a new answer.
 4. Verify the XML path and oBDS version first.
 5. Review datatype, cardinality, allowed values, and highlighted XSD lines.
 6. Use `Offizielle XSD` when you need the complete upstream file.
-
-The embedded field view is exact-path and exact-version evidence. A same-named
-element can occur at several XML paths, so the path is part of its identity.
 
 ## Inspect Umsetzungsleitfaden evidence
 
@@ -56,15 +52,13 @@ element can occur at several XML paths, so the path is part of its identity.
 3. Paste into the destination document.
 
 The copied text includes user and chatbot roles plus readable source metadata.
-It does not copy the interactive HTML controls.
 
 ## Start over
 
 1. Copy anything you need to keep.
 2. Select `Chat leeren`.
 
-This clears the conversation state held by the current frontend session. It
-cannot be undone from the UI.
+This clears the conversation state. It cannot be undone from the UI.
 
 ## Expected result
 

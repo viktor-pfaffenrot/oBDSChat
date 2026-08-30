@@ -227,9 +227,7 @@ self-hosted deployments.
 
 The application gains a portable and mockable model contract. Some advanced
 provider features need separate treatment, and models can differ in tool-call
-reliability even when they accept the same schema. The current loop and its
-validation rules are covered in
-[How the backend works](backend-architecture.md#model-loop-and-citation-policy).
+reliability even when they accept the same schema.
 
 ## ADR-006: Separate the Gradio frontend from the FastAPI backend
 
@@ -432,8 +430,7 @@ mostly distribute straightforward behavior across more files and indirection.
 The backend stays easy to read, explain, and test. Modules may eventually need
 to split as responsibilities or team ownership grow. When that happens, add the
 smallest boundary justified by the observed pressure and record a new decision
-if it materially changes the architecture. The current ownership map is in the
-[repository structure](../reference/repository-structure.md).
+if it materially changes the architecture. 
 
 ## Maintaining these records
 

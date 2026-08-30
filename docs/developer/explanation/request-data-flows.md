@@ -34,29 +34,18 @@ sequenceDiagram
     participant U as Browser
     participant F as Frontend
     participant A as FastAPI backend
-    participant M as Model provider
-    participant T as Local tools
-    participant E as XSD / ParadeDB evidence
 
     U->>F: Submit question
-    F->>F: Store pending state and render progress
-    F->>A: Typed question plus bounded history
-    A->>A: Validate input; resolve version in worker thread
-    A->>M: Await model with policy, history, question, strict tools
-    M->>T: Required first tool call
-    T->>E: Run synchronous evidence handler in worker thread
-    E-->>T: Official source facts
-    T-->>M: JSON result with citation IDs
-    loop Optional additional tool rounds
-        M->>T: Tool call
-        T->>E: Retrieve evidence
-        E-->>M: Serialized result
-    end
-    M-->>A: Structured answer and selected citation IDs
-    A->>A: Remove inline citation tokens; validate current evidence
-    A-->>F: Answer, used versions, deduplicated sources
-    F-->>U: Complete answer and expandable evidence cards
+    F->>F: Render pending state
+    F->>A: Question, version, and bounded history
+    A->>A: Validate request and run grounded answering
+    A->>A: Verify citations and build response
+    A-->>F: Answer, used versions, and sources
+    F-->>U: Render answer and evidence cards
 ```
+
+The backend's model, tool, and evidence processing is described in
+[How the backend works](backend-architecture.md#runtime-data-flow).
 
 If the API explicitly constrains `obds_version`, every version-aware tool call is
 forced to that version. Otherwise, model tool arguments can select a version;
