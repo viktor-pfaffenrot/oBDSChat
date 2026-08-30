@@ -62,7 +62,7 @@ exclude = ["src/backend/config_2.py"]
 exclude = ["/src/backend/config_2.py"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/backend", "src/frontend", "scripts"]
+packages = ["src/backend", "src/frontend", "src/obdschat_api", "scripts"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "db/init.sql" = "scripts/data/init.sql"

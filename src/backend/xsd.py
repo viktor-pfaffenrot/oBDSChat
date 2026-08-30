@@ -15,6 +15,7 @@ from lxml import etree  # ty: ignore[unresolved-import]
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.config import load_settings
+from obdschat_api.models import SchemaEnumValue, SchemaSourceLine
 
 XSD_NAMESPACE: Final = "http://www.w3.org/2001/XMLSchema"
 ENUMERATION_FACET: Final = f"{{{XSD_NAMESPACE}}}enumeration"
@@ -37,18 +38,6 @@ class SchemaVersionNotFoundError(SchemaError):
 
 class SchemaElementNotFoundError(SchemaError):
     """Raised when an exact XML path does not exist in a schema version."""
-
-
-class SchemaEnumValue(BaseModel):
-    """One allowed XSD enumeration value and its optional documentation."""
-
-    model_config = ConfigDict(frozen=True)
-
-    value: str = Field(description="Allowed lexical value from the XSD enumeration.")
-    documentation: str | None = Field(
-        default=None,
-        description="Documentation attached to this enumeration value.",
-    )
 
 
 class SchemaElement(BaseModel):
@@ -107,18 +96,6 @@ class SchemaCardinality(BaseModel):
     xsd_file: str
     source_url: str
     source_type: Literal["xsd"] = "xsd"
-
-
-class SchemaSourceLine(BaseModel):
-    """One numbered XSD source line and its evidence-highlight state."""
-
-    model_config = ConfigDict(frozen=True)
-
-    number: int = Field(gt=0, description="One-based source line number.")
-    content: str = Field(description="Original XSD source line content.")
-    highlighted: bool = Field(
-        description="Whether this line belongs to the selected declaration."
-    )
 
 
 class SchemaEvidence(BaseModel):

@@ -2,17 +2,13 @@
 
 import os
 from collections.abc import Sequence
-from typing import Final, Literal
+from typing import Final
 from urllib.parse import quote
 
 import httpx
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    HttpUrl,
-    field_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from obdschat_api.models import QueryResponse, XsdEvidenceResponse
 
 BACKEND_URL_ENV: Final = "BACKEND_URL"
 DEFAULT_BACKEND_URL: Final = "http://localhost:8000"
@@ -34,74 +30,6 @@ class ConversationTurn(BaseModel):
         if not normalized_value:
             raise ValueError("must not be empty")
         return normalized_value
-
-
-class SourceReference(BaseModel):
-    """Citation metadata returned with one backend answer."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    title: str
-    url: HttpUrl
-    source_type: str
-    section: str | None = None
-    obds_version: str | None = None
-    source_id: int | None = Field(default=None, gt=0)
-    xsd_file: str | None = None
-    element: str | None = None
-    path: str | None = None
-
-
-class QueryResponse(BaseModel):
-    """Validated answer returned by the backend query endpoint."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    answer: str
-    used_versions: tuple[str, ...]
-    sources: tuple[SourceReference, ...]
-
-
-class SchemaEnumValue(BaseModel):
-    """One allowed XSD value shown in the evidence viewer."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    value: str
-    documentation: str | None = None
-
-
-class SchemaSourceLine(BaseModel):
-    """One numbered source line returned by the evidence endpoint."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    number: int = Field(gt=0)
-    content: str
-    highlighted: bool
-
-
-class XsdEvidence(BaseModel):
-    """Exact XSD field evidence rendered by the frontend viewer."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    name: str
-    path: str
-    datatype: str
-    base_datatype: str | None = None
-    min_occurs: int = Field(ge=0)
-    max_occurs: int | Literal["unbounded"]
-    allowed_values: tuple[SchemaEnumValue, ...]
-    documentation: str | None = None
-    datatype_documentation: str | None = None
-    version: str
-    xsd_file: str
-    source_url: HttpUrl
-    source_lines: tuple[SchemaSourceLine, ...]
-    declaration_start_line: int | None = Field(default=None, gt=0)
-    declaration_end_line: int | None = Field(default=None, gt=0)
-    declaration_truncated: bool
 
 
 class _QueryPayload(BaseModel):
@@ -171,7 +99,7 @@ class BackendClient:
         )
         return _validate_response(response, QueryResponse)
 
-    def get_xsd_evidence(self, version: str, path: str) -> XsdEvidence:
+    def get_xsd_evidence(self, version: str, path: str) -> XsdEvidenceResponse:
         """Fetch exact source evidence for one versioned XML path."""
         normalized_version = version.strip()
         normalized_path = path.strip()
@@ -184,7 +112,7 @@ class BackendClient:
             f"/sources/xsd/{quote(normalized_version, safe='')}",
             params={"path": normalized_path},
         )
-        return _validate_response(response, XsdEvidence)
+        return _validate_response(response, XsdEvidenceResponse)
 
     def _request(
         self,
@@ -222,7 +150,7 @@ def _validate_response[ResponseModel: BaseModel](
     model: type[ResponseModel],
 ) -> ResponseModel:
     try:
-        return model.model_validate(response.json())
+        return model.model_validate(response.json(), extra="forbid")
     except ValueError as error:
         raise BackendApiError(
             "Backend hat eine ungültige Antwort geliefert."

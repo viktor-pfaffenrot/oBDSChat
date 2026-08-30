@@ -268,9 +268,12 @@ can therefore be deployed and tested independently.
 ### Consequences
 
 Responsibilities and deployment boundaries remain clear, and a future frontend
-can reuse the same API. The split adds an HTTP client, duplicated boundary
-models, and one network hop. See [How the frontend works](frontend-architecture.md)
-for the state and contract implications.
+can reuse the same API. Public response models live in the neutral
+`obdschat_api` package, so both services validate the same contract without the
+frontend importing backend internals. The split still adds an HTTP client and
+one network hop, and response-contract changes require rebuilding both service
+images. See [How the frontend works](frontend-architecture.md) for the state and
+contract implications.
 
 ## ADR-007: Start with BM25 before vector search
 

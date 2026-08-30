@@ -7,10 +7,11 @@ boundary.
 
 ## Component split
 
-`frontend.api` contains a synchronous `BackendClient`, request payload model, and
-response models. It validates `BACKEND_URL`, applies bounded HTTP timeouts,
-translates transport/status failures into `BackendApiError`, and validates every
-successful JSON response.
+`frontend.api` contains a synchronous `BackendClient` and request payload model.
+Public response models live in the dependency-light `obdschat_api.models`
+module shared with the backend. The client validates `BACKEND_URL`, applies
+bounded HTTP timeouts, translates transport/status failures into
+`BackendApiError`, and strictly validates every successful JSON response.
 
 `frontend.app` contains:
 
@@ -64,12 +65,18 @@ evidence from the backend, escapes content, and renders highlighted source lines
 Cross-window close messages are accepted only from the same origin and active
 iframe.
 
-## HTTP boundary duplication
+## Shared HTTP response contracts
 
-Frontend response models intentionally mirror backend public models instead of
-importing them. This keeps container dependency groups separate and makes an HTTP
-contract change visible: backend tests cover production, frontend tests cover
-consumption. A contract change must update both sides and their boundary tests.
+Backend and frontend import public response models from `obdschat_api.models`.
+The neutral package depends only on Pydantic and standard-library typing, so the
+frontend never imports backend application or infrastructure modules and the
+container dependency groups remain separate. Backend code converts domain
+objects into these DTOs; frontend code still owns transport and rendering.
+
+Changing a response contract requires one model edit and rebuilding both service
+images. Frontend rendering changes only when it consumes an added, removed, or
+renamed field. Strict validation still requires compatible rollout steps if old
+and new images can run together.
 
 ## Current trade-offs
 

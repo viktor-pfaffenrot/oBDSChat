@@ -5,8 +5,9 @@ or orchestration logic in focused modules.
 
 ## Add or change an HTTP route
 
-1. Define explicit request and response Pydantic models in `src/backend/app.py`
-   or a focused boundary module if the route family becomes large.
+1. Define backend-only request models in `src/backend/app.py` or a focused
+   boundary module. Define public response models once in
+   `src/obdschat_api/models.py` so backend and frontend validate the same DTO.
 2. For external input, set deliberate length/range constraints and decide whether
    unknown fields must be forbidden.
 3. Add a thin route that calls domain functions and converts known exceptions to
@@ -16,8 +17,9 @@ or orchestration logic in focused modules.
 5. Add boundary tests in `tests/test_app.py` for success, validation, and each
    mapped failure.
 6. Inspect `/openapi.json`; treat it as the canonical signature.
-7. If the frontend consumes the route, update `src/frontend/api.py` models and
-   client method, then add frontend boundary tests.
+7. If the frontend consumes the route, update its client method and any rendering
+   that reads changed response fields, then add frontend boundary tests. Do not
+   duplicate the response model in `src/frontend/api.py`.
 
 Expected result: the route contract is visible in generated OpenAPI, errors are
 stable, no domain work is embedded in the handler, and long provider waits do not
