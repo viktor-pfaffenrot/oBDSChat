@@ -1,0 +1,27 @@
+.wy-nav-content {
+  margin: 0;
+  max-width: none;
+}
+
+.rst-content {
+  max-width: 100rem;
+}
+
+.wy-side-nav-search > a img.logo {
+  width: 7.5rem;
+}
+
+@media screen and (max-width: 1100px) {
+  .rst-content {
+    max-width: none;
+  }
+}
+
+html {
+  font-size: 18px;
+}
+
+.rst-content p {
+  font-size: 1rem;
+  line-height: 1.6;
+}
