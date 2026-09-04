@@ -168,7 +168,7 @@ writes a timestamped JSON report and PNG summary to `evaluation-results/`. Add
 
 ## Further documentation
 
-New users should start with [Ask your first oBDS question](docs/user/tutorials/get-started.md).
+New users should start with [Ask your first oBDS question](docs/user/how-to/use-obdschat.md).
 Developers and operators can continue with:
 
 1. [Local development](docs/developer/how-to/local-development.md)
