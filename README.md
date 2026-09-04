@@ -1,4 +1,4 @@
-# oBDSChat <a href="docs/index.md"><img src="src/frontend/assets/obdschat-logo-transparent.png" align="right" height="138" alt="oBDSChat documentation" /></a>
+# oBDSChat <a href="https://viktor-pfaffenrot.github.io/oBDSChat/"><img src="src/frontend/assets/obdschat-logo-transparent.png" align="right" height="138" alt="oBDSChat documentation" /></a>
 
 ## Overview
 
@@ -167,6 +167,9 @@ writes a timestamped JSON report and PNG summary to `evaluation-results/`. Add
 `--category` for focused runs.
 
 ## Further documentation
+
+Read the complete documentation at
+[oBDSChat Documentation](https://viktor-pfaffenrot.github.io/oBDSChat/).
 
 New users should start with [Ask your first oBDS question](docs/user/how-to/use-obdschat.md).
 Developers and operators can continue with:
