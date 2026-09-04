@@ -37,7 +37,7 @@ variables.
 5. Build and start the stack:
 
    ```bash
-   docker compose up --build
+   docker compose up -d --force-recreate
    ```
 
    On a fresh or recreated source-sync container, startup downloads official oBDS

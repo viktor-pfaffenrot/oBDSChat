@@ -3,8 +3,7 @@
 ## Overview
 
 oBDSChat is a source-grounded chat application for questions about the German
-oncological basic data set (oBDS). It combines versioned official oBDS XML
-schemas with the public Umsetzungsleitfaden, lets a language model retrieve
+oncological basic data set (oBDS). It combines two publically available sources:  versioned official oBDS XML schemas and the [Umsetzungsleitfaden](https://plattform65c.atlassian.net/wiki/spaces/UMK/overview). oBDSChat lets a language model retrieve
 evidence through controlled local tools, and returns the sources used for each
 supported answer.
 
@@ -15,7 +14,7 @@ datatype, cardinality, allowed values, documentation, and original source lines.
 ## Installation
 
 The supported installation uses Docker Compose. It requires Git, Docker with
-Compose, outbound HTTPS access, and an OpenAI or Requesty API key.
+Compose and an OpenAI or Requesty API key.
 
 ```bash
 git clone https://github.com/viktor-pfaffenrot/oBDSChat.git
@@ -36,8 +35,8 @@ config/secrets/llm_api_key.txt
 Restrict the files, then build and start the stack:
 
 ```bash
-chmod 600 config/secrets/obdschat_db_password.txt
-chmod 600 config/secrets/llm_api_key.txt
+chmod 644 config/secrets/obdschat_db_password.txt
+chmod 644 config/secrets/llm_api_key.txt
 docker compose up -d --build
 docker compose ps -a
 ```
@@ -47,9 +46,10 @@ backend, frontend, and documentation site. Open <http://localhost:17860> for
 the chat, <http://localhost:8000> for the documentation, or
 <http://localhost:18000/docs> for the interactive backend API.
 
-The application has no built-in authentication or authorization. Do not expose
-the supplied frontend, backend, or documentation ports to an untrusted network
-without an external access-control boundary.
+> [!CAUTION]
+>The application has no built-in authentication or authorization. Do not expose
+>the supplied frontend, backend, or documentation ports to an untrusted network
+>without an external access-control boundary.
 
 ## Usage
 
@@ -83,10 +83,9 @@ The backend connects to the Requesty EU router and calls the fixed
 `policy/obdschat` route. Put the Requesty API key in
 `config/secrets/llm_api_key.txt`.
 
-> **Requesty setup placeholder:** Create a Requesty account and API key, then
-> configure a policy named `obdschat` with the required models, routing rules,
-> fallbacks, and regional constraints. Replace this paragraph with the final
-> project-specific Requesty setup procedure.
+#### Requesty setup
+
+Create a Requesty account and API key, then under `Model Library`, select `Manage` and approve the desired models. The app was tested with gpt-5.6 in all of its variants and with kimi-k2.6. With the models approved, select `Routing Policies` followed by `Create Policy`. Name the policy **`obdschat`** and configure it with the desired models.
 
 For direct OpenAI use, change `.env` and keep the selected provider key in the
 same secret file:
@@ -167,7 +166,7 @@ writes a timestamped JSON report and PNG summary to `evaluation-results/`. Add
 `--no-show` in a headless environment, or use `--limit`, `--case-id`, and
 `--category` for focused runs.
 
-## Documentation
+## Further documentation
 
 New users should start with [Ask your first oBDS question](docs/user/tutorials/get-started.md).
 Developers and operators can continue with:
@@ -180,3 +179,11 @@ Developers and operators can continue with:
 
 Build the complete documentation site with `make docs`, preview it with
 `make docs-serve`, or run the strict documentation check with `make docs-check`.
+
+## License
+
+Original oBDSChat code, documentation, configuration, and artwork are licensed
+under the [Apache License 2.0](LICENSE). Copyright 2026 Viktor Pfaffenrot.
+
+Third-party software and retrieved source material retain their respective
+licenses and copyright. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -47,25 +47,6 @@ sequenceDiagram
 The backend's model, tool, and evidence processing is described in
 [How the backend works](backend-architecture.md#runtime-data-flow).
 
-If the API explicitly constrains `obds_version`, every version-aware tool call is
-forced to that version. Otherwise, model tool arguments can select a version;
-missing selection resolves to the newest available XSD version.
-
-Questions asking where or how a concept can be reported, which message types
-contain it, or for all occurrences use exhaustive concept-location lookup. That
-lookup covers every structural match in the selected schema version instead of
-using the ranked, limited schema search.
-
-Provider waits do not block the backend event loop, and synchronous version and
-tool work is offloaded to worker threads. Separate requests can overlap. Within
-one request, model rounds and tool calls remain ordered; answers are not streamed.
-The frontend applies its configured per-process concurrency limit, but direct API
-clients bypass that frontend limit.
-
-The backend returns only sources named by the model and verified against current
-tool executions. Search results that were read but not cited do not appear in the
-response.
-
 ## Exact XSD evidence view
 
 ```mermaid
@@ -84,18 +65,7 @@ sequenceDiagram
     F-->>U: Escaped field view
 ```
 
-The evidence excerpt includes three context lines around the declaration and is
-bounded to 160 lines. Metadata reports the full declaration range and whether the
-displayed declaration was truncated.
-
-## Failure propagation
-
-- Frontend transport failures become a user-safe backend-unreachable message.
-- Backend validation failures retain HTTP client-error meaning.
-- Model failures become a bad-gateway response.
-- database, runtime configuration, and XSD parsing failures become
-  service-unavailable responses.
-- Frontend response-model mismatch becomes an invalid-backend-response message.
-
-Health routes are intentionally outside these dependency flows; they report only
-whether their own process can answer HTTP.
+The evidence view shows the declaration with up to three lines of surrounding
+context. To keep the response manageable, the excerpt is limited to 160 lines.
+The metadata still records the declaration's complete line range and indicates
+whether the excerpt omits any part of it.

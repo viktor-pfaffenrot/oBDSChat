@@ -73,15 +73,19 @@ def test_source_sync_shares_xsd_volume_with_backend() -> None:
     assert services["backend"]["volumes"] == ["xsd-data:/app/data/xsd:ro"]
 
 
-def test_compose_uses_non_conflicting_default_ports() -> None:
+def test_compose_publishes_non_conflicting_ports_on_loopback() -> None:
     services = _compose_config()["services"]
 
     assert services["obdschat-db"]["ports"] == [
         "127.0.0.1:${OBDSCHAT_DB_PUBLISHED_PORT:-55434}:5432"
     ]
-    assert services["backend"]["ports"] == ["${OBDSCHAT_BACKEND_PORT:-18000}:8000"]
-    assert services["frontend"]["ports"] == ["${OBDSCHAT_FRONTEND_PORT:-17860}:7860"]
-    assert services["docs"]["ports"] == ["${OBDSCHAT_DOCS_PORT:-8000}:8080"]
+    assert services["backend"]["ports"] == [
+        "127.0.0.1:${OBDSCHAT_BACKEND_PORT:-18000}:8000"
+    ]
+    assert services["frontend"]["ports"] == [
+        "127.0.0.1:${OBDSCHAT_FRONTEND_PORT:-17860}:7860"
+    ]
+    assert services["docs"]["ports"] == ["127.0.0.1:${OBDSCHAT_DOCS_PORT:-8000}:8080"]
 
 
 def test_compose_uses_dedicated_docs_image() -> None:

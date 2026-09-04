@@ -60,3 +60,4 @@ nav:
       - Logging and troubleshooting: developer/how-to/troubleshoot-operations.md
   - Architecture Decision Records:
       - Decisions and rationale: developer/explanation/ADR.md
+  - License: license.md

@@ -23,7 +23,7 @@ The frontend receives the explicit `BACKEND_URL` and
 | Variable | Default | Required | Description |
 | --- | --- | --- | --- |
 | `LLM_PROVIDER` | `openai` | No | Selected provider: `openai` or `requesty`. The example selects `requesty`. |
-| `OPENAI_MODEL` | `gpt-5.6-terra` | For direct OpenAI only | Model route used when `LLM_PROVIDER=openai`. |
+| `OPENAI_MODEL` | `gpt-5.6-luna` | For direct OpenAI only | Model route used when `LLM_PROVIDER=openai`. |
 | `LLM_API_KEY_FILE` | Unset | Preferred | Backend-readable file containing the selected provider key. Compose uses `/run/secrets/llm_api_key`. |
 | `OPENAI_API_KEY` | Unset | Alternative | Direct OpenAI key used only when no key file is configured. |
 | `REQUESTY_API_KEY` | Unset | Alternative | Direct Requesty key used only when no key file is configured. Requesty always uses `policy/obdschat`. |
@@ -55,14 +55,11 @@ and password file paths are also resolved below `OBDSCHAT_BASE_DIR`.
 | `OBDSCHAT_DB_DATA_DIR` | `./data/obdschat_db/data` | Host path containing persistent PostgreSQL data. Changing it points Compose at a different database directory. |
 | `OBDSCHAT_DB_LOG_DIR` | `./data/obdschat_db/logs` | Host path mounted for PostgreSQL file logs. Container output remains available through Compose logs. |
 | `OBDSCHAT_DB_PUBLISHED_PORT` | `55434` | Host PostgreSQL port, bound to `127.0.0.1` only. Application containers continue to use port `5432`. |
-| `OBDSCHAT_BACKEND_PORT` | `18000` | Host port mapped to backend port `8000`. It binds all host interfaces in the supplied Compose file. |
-| `OBDSCHAT_FRONTEND_PORT` | `17860` | Host port mapped to frontend port `7860`. It binds all host interfaces in the supplied Compose file. |
-| `OBDSCHAT_DOCS_PORT` | `8000` | Host port mapped to the documentation server port `8080`. It binds all host interfaces in the supplied Compose file. |
+| `OBDSCHAT_BACKEND_PORT` | `18000` | IPv4 loopback port mapped to backend port `8000`. |
+| `OBDSCHAT_FRONTEND_PORT` | `17860` | IPv4 loopback port mapped to frontend port `7860`. |
+| `OBDSCHAT_DOCS_PORT` | `8000` | IPv4 loopback port mapped to documentation server port `8080`. |
 | `OBDSCHAT_DB_PASSWORD_SOURCE` | `./config/secrets/obdschat_db_password.txt` | Host file mounted as the database-password Compose secret. |
 | `TZ` | Image or host default | Time zone supplied to services using `.env`; the example uses `Europe/Berlin`. |
-
-Relative host paths are resolved from the Compose project directory. Prefer
-absolute paths on a managed host when the repository checkout may move.
 
 ## PostgreSQL container initialization
 
@@ -87,17 +84,13 @@ file. Change the Compose service or use an override file when the frontend must
 reach a different backend.
 
 The query concurrency limit is read when the frontend module starts; zero,
-negative, and non-integer values fail startup. It covers both submission paths
-through their shared Gradio concurrency group. It does not cap direct backend API
-traffic or set the number of model tool rounds within one request.
+negative, and non-integer values fail startup. It covers both submission paths ('Prüfen' and hitting 'Enter') through their shared Gradio concurrency group. It does not cap direct backend API traffic or set the number of model tool rounds within one request.
 
 ## Security invariants
 
 - Keep provider and database secrets out of `.env`, shell history, logs, and
   version control.
-- Give secret files only the permissions required by the operator and Docker.
-- Keep `OBDSCHAT_DB_USER`/`POSTGRES_USER` and
-  `OBDSCHAT_DB_NAME`/`POSTGRES_DB` aligned.
+- Keep `OBDSCHAT_DB_USER`/`POSTGRES_USER` and `OBDSCHAT_DB_NAME`/`POSTGRES_DB` aligned.
 - The application provides no authentication or authorization. Control network
   access outside the application before exposing frontend, backend, or
   documentation ports.

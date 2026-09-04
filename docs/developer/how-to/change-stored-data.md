@@ -1,15 +1,13 @@
 # How to change stored source data
 
-This guide covers changes to PostgreSQL-backed guide sections and XSD-backed
-schema facts. It assumes you understand [How source data is stored](../explanation/data-storage.md).
+This guide covers changes to PostgreSQL-backed sections of the Umsetzungsleitfaden and XSD-backed schema facts. Check the section on ["Data storage"](../explanation/data-storage.md) for background on how the data are stored.
 
 ## Change the `documents` data model
 
 1. Update the desired bootstrap state in `db/init.sql`.
 2. Decide how an existing installation reaches that state. Do not assume
    `CREATE TABLE IF NOT EXISTS` changes existing columns or constraints.
-3. Update `Document` in `scripts/sync_sources.py` so external data is validated
-   before persistence.
+3. Update the `Document` pydantic data model in `scripts/sync_sources.py` so external data is validated before persistence.
 4. Update row construction and the parameterized `INSERT` in
    `replace_documents`.
 5. Update result models and fixed SQL in `src/backend/search.py`.
@@ -17,9 +15,7 @@ schema facts. It assumes you understand [How source data is stored](../explanati
    fields. Choose literal versus stemmed text behavior explicitly.
 7. Update `tests/test_sync_sources.py`, `tests/test_search.py`, and
    `tests/test_db_smoke.py`.
-8. Run `make docs-check` and review the rendered
-   [database reference](../database/index.md).
-9. Test the forward migration on a disposable copy of an existing database, then
+8. Test the forward migration on a disposable copy of an existing database, then
    test fresh bootstrap separately.
 
 Expected result: new and upgraded databases expose the same schema, synchronized
@@ -34,11 +30,12 @@ unreviewed destructive fallback in application startup.
 1. Modify focused extraction helpers in `scripts/sync_sources.py`.
 2. Preserve the rule that all remote content is fetched and validated before
    writes begin.
-3. Keep allowed-host validation on discovery, pagination, details, and redirects.
+3. Reject any source URL outside the approved hosts. Apply this check to the
+   initial discovery request, every pagination and page-detail URL, and the final
+   destination of every redirect.
 4. Ensure extraction cannot produce an empty corpus silently.
 5. Keep replacement scoped to `source_type = 'umsetzungsleitfaden'`.
-6. Add HTML fixtures for headings, tables, ignored nodes, whitespace, malformed
-   payloads, and pagination behavior.
+6. Add test fixtures for HTML extraction cases, including headings, tables, ignored elements, and whitespace. Also test malformed API responses and pagination behavior.
 7. Run source synchronization against a disposable database before using it with
    retained data.
 
@@ -48,8 +45,8 @@ URL and version metadata.
 ## Change prose ranking
 
 1. Change `_SEARCH_QUERY` in `src/backend/search.py`.
-2. Keep all user/model values as SQL parameters.
-3. Keep result ordering deterministic after score ordering.
+2. Keep all user/model values as SQL parameters. Prevents SQL injection and quoting bugs.
+3. Keep result ordering deterministic after score ordering. (`ORDER BY score DESC, id`)
 4. Verify title, section, content, generic-version, requested-version, and
    unrelated rows in unit tests.
 5. Run the optional DB smoke test against ParadeDB; mocked psycopg tests cannot
@@ -63,10 +60,13 @@ ParadeDB extension.
 1. Keep downloaded schemas grouped by exact version and filename.
 2. Validate official host, filename/version agreement, XML syntax, and XSD root
    before writing.
-3. Write changes atomically; never expose a partial XSD file to the backend.
-4. Update schema discovery and catalog tests if naming rules change.
-5. Recheck cache behavior. A running process does not see new catalog contents
-   until `clear_schema_cache` runs or the process restarts.
+3. Write complete download to temporary file, then replace destination in one operation. Backend sees either old complete file or new complete file, never half-written file.
+4. If the version-directory or XSD filename convention changes, update both the
+   synchronization discovery logic and the backend catalog discovery logic. Add
+   or update tests for both components.
+5. After adding or replacing synchronized XSD files, call `clear_schema_cache()`
+   in each running backend process or restart it. Otherwise, that process keeps
+   using the catalog and parsed schema indexes it previously cached.
 6. Verify exact path lookup, duplicate path detection, declared version, source
    location, and excerpt bounds.
 
@@ -76,9 +76,8 @@ produces a deterministic in-memory index.
 ## Review checklist
 
 - Fresh bootstrap and forward migration both exist where needed.
-- No production data reset is required merely to apply a schema change.
-- Writes remain outside request handling.
-- Remote content is validated before persistence.
+- Upgrade must preserve stored database. Operators should not need to delete PostgreSQL volume and rebuild everything.
+- Backend requests should only read source data. Synchronization process owns downloads, XSD updates, and guide-row replacement. User request must not trigger data mutation.
+- Remote content is validated before persistence. Bad download must not replace valid data.
 - SQL stays parameterized.
-- Search semantics are proven with real ParadeDB.
-- Database reference matches the current `db/init.sql`.
+- Database reference in documentation matches the current `db/init.sql`.
