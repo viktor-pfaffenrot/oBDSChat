@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Local development - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Local development";
+        var mkdocs_page_input_path = "developer/how-to/local-development.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Local development</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#run-the-complete-compose-stack">Run the complete Compose stack</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rebuild-after-code-changes">Rebuild after code changes</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#run-python-processes-outside-compose">Run Python processes outside Compose</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#preview-documentation">Preview documentation</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Local development</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-run-obdschat-locally">How to run oBDSChat locally</h1>
+<p>This guide starts a complete development stack and shows an optional split-process
+workflow. It assumes familiarity with Python, Docker Compose, and environment
+variables.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Git</li>
+<li>Docker with Compose</li>
+<li>Python 3.13.9 or newer</li>
+<li><code>uv</code></li>
+<li><code>make</code> for documentation commands</li>
+<li>an OpenAI or Requesty API key</li>
+<li>outbound HTTPS access to the selected model provider and official oBDS sources</li>
+</ul>
+<h2 id="run-the-complete-compose-stack">Run the complete Compose stack</h2>
+<ol>
+<li>Create local configuration:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+mkdir<span class="w"> </span>-p<span class="w"> </span>config/secrets
+</code></pre></div>
+<ol>
+<li>
+<p>Open <code>config/secrets/obdschat_db_password.txt</code> in an editor and add one strong
+   database password with no surrounding quotes.</p>
+</li>
+<li>
+<p>Open <code>config/secrets/llm_api_key.txt</code> and add the key for the provider selected
+   by <code>LLM_PROVIDER</code> in <code>.env</code>.</p>
+</li>
+<li>
+<p>Review <code>.env</code> against the
+   <a href="../../reference/runtime-configuration/">runtime configuration reference</a>.
+   Keep container-internal values such as <code>OBDSCHAT_DB_HOST=db</code> and
+   <code>/run/secrets/...</code> file paths for Compose.</p>
+</li>
+<li>
+<p>Build and start the stack:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--force-recreate
+</code></pre></div>
+<p>On a fresh or recreated source-sync container, startup downloads official oBDS
+   3.x schemas and the public Umsetzungsleitfaden before starting the backend.</p>
+<ol>
+<li>In another terminal, verify services:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>ps
+curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:18000/health
+curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:17860/health
+curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:8000/
+</code></pre></div>
+<ol>
+<li>Open <a href="http://localhost:17860">http://localhost:17860</a>. The documentation site is at
+   <a href="http://localhost:8000">http://localhost:8000</a>, and FastAPI's interactive backend schema is at
+   <a href="http://localhost:18000/docs">http://localhost:18000/docs</a>.</li>
+</ol>
+<p>Expected result: database, backend, frontend, and documentation service report
+healthy; source-sync has exited successfully; the browser can complete a
+grounded question.</p>
+<h2 id="rebuild-after-code-changes">Rebuild after code changes</h2>
+<p>Container images copy source code at build time. Rebuild the affected image:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>backend
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>frontend
+</code></pre></div>
+<p>Changes to shared packaging or backend code used by <code>source-sync</code> may require its
+container to be recreated and completed before rebuilding the backend.</p>
+<h2 id="run-python-processes-outside-compose">Run Python processes outside Compose</h2>
+<p>Use this mode for reload-driven development while keeping ParadeDB in Compose.</p>
+<ol>
+<li>Install all development groups:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--group<span class="w"> </span>backend<span class="w"> </span>--group<span class="w"> </span>frontend<span class="w"> </span>--group<span class="w"> </span>dev
+</code></pre></div>
+<ol>
+<li>Start only the database:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>obdschat-db
+</code></pre></div>
+<ol>
+<li>Synchronize sources using host-reachable settings:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nv">OBDSCHAT_BASE_DIR</span><span class="o">=</span>.<span class="w"> </span><span class="se">\</span>
+<span class="nv">OBDSCHAT_DB_HOST</span><span class="o">=</span>localhost<span class="w"> </span><span class="se">\</span>
+<span class="nv">OBDSCHAT_DB_PORT</span><span class="o">=</span><span class="m">55434</span><span class="w"> </span><span class="se">\</span>
+<span class="nv">OBDSCHAT_DB_PASSWORD_FILE</span><span class="o">=</span>config/secrets/obdschat_db_password.txt<span class="w"> </span><span class="se">\</span>
+uv<span class="w"> </span>run<span class="w"> </span>obdschat-sync-sources
+</code></pre></div>
+<ol>
+<li>Start the backend with the same database overrides and a host-readable model
+   key:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nv">OBDSCHAT_BASE_DIR</span><span class="o">=</span>.<span class="w"> </span><span class="se">\</span>
+<span class="nv">OBDSCHAT_DB_HOST</span><span class="o">=</span>localhost<span class="w"> </span><span class="se">\</span>
+<span class="nv">OBDSCHAT_DB_PORT</span><span class="o">=</span><span class="m">55434</span><span class="w"> </span><span class="se">\</span>
+<span class="nv">OBDSCHAT_DB_PASSWORD_FILE</span><span class="o">=</span>config/secrets/obdschat_db_password.txt<span class="w"> </span><span class="se">\</span>
+<span class="nv">LLM_API_KEY_FILE</span><span class="o">=</span>config/secrets/llm_api_key.txt<span class="w"> </span><span class="se">\</span>
+uv<span class="w"> </span>run<span class="w"> </span>uvicorn<span class="w"> </span>backend.app:app<span class="w"> </span>--reload<span class="w"> </span>--port<span class="w"> </span><span class="m">9000</span>
+</code></pre></div>
+<ol>
+<li>Start the frontend in another terminal:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nv">BACKEND_URL</span><span class="o">=</span>http://localhost:9000<span class="w"> </span><span class="se">\</span>
+uv<span class="w"> </span>run<span class="w"> </span>uvicorn<span class="w"> </span>frontend.app:app<span class="w"> </span>--reload<span class="w"> </span>--port<span class="w"> </span><span class="m">7860</span>
+</code></pre></div>
+<ol>
+<li>Open <a href="http://localhost:7860">http://localhost:7860</a>.</li>
+</ol>
+<p>Process environment variables override <code>.env</code>, which is why these commands can
+reuse the Compose-oriented file without changing container paths.</p>
+<h2 id="preview-documentation">Preview documentation</h2>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>docs-serve
+</code></pre></div>
+<p>The command exports OpenAPI and starts MkDocs. Open <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../explanation/data-storage/" class="btn btn-neutral float-left" title="Data storage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../extend-backend/" class="btn btn-neutral float-right" title="Extend the backend">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../explanation/data-storage/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../extend-backend/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

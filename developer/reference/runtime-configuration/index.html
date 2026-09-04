@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Runtime configuration - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Runtime configuration";
+        var mkdocs_page_input_path = "developer/reference/runtime-configuration.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Runtime configuration</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#loading-and-precedence">Loading and precedence</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#model-provider">Model provider</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#application-paths-and-postgresql-connection">Application paths and PostgreSQL connection</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#compose-host-paths-and-published-ports">Compose host paths and published ports</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#postgresql-container-initialization">PostgreSQL container initialization</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#frontend-connection">Frontend connection</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#security-invariants">Security invariants</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Operations</li>
+      <li class="breadcrumb-item active">Runtime configuration</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="runtime-configuration">Runtime configuration</h1>
+<p>This reference lists configuration read by the application and the supplied
+Docker Compose deployment. Values in <code>.env.example</code> are Compose-oriented
+examples, not universal application defaults.</p>
+<h2 id="loading-and-precedence">Loading and precedence</h2>
+<p>The backend reads process environment variables first and <code>.env</code> as a fallback.
+Empty values are ignored. Unknown variables do not change backend settings.</p>
+<p>For model credentials, <code>LLM_API_KEY_FILE</code> takes precedence over the selected
+provider's direct key. For the database, a non-empty <code>OBDSCHAT_DB_PASSWORD</code>
+takes precedence over <code>OBDSCHAT_DB_PASSWORD_FILE</code>.</p>
+<p>Compose uses <code>.env</code> twice: for <code>${...}</code> interpolation in <code>docker-compose.yaml</code>
+and as <code>env_file</code> input for the database, source synchronizer, and backend.
+The frontend receives the explicit <code>BACKEND_URL</code> and
+<code>OBDSCHAT_QUERY_CONCURRENCY</code> values declared by Compose.</p>
+<h2 id="model-provider">Model provider</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LLM_PROVIDER</code></td>
+<td><code>openai</code></td>
+<td>No</td>
+<td>Selected provider: <code>openai</code> or <code>requesty</code>. The example selects <code>requesty</code>.</td>
+</tr>
+<tr>
+<td><code>OPENAI_MODEL</code></td>
+<td><code>gpt-5.6-luna</code></td>
+<td>For direct OpenAI only</td>
+<td>Model route used when <code>LLM_PROVIDER=openai</code>.</td>
+</tr>
+<tr>
+<td><code>LLM_API_KEY_FILE</code></td>
+<td>Unset</td>
+<td>Preferred</td>
+<td>Backend-readable file containing the selected provider key. Compose uses <code>/run/secrets/llm_api_key</code>.</td>
+</tr>
+<tr>
+<td><code>OPENAI_API_KEY</code></td>
+<td>Unset</td>
+<td>Alternative</td>
+<td>Direct OpenAI key used only when no key file is configured.</td>
+</tr>
+<tr>
+<td><code>REQUESTY_API_KEY</code></td>
+<td>Unset</td>
+<td>Alternative</td>
+<td>Direct Requesty key used only when no key file is configured. Requesty always uses <code>policy/obdschat</code>.</td>
+</tr>
+<tr>
+<td><code>LLM_API_KEY_SOURCE</code></td>
+<td><code>./config/secrets/llm_api_key.txt</code></td>
+<td>Compose only</td>
+<td>Host file mounted as the <code>llm_api_key</code> Compose secret.</td>
+</tr>
+</tbody>
+</table>
+<p>Changing <code>OPENAI_MODEL</code> has no effect when Requesty is selected. Concrete
+Requesty routing belongs to the provider-side <code>policy/obdschat</code> policy.</p>
+<h2 id="application-paths-and-postgresql-connection">Application paths and PostgreSQL connection</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OBDSCHAT_BASE_DIR</code></td>
+<td>Current working directory</td>
+<td>No</td>
+<td>Base for backend XSD data and relative secret paths. Compose uses <code>/app</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_HOST</code></td>
+<td><code>localhost</code></td>
+<td>No</td>
+<td>PostgreSQL hostname. Compose uses the <code>db</code> network alias.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_PORT</code></td>
+<td><code>5432</code></td>
+<td>No</td>
+<td>PostgreSQL target port, from 1 through 65535. Compose uses the container-side port <code>5432</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_NAME</code></td>
+<td>Unset</td>
+<td>Yes</td>
+<td>Database name used by the backend and synchronizer. Must match <code>POSTGRES_DB</code> in Compose.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_USER</code></td>
+<td>Unset</td>
+<td>Yes</td>
+<td>Database user used by the backend and synchronizer. Must match <code>POSTGRES_USER</code> in Compose.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_PASSWORD_FILE</code></td>
+<td><code>&lt;base&gt;/config/secrets/obdschat_db_password.txt</code></td>
+<td>Preferred</td>
+<td>Backend-readable password file. Compose uses <code>/run/secrets/obdschat_db_password</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_PASSWORD</code></td>
+<td>Unset</td>
+<td>Alternative</td>
+<td>Direct database password. Prefer a mounted file outside local development.</td>
+</tr>
+</tbody>
+</table>
+<p>The backend reads XSD files below <code>&lt;OBDSCHAT_BASE_DIR&gt;/data/xsd</code>. Relative key
+and password file paths are also resolved below <code>OBDSCHAT_BASE_DIR</code>.</p>
+<h2 id="compose-host-paths-and-published-ports">Compose host paths and published ports</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OBDSCHAT_INIT_DATA</code></td>
+<td><code>./db</code></td>
+<td>Host directory mounted read-only into PostgreSQL initialization. Scripts run automatically only for an empty database directory.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_DATA_DIR</code></td>
+<td><code>./data/obdschat_db/data</code></td>
+<td>Host path containing persistent PostgreSQL data. Changing it points Compose at a different database directory.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_LOG_DIR</code></td>
+<td><code>./data/obdschat_db/logs</code></td>
+<td>Host path mounted for PostgreSQL file logs. Container output remains available through Compose logs.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_PUBLISHED_PORT</code></td>
+<td><code>55434</code></td>
+<td>Host PostgreSQL port, bound to <code>127.0.0.1</code> only. Application containers continue to use port <code>5432</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_BACKEND_PORT</code></td>
+<td><code>18000</code></td>
+<td>IPv4 loopback port mapped to backend port <code>8000</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_FRONTEND_PORT</code></td>
+<td><code>17860</code></td>
+<td>IPv4 loopback port mapped to frontend port <code>7860</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DOCS_PORT</code></td>
+<td><code>8000</code></td>
+<td>IPv4 loopback port mapped to documentation server port <code>8080</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_DB_PASSWORD_SOURCE</code></td>
+<td><code>./config/secrets/obdschat_db_password.txt</code></td>
+<td>Host file mounted as the database-password Compose secret.</td>
+</tr>
+<tr>
+<td><code>TZ</code></td>
+<td>Image or host default</td>
+<td>Time zone supplied to services using <code>.env</code>; the example uses <code>Europe/Berlin</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="postgresql-container-initialization">PostgreSQL container initialization</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POSTGRES_USER</code></td>
+<td>Example: <code>obdschat</code></td>
+<td>Yes in this deployment</td>
+<td>User created by the ParadeDB image. Keep equal to <code>OBDSCHAT_DB_USER</code>.</td>
+</tr>
+<tr>
+<td><code>POSTGRES_DB</code></td>
+<td>Example: <code>obdschat</code></td>
+<td>Yes in this deployment</td>
+<td>Database created by the ParadeDB image. Keep equal to <code>OBDSCHAT_DB_NAME</code>.</td>
+</tr>
+<tr>
+<td><code>POSTGRES_PASSWORD_FILE</code></td>
+<td>Example: <code>/run/secrets/obdschat_db_password</code></td>
+<td>Yes in this deployment</td>
+<td>Container path read by the image. It must match the mounted database-password secret.</td>
+</tr>
+</tbody>
+</table>
+<p>These values initialize an empty data directory. Changing them later does not
+rename an existing PostgreSQL user or database.</p>
+<h2 id="frontend-connection">Frontend connection</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BACKEND_URL</code></td>
+<td><code>http://localhost:8000</code></td>
+<td>No</td>
+<td>Absolute HTTP(S) backend base URL used by the frontend process. Compose fixes it to <code>http://backend:8000</code>.</td>
+</tr>
+<tr>
+<td><code>OBDSCHAT_QUERY_CONCURRENCY</code></td>
+<td><code>8</code></td>
+<td>No</td>
+<td>Positive integer limiting simultaneous query-completion events in one frontend process. Compose interpolates the value from <code>.env</code> and also defaults to <code>8</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>BACKEND_URL</code> is not currently interpolated from <code>.env</code> in the supplied Compose
+file. Change the Compose service or use an override file when the frontend must
+reach a different backend.</p>
+<p>The query concurrency limit is read when the frontend module starts; zero,
+negative, and non-integer values fail startup. It covers both submission paths ('Prüfen' and hitting 'Enter') through their shared Gradio concurrency group. It does not cap direct backend API traffic or set the number of model tool rounds within one request.</p>
+<h2 id="security-invariants">Security invariants</h2>
+<ul>
+<li>Keep provider and database secrets out of <code>.env</code>, shell history, logs, and
+  version control.</li>
+<li>Keep <code>OBDSCHAT_DB_USER</code>/<code>POSTGRES_USER</code> and <code>OBDSCHAT_DB_NAME</code>/<code>POSTGRES_DB</code> aligned.</li>
+<li>The application provides no authentication or authorization. Control network
+  access outside the application before exposing frontend, backend, or
+  documentation ports.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../database/" class="btn btn-neutral float-left" title="Database reference"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../how-to/deploy/" class="btn btn-neutral float-right" title="Deploy and upgrade">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../database/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../how-to/deploy/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

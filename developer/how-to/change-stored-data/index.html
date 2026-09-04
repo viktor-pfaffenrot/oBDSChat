@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Change stored data - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Change stored data";
+        var mkdocs_page_input_path = "developer/how-to/change-stored-data.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Change stored data</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#change-the-documents-data-model">Change the documents data model</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#change-guide-extraction">Change guide extraction</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#change-prose-ranking">Change prose ranking</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#change-synchronized-xsd-handling">Change synchronized XSD handling</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#review-checklist">Review checklist</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Change stored data</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-change-stored-source-data">How to change stored source data</h1>
+<p>This guide covers changes to PostgreSQL-backed sections of the Umsetzungsleitfaden and XSD-backed schema facts. Check the section on <a href="../../explanation/data-storage/">"Data storage"</a> for background on how the data are stored.</p>
+<h2 id="change-the-documents-data-model">Change the <code>documents</code> data model</h2>
+<ol>
+<li>Update the desired bootstrap state in <code>db/init.sql</code>.</li>
+<li>Decide how an existing installation reaches that state. Do not assume
+   <code>CREATE TABLE IF NOT EXISTS</code> changes existing columns or constraints.</li>
+<li>Update the <code>Document</code> pydantic data model in <code>scripts/sync_sources.py</code> so external data is validated before persistence.</li>
+<li>Update row construction and the parameterized <code>INSERT</code> in
+   <code>replace_documents</code>.</li>
+<li>Update result models and fixed SQL in <code>src/backend/search.py</code>.</li>
+<li>Revisit the ParadeDB index definition when adding searchable or filterable
+   fields. Choose literal versus stemmed text behavior explicitly.</li>
+<li>Update <code>tests/test_sync_sources.py</code>, <code>tests/test_search.py</code>, and
+   <code>tests/test_db_smoke.py</code>.</li>
+<li>Test the forward migration on a disposable copy of an existing database, then
+   test fresh bootstrap separately.</li>
+</ol>
+<p>Expected result: new and upgraded databases expose the same schema, synchronized
+rows validate before insertion, and search returns typed results.</p>
+<p>The repository does not yet provide a migration runner. Add one as part of any
+schema change that must work on persisted installations; do not encode an
+unreviewed destructive fallback in application startup.</p>
+<h2 id="change-guide-extraction">Change guide extraction</h2>
+<ol>
+<li>Modify focused extraction helpers in <code>scripts/sync_sources.py</code>.</li>
+<li>Preserve the rule that all remote content is fetched and validated before
+   writes begin.</li>
+<li>Reject any source URL outside the approved hosts. Apply this check to the
+   initial discovery request, every pagination and page-detail URL, and the final
+   destination of every redirect.</li>
+<li>Ensure extraction cannot produce an empty corpus silently.</li>
+<li>Keep replacement scoped to <code>source_type = 'umsetzungsleitfaden'</code>.</li>
+<li>Add test fixtures for HTML extraction cases, including headings, tables, ignored elements, and whitespace. Also test malformed API responses and pagination behavior.</li>
+<li>Run source synchronization against a disposable database before using it with
+   retained data.</li>
+</ol>
+<p>Expected result: each row remains a useful heading-sized search unit with public
+URL and version metadata.</p>
+<h2 id="change-prose-ranking">Change prose ranking</h2>
+<ol>
+<li>Change <code>_SEARCH_QUERY</code> in <code>src/backend/search.py</code>.</li>
+<li>Keep all user/model values as SQL parameters. Prevents SQL injection and quoting bugs.</li>
+<li>Keep result ordering deterministic after score ordering. (<code>ORDER BY score DESC, id</code>)</li>
+<li>Verify title, section, content, generic-version, requested-version, and
+   unrelated rows in unit tests.</li>
+<li>Run the optional DB smoke test against ParadeDB; mocked psycopg tests cannot
+   prove index/operator compatibility.</li>
+</ol>
+<p>Expected result: ranking behavior is stated in tests and executes with the real
+ParadeDB extension.</p>
+<h2 id="change-synchronized-xsd-handling">Change synchronized XSD handling</h2>
+<ol>
+<li>Keep downloaded schemas grouped by exact version and filename.</li>
+<li>Validate official host, filename/version agreement, XML syntax, and XSD root
+   before writing.</li>
+<li>Write complete download to temporary file, then replace destination in one operation. Backend sees either old complete file or new complete file, never half-written file.</li>
+<li>If the version-directory or XSD filename convention changes, update both the
+   synchronization discovery logic and the backend catalog discovery logic. Add
+   or update tests for both components.</li>
+<li>After adding or replacing synchronized XSD files, call <code>clear_schema_cache()</code>
+   in each running backend process or restart it. Otherwise, that process keeps
+   using the catalog and parsed schema indexes it previously cached.</li>
+<li>Verify exact path lookup, duplicate path detection, declared version, source
+   location, and excerpt bounds.</li>
+</ol>
+<p>Expected result: each discoverable version has one validated canonical file and
+produces a deterministic in-memory index.</p>
+<h2 id="review-checklist">Review checklist</h2>
+<ul>
+<li>Fresh bootstrap and forward migration both exist where needed.</li>
+<li>Upgrade must preserve stored database. Operators should not need to delete PostgreSQL volume and rebuild everything.</li>
+<li>Backend requests should only read source data. Synchronization process owns downloads, XSD updates, and guide-row replacement. User request must not trigger data mutation.</li>
+<li>Remote content is validated before persistence. Bad download must not replace valid data.</li>
+<li>SQL stays parameterized.</li>
+<li>Database reference in documentation matches the current <code>db/init.sql</code>.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../extend-backend/" class="btn btn-neutral float-left" title="Extend the backend"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../test-changes/" class="btn btn-neutral float-right" title="Test changes">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../extend-backend/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../test-changes/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

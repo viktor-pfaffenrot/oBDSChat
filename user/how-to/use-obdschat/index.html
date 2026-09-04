@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Use oBDSChat - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Use oBDSChat";
+        var mkdocs_page_input_path = "user/how-to/use-obdschat.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Use oBDSChat</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#ask-an-effective-question">Ask an effective question</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#continue-a-conversation">Continue a conversation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#inspect-xsd-evidence">Inspect XSD evidence</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#inspect-umsetzungsleitfaden-evidence">Inspect Umsetzungsleitfaden evidence</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#copy-a-conversation">Copy a conversation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#start-over">Start over</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#expected-result">Expected result</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../developer/reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../developer/database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User documentation</li>
+      <li class="breadcrumb-item active">Use oBDSChat</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-use-obdschat">How to use oBDSChat</h1>
+<p>Use these workflows to obtain precise answers and inspect their supporting
+evidence. The workflows assume you can already open a running oBDSChat instance.</p>
+<h2 id="ask-an-effective-question">Ask an effective question</h2>
+<ol>
+<li>Name the field, message type, rule, or implementation topic.</li>
+<li>Include an exact oBDS version when the version matters.</li>
+<li>Ask for one decision or comparison at a time.</li>
+<li>Select <code>Prüfen</code> or press Enter.</li>
+<li>Read the answer and expand <code>Beleglage</code> before acting on it.</li>
+</ol>
+<p>For example:</p>
+<div class="highlight"><pre><span></span><code>Ist Zentrumsfall in oBDS 3.0.5 ein Pflichtfeld?
+</code></pre></div>
+<p>The input accepts up to 10,000 characters. The answer appears only after the
+model completes its source-gathering and answer synthesization; partial model output is not shown.</p>
+<h2 id="continue-a-conversation">Continue a conversation</h2>
+<ol>
+<li>Ask a follow-up. The application sends the recent complete conversation as context to the model. Confirm that the new answer has its own source list.</li>
+<li>Repeat the field or version if ambiguity would change the answer.</li>
+<li>Check the new answer's evidence independently.</li>
+</ol>
+<p>Up to ten recent completed turns can be supplied as context. Very large turns
+may reduce that number because total history is also limited.</p>
+<h2 id="inspect-xsd-evidence">Inspect XSD evidence</h2>
+<ol>
+<li>Expand <code>Beleglage</code> below an answer.</li>
+<li>Find a card marked <code>XSD</code>.</li>
+<li>Select <code>Feld anzeigen</code>.</li>
+<li>Verify the XML path and oBDS version first.</li>
+<li>Review datatype, cardinality, allowed values, and highlighted XSD lines.</li>
+<li>Use <code>Offizielle XSD</code> when you need the complete upstream file.</li>
+</ol>
+<h2 id="inspect-umsetzungsleitfaden-evidence">Inspect Umsetzungsleitfaden evidence</h2>
+<ol>
+<li>Expand <code>Beleglage</code>.</li>
+<li>Find a card marked <code>UMSETZUNGSLEITFADEN</code>.</li>
+<li>Check the page title and section.</li>
+<li>Select <code>Originalseite öffnen</code> to read its public source page.</li>
+</ol>
+<h2 id="copy-a-conversation">Copy a conversation</h2>
+<ol>
+<li>Wait until any current request completes.</li>
+<li>Select <code>Chat kopieren</code>.</li>
+<li>Paste into the destination document.</li>
+</ol>
+<p>The copied text includes user and chatbot roles plus readable source metadata.</p>
+<h2 id="start-over">Start over</h2>
+<ol>
+<li>Copy anything you need to keep.</li>
+<li>Select <code>Chat leeren</code>.</li>
+</ol>
+<p>This clears the conversation state. It cannot be undone from the UI.</p>
+<h2 id="expected-result">Expected result</h2>
+<p>Each completed answer is displayed with only the evidence the backend accepted
+for that answer. When no official evidence supports a claim, the application
+should say that evidence is insufficient instead of inventing a fact.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../.." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../reference/configuration/" class="btn btn-neutral float-right" title="Configuration">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../.." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../reference/configuration/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

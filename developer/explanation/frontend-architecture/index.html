@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Frontend architecture - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Frontend architecture";
+        var mkdocs_page_input_path = "developer/explanation/frontend-architecture.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Frontend architecture</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#component-split">Component split</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#conversation-state">Conversation state</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rendering-and-escaping">Rendering and escaping</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#shared-http-response-contracts">Shared HTTP response contracts</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#current-trade-offs">Current trade-offs</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Frontend architecture</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-the-frontend-works">How the frontend works</h1>
+<p>The frontend runs as a separate FastAPI web application. Gradio provides the chat interface, while FastAPI serves supporting routes such as health checks, static assets, and the XSD evidence viewer. The frontend manages presentation and conversation history for each browser session. It communicates with the backend only through validated HTTP requests and never accesses backend code or PostgreSQL directly.</p>
+<h2 id="component-split">Component split</h2>
+<p><code>frontend.api</code> defines the frontend’s HTTP client and data models for communicating with the backend. Public response models live in the dependency-light <code>obdschat_api.models</code>
+module shared with the backend. Before sending a request, it validates the backend URL and request data. It uses fixed timeouts so requests cannot wait forever. Network and HTTP errors are converted into a common <code>BackendApiError</code>. Successful responses are parsed and checked against the expected response model before the frontend uses them.
+ e12a7b1 (updated docs)</p>
+<p><code>frontend.app</code> contains:</p>
+<ul>
+<li><strong>immutable conversation state models</strong>: Store questions, answers, citations, and pending requests</li>
+<li><strong>Gradio event handlers</strong>: Functions that run when user submits, clears, copies, or clicks something.</li>
+<li><strong>bounded query-event concurrency configuration</strong>: Limits how many backend questions one frontend process handles simultaneously.</li>
+<li><strong>chat and source-card rendering</strong>: Converts answers and citations into visible chat messages and source cards.</li>
+<li><strong>clipboard formatting</strong>: Converts conversation into clean plain text for copying.</li>
+<li>an HTML XSD evidence viewer</li>
+<li><strong>frontend liveness route and Gradio mounting</strong></li>
+</ul>
+<p><code>frontend.assets/styles.css</code> styles both the Gradio surface and exact-field view.</p>
+<h2 id="conversation-state">Conversation state</h2>
+<div class="mermaid">stateDiagram-v2
+    direction LR
+    state "Ready: completed turns only" as Ready
+    state "Pending: question visible" as Pending
+
+    [*] --&gt; Ready
+    Ready --&gt; Pending: prepare_question
+    Pending --&gt; Ready: complete_question</div>
+<p><code>prepare_question</code> validates and stores a pending question, clears the input, and
+renders a visible progress state without waiting for HTTP. A chained Gradio event
+runs <code>complete_question</code>, which performs one backend request and replaces the
+pending state with either a completed turn or an error card.</p>
+<p>Clicking the submit button or pressing Enter starts a backend request in the
+shared <code>backend-queries</code> concurrency group. <code>OBDSCHAT_QUERY_CONCURRENCY</code> limits
+how many of these requests one frontend process can handle at once and defaults
+to eight. This lets requests from different browser sessions run at the same
+time. Calls made directly to the backend API do not use this limit.</p>
+<p>Completed turns keep their answers and source metadata. Before each backend
+request, the frontend sends the newest completed turns that fit the backend's
+limits on turn count and total characters. Pending and failed turns are never
+included in this history.</p>
+<h2 id="rendering-and-escaping">Rendering and escaping</h2>
+<p>Gradio removes unsafe HTML from chat messages before displaying them. The frontend also escapes source-card values before adding them to HTML. External links use <code>noopener noreferrer</code> for security. Copied conversations use a separate plain-text version, so interactive HTML is not copied.</p>
+<p>For an XSD citation, the source card links to a frontend-owned exact-field route.
+Client-side code opens that route in a same-origin iframe. The route fetches typed
+evidence from the backend, escapes content, and renders highlighted source lines.
+Cross-window close messages are accepted only from the same origin and active
+iframe.</p>
+<h2 id="shared-http-response-contracts">Shared HTTP response contracts</h2>
+<p>Backend and frontend import public response models from <code>obdschat_api.models</code>.
+The neutral package depends only on Pydantic and standard-library typing, so the
+frontend never imports backend application or infrastructure modules and the
+container dependency groups remain separate. Backend code converts domain
+objects into these DTOs; frontend code still owns transport and rendering.</p>
+<p>Changing a response contract requires one model edit and rebuilding both service
+images. Frontend rendering changes only when it consumes an added, removed, or
+renamed field. Strict validation still requires compatible rollout steps if old
+and new images can run together.</p>
+<h2 id="current-trade-offs">Current trade-offs</h2>
+<p>The client creates a new <code>httpx.Client</code> for each operation. This avoids shared
+client lifecycle concerns but does not reuse connections. Conversation state is
+session-local and has no durable store. Answers are not streamed.
+Query concurrency is bounded per frontend process rather than across a
+multi-instance deployment. These constraints keep the frontend small.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../backend-architecture/" class="btn btn-neutral float-left" title="Backend architecture"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../request-data-flows/" class="btn btn-neutral float-right" title="Request and data flows">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../backend-architecture/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../request-data-flows/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

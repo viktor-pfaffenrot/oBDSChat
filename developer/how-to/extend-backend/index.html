@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Extend the backend - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Extend the backend";
+        var mkdocs_page_input_path = "developer/how-to/extend-backend.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Extend the backend</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#add-or-change-an-http-route">Add or change an HTTP route</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#add-a-model-callable-evidence-tool">Add a model-callable evidence tool</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#add-a-new-fact-from-an-xsd-to-backend-retrieval">Add a new fact from an XSD to backend retrieval</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#add-a-model-provider">Add a model provider</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#review-checklist">Review checklist</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Extend the backend</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-extend-the-backend">How to extend the backend</h1>
+<p>Use the matching procedure below. Keep FastAPI handlers thin and place retrieval
+or orchestration logic in focused modules.</p>
+<h2 id="add-or-change-an-http-route">Add or change an HTTP route</h2>
+<ol>
+<li>Define backend-only request models in <code>src/backend/app.py</code> or a focused
+   boundary module. Define public response models once in
+   <code>src/obdschat_api/models.py</code> so backend and frontend validate the same DTO.</li>
+<li>For external input, set deliberate length/range constraints and decide whether
+   unknown fields must be forbidden.</li>
+<li>Add a thin route that calls domain functions and converts known exceptions to
+   intentional HTTP responses. Use <code>async def</code> when the route awaits provider or
+   network work; move synchronous blocking work to a worker thread.</li>
+<li>Do not expose raw model-provider, database, secret-path, or parser exceptions.</li>
+<li>Add boundary tests in <code>tests/test_app.py</code> for success, validation, and each
+   mapped failure.</li>
+<li>Inspect <code>/openapi.json</code>; treat it as the canonical signature.</li>
+<li>If the frontend calls this route, update its HTTP client and UI code to match any request or response changes. Add tests covering the frontend’s handling of the response. Import the shared response model from <code>src/obdschat_api/models.py</code>; do not redefine it in <code>src/frontend/api.py</code>.</li>
+</ol>
+<p>Expected result: the route contract is visible in generated OpenAPI, errors are
+stable, no domain work is embedded in the handler, and long provider waits do not
+block unrelated asynchronous request tasks.</p>
+<h2 id="add-a-model-callable-evidence-tool">Add a model-callable evidence tool</h2>
+<ol>
+<li>First, implement the operation as a type-annotated function in the backend module responsible for that data or feature. (see e.g. <code>get_schema_values()</code> in <code>src/backend/xsd.py</code>). Keep arbitrary SQL, filesystem paths, and external URLs out of model-controlled arguments.</li>
+<li>Add an adapter in <code>src/backend/tools.py</code> that returns JSON-serializable typed
+   data.</li>
+<li>Define one <code>LocalTool</code> with a unique name, precise description, and strict
+   object schema.</li>
+<li>Include every property in <code>required</code>. Use a union containing <code>null</code> when a
+   value is semantically optional.</li>
+<li>Register the tool in <code>TOOLS</code>.</li>
+<li>If results can support public claims, include stable source metadata that
+   <code>_citation_id</code> can convert into an ID. Extend citation-ID and public-source
+   conversion deliberately for a new source type.</li>
+<li>Test schema strictness, argument validation, handler output, asynchronous tool
+   dispatch, and citation selection.</li>
+</ol>
+<p>Expected result: the first model round can select the new tool, outputs are
+serializable and normally bounded, and cited results can be proven to come from
+the current request. An intentionally exhaustive tool must document why
+truncation would be incorrect and test complete deterministic ordering.</p>
+<h2 id="add-a-new-fact-from-an-xsd-to-backend-retrieval">Add a new fact from an XSD to backend retrieval</h2>
+<ol>
+<li>Add the fact to the relevant frozen Pydantic model in <code>src/backend/xsd.py</code>.</li>
+<li>Extract it while building <code>_SchemaIndex</code>; do not reparse the schema for every
+   request.</li>
+<li>Add it to a focused catalog query or tool result.</li>
+<li>If it belongs in exact evidence, update the backend evidence response and the
+   mirrored frontend model.</li>
+<li>Update XSD fixtures and tests for direct, inherited, missing, and malformed
+   cases where relevant.</li>
+<li>Clear the schema catalog cache in tests that change configured XSD files.</li>
+</ol>
+<p>Expected result: the fact is deterministic for an exact version/path and remains
+traceable to the official XSD.</p>
+<h2 id="add-a-model-provider">Add a model provider</h2>
+<ol>
+<li>Add a value to <code>LlmProvider</code> in <code>src/backend/config.py</code>.</li>
+<li>Verify the complete tool loop with the provider route and selected model. OpenAI API compatibility alone does not guarantee reliable strict, multi-round tool use and structured final responses. In particular, Qwen3.8 behaved unreliably with currently implemented multi-round sequence.</li>
+<li>Add provider base URL, route policy, and key resolution in
+   <code>Settings.resolve_llm_endpoint</code>.</li>
+<li>Keep <code>backend.llm</code> provider-neutral unless the Chat Completions protocol itself
+   differs.</li>
+<li>Add settings tests for normalization, missing key, mounted key, and endpoint
+   resolution.</li>
+<li>Update <code>.env.example</code> without adding real credentials.</li>
+</ol>
+<p>Expected result: asynchronous <code>answer_question</code> receives one resolved
+<code>LlmEndpoint</code>, awaits the provider client, and does not branch on provider.</p>
+<h2 id="review-checklist">Review checklist</h2>
+<ul>
+<li>Public inputs and outputs are typed.</li>
+<li>Error mapping is specific and tested.</li>
+<li>Tool results are bounded and JSON-serializable, or explicitly exhaustive with
+  deterministic coverage tests.</li>
+<li>Asynchronous routes do not run blocking provider or local work on the event
+  loop.</li>
+<li>Source-bearing claims can pass current-request citation validation.</li>
+<li>Frontend boundary models match changed HTTP responses.</li>
+<li><a href="../test-changes/">Test changes</a> passes.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../local-development/" class="btn btn-neutral float-left" title="Local development"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../change-stored-data/" class="btn btn-neutral float-right" title="Change stored data">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../local-development/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../change-stored-data/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

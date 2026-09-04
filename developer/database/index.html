@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Database reference - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Database reference";
+        var mkdocs_page_input_path = "developer/database/index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Database reference</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#publicdocuments">public.documents</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#columns">Columns</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#constraints">Constraints</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#full-text-index">Full-text index</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Database reference</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="postgresql-schema-reference">PostgreSQL schema reference</h1>
+<p><code>db/init.sql</code> is the canonical definition of application-owned PostgreSQL
+objects. This reference summarizes its table, columns, constraints, and search
+index for quick lookup.</p>
+<p>For storage rationale and synchronization behavior, read
+<a href="../explanation/data-storage/">Data Storage</a>.</p>
+<h2 id="publicdocuments"><code>public.documents</code></h2>
+<p>One row represents one searchable section extracted from official oBDS
+documentation.</p>
+<h3 id="columns">Columns</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>bigint</code></td>
+<td>No</td>
+<td>Sequence-backed <code>BIGSERIAL</code></td>
+<td>Request-local row identifier, primary key, and ParadeDB BM25 key field. IDs can change when sources are synchronized.</td>
+</tr>
+<tr>
+<td><code>source_type</code></td>
+<td><code>text</code></td>
+<td>No</td>
+<td>None</td>
+<td>Source family used to scope synchronization and search. The current persisted value is <code>umsetzungsleitfaden</code>.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>text</code></td>
+<td>No</td>
+<td>None</td>
+<td>Title of the source page or document. Title matches receive the strongest query-time boost.</td>
+</tr>
+<tr>
+<td><code>section</code></td>
+<td><code>text</code></td>
+<td>Yes</td>
+<td><code>NULL</code></td>
+<td>Optional heading identifying the extracted section. Section matches rank below title matches and above body-only matches.</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td><code>text</code></td>
+<td>No</td>
+<td>None</td>
+<td>Plain-text section content searched when producing grounded answers.</td>
+</tr>
+<tr>
+<td><code>url</code></td>
+<td><code>text</code></td>
+<td>No</td>
+<td>None</td>
+<td>Public URL of the canonical source page.</td>
+</tr>
+<tr>
+<td><code>obds_version</code></td>
+<td><code>text</code></td>
+<td>Yes</td>
+<td><code>NULL</code></td>
+<td>Optional oBDS version. <code>NULL</code> marks version-independent content that remains eligible during version-filtered search.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="constraints">Constraints</h3>
+<ul>
+<li><code>documents_pkey</code> enforces uniqueness on <code>id</code>.</li>
+<li><code>id</code>, <code>source_type</code>, <code>title</code>, <code>content</code>, and <code>url</code> are required.</li>
+<li><code>section</code> and <code>obds_version</code> are optional.</li>
+</ul>
+<h3 id="full-text-index">Full-text index</h3>
+<p><code>documents_full_text_idx</code> is a ParadeDB BM25 index supplied by the <code>pg_search</code>
+extension.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Index treatment</th>
+<th>Search role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Key field</td>
+<td>Identifies the row returned by a search result.</td>
+</tr>
+<tr>
+<td><code>source_type</code></td>
+<td>Literal</td>
+<td>Supports exact source-family filtering.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>German-stemmed text</td>
+<td>Highest query-time text boost.</td>
+</tr>
+<tr>
+<td><code>section</code></td>
+<td>German-stemmed text</td>
+<td>Medium query-time text boost.</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>German-stemmed text</td>
+<td>Base full-text match.</td>
+</tr>
+<tr>
+<td><code>obds_version</code></td>
+<td>Literal</td>
+<td>Supports exact version filtering.</td>
+</tr>
+</tbody>
+</table>
+<p>Change <code>db/init.sql</code> first, keep this reference aligned, account for existing
+installations as described in
+<a href="../how-to/change-stored-data/">How to change stored source data</a>, then run
+<code>make docs-check</code>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../reference/rest-api/" class="btn btn-neutral float-left" title="REST API reference"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../reference/runtime-configuration/" class="btn btn-neutral float-right" title="Runtime configuration">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../reference/rest-api/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../reference/runtime-configuration/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../assets/javascripts/mermaid.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

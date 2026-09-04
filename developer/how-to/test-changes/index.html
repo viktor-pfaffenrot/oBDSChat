@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Test changes - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Test changes";
+        var mkdocs_page_input_path = "developer/how-to/test-changes.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Test changes</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#commands-to-run-test-suite">Commands to run test suite</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#run-focused-tests-while-developing">Run focused tests while developing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#test-real-paradedb-behavior">Test real ParadeDB behavior</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#check-documentation">Check documentation</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Test changes</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-test-changes">How to test changes</h1>
+<p>Run checks from the repository root. Install development dependencies first:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--group<span class="w"> </span>backend<span class="w"> </span>--group<span class="w"> </span>frontend<span class="w"> </span>--group<span class="w"> </span>dev
+</code></pre></div>
+<h2 id="commands-to-run-test-suite">Commands to run test suite</h2>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>.
+uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>format<span class="w"> </span>--check<span class="w"> </span>.
+uv<span class="w"> </span>run<span class="w"> </span>ty<span class="w"> </span>check
+uv<span class="w"> </span>run<span class="w"> </span>pytest
+</code></pre></div>
+<p>Expected result: all four commands exit successfully. Without
+<code>TEST_DATABASE_URL</code>, the optional database smoke test is skipped.</p>
+<h2 id="run-focused-tests-while-developing">Run focused tests while developing</h2>
+<p>Choose the closest boundary first:</p>
+<table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Focused test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FastAPI route or response shaping</td>
+<td><code>uv run pytest tests/test_app.py</code></td>
+</tr>
+<tr>
+<td>Settings or secrets</td>
+<td><code>uv run pytest tests/test_config.py</code></td>
+</tr>
+<tr>
+<td>Compose/Dockerfile contract</td>
+<td><code>uv run pytest tests/test_container_config.py</code></td>
+</tr>
+<tr>
+<td>LLM loop or citation policy</td>
+<td><code>uv run pytest tests/test_llm.py</code></td>
+</tr>
+<tr>
+<td>Prose SQL and ranking</td>
+<td><code>uv run pytest tests/test_search.py</code></td>
+</tr>
+<tr>
+<td>Local tool schemas/adapters</td>
+<td><code>uv run pytest tests/test_tools.py</code></td>
+</tr>
+<tr>
+<td>XSD parsing and lookup</td>
+<td><code>uv run pytest tests/test_xsd.py</code></td>
+</tr>
+<tr>
+<td>Frontend HTTP client</td>
+<td><code>uv run pytest tests/test_frontend_api.py</code></td>
+</tr>
+<tr>
+<td>Gradio state/rendering/viewer</td>
+<td><code>uv run pytest tests/test_frontend_app.py</code></td>
+</tr>
+<tr>
+<td>Source synchronization</td>
+<td><code>uv run pytest tests/test_sync_sources.py</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="test-real-paradedb-behavior">Test real ParadeDB behavior</h2>
+<p>The smoke test requires a disposable ParadeDB/PostgreSQL database with
+<code>pg_search</code>; a stock PostgreSQL server is insufficient.</p>
+<div class="highlight"><pre><span></span><code><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span>postgresql://user:password@host:port/database<span class="w"> </span><span class="se">\</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span>db_smoke
+</code></pre></div>
+<p>Run the full smoke test against a separate temporary container:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">SMOKE_DB_PASSWORD</span><span class="o">=</span>obdschat-smoke-local-only
+
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span>obdschat-smoke-db<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--publish<span class="w"> </span><span class="m">127</span>.0.0.1:55435:5432<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--env<span class="w"> </span><span class="nv">POSTGRES_USER</span><span class="o">=</span>obdschat_smoke<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--env<span class="w"> </span><span class="nv">POSTGRES_PASSWORD</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$SMOKE_DB_PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--env<span class="w"> </span><span class="nv">POSTGRES_DB</span><span class="o">=</span>obdschat_smoke<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>paradedb/paradedb:0.25.3-pg18<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>postgres<span class="w"> </span>-c<span class="w"> </span><span class="nv">shared_preload_libraries</span><span class="o">=</span>pg_search
+
+docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>obdschat-smoke-db<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>pg_isready<span class="w"> </span>-U<span class="w"> </span>obdschat_smoke<span class="w"> </span>-d<span class="w"> </span>obdschat_smoke
+
+<span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://obdschat_smoke:</span><span class="si">${</span><span class="nv">SMOKE_DB_PASSWORD</span><span class="si">}</span><span class="s2">@localhost:55435/obdschat_smoke&quot;</span><span class="w"> </span><span class="se">\</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span>db_smoke
+
+docker<span class="w"> </span>stop<span class="w"> </span>obdschat-smoke-db
+</code></pre></div>
+<p>Wait for <code>pg_isready</code> to report that the database accepts connections before
+running pytest. The container uses a host-local port and <code>--rm</code>, so stopping it
+removes the container and its test data. Always stop it even when the test fails.</p>
+<p>The test creates an isolated schema, verifies German BM25 search, checks version
+filtering and exact content lookup, confirms the ParadeDB index definition, then
+rolls back. Never point it at a database where the supplied role cannot safely
+create temporary schemas.</p>
+<p>Expected result: the marker test passes instead of skipping.</p>
+<h2 id="check-documentation">Check documentation</h2>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>docs-check
+</code></pre></div>
+<p>This first verifies that committed OpenAPI JSON matches the FastAPI application,
+then performs a clean strict Material for MkDocs build. A stale schema or
+warnings—including broken internal links, invalid anchors, omitted documentation
+files, and unrecognized links—fail the command.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../change-stored-data/" class="btn btn-neutral float-left" title="Change stored data"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../reference/rest-api/" class="btn btn-neutral float-right" title="REST API reference">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../change-stored-data/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../reference/rest-api/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

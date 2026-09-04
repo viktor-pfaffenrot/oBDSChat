@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>System architecture - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "System architecture";
+        var mkdocs_page_input_path = "developer/explanation/system-architecture.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">System architecture</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#runtime-components">Runtime components</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#startup-dependency-chain">Startup dependency chain</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#evidence-mechanisms">Evidence Mechanisms</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#trust-and-validation-boundaries">Trust and validation boundaries</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#design-trade-offs">Design trade-offs</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">System architecture</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-obdschat-is-structured">How oBDSChat is structured</h1>
+<p>oBDSChat separates presentation, orchestration, evidence retrieval, and source
+storage. The split keeps the language model away from direct HTTP and database
+access: it can request only the local tools registered by the backend.</p>
+<h2 id="runtime-components">Runtime components</h2>
+<div class="mermaid">---
+config:
+  flowchart:
+    nodeSpacing: 120
+---
+flowchart LR
+    User[Browser user] --&gt;|HTTP| Frontend[Gradio frontend]
+    Reader[Documentation reader] --&gt;|HTTP| Docs[Static documentation\nNginx]
+    Frontend --&gt;|Typed HTTP| Backend[FastAPI backend]
+    Backend --&gt;|Chat Completions| LLM[OpenAI-compatible\nmodel provider]
+    Backend --&gt;|BM25 SQL| DB[(ParadeDB\nPostgreSQL 18)]
+    Backend --&gt;|Parse and index| XSD[(Versioned XSD files\nread-only volume)]
+    Sync[Source synchronizer] ---&gt;|Replace guide sections| DB
+    Sync --&gt;|file writes| XSD
+    Official[Official oBDS sites] --&gt;|HTTPS| Sync</div>
+<p>The Compose deployment contains five services:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Responsibility</th>
+<th>Persistent input/output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obdschat-db</code></td>
+<td>PostgreSQL plus ParadeDB BM25 search</td>
+<td>Bind-mounted PostgreSQL data and logs</td>
+</tr>
+<tr>
+<td><code>source-sync</code></td>
+<td>Download and validate official sources before application startup</td>
+<td>Writes the XSD files and rows within postgres' <code>documents</code> table</td>
+</tr>
+<tr>
+<td><code>backend</code></td>
+<td>Validate requests, retrieve evidence, orchestrate the model, validate citations</td>
+<td>Reads PostgreSQL and XSD files</td>
+</tr>
+<tr>
+<td><code>frontend</code></td>
+<td>Render chat and XSD evidence views</td>
+<td>Browser-session conversation state only</td>
+</tr>
+<tr>
+<td><code>docs</code></td>
+<td>Serve the statically built MkDocs site</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p>Use <a href="../../how-to/deploy/">How to deploy and upgrade oBDSChat</a> for the supported
+single-host Compose procedure and
+<a href="../../how-to/troubleshoot-operations/">How to diagnose an oBDSChat deployment</a>
+for failures of the already deployed app.</p>
+<h2 id="startup-dependency-chain">Startup dependency chain</h2>
+<div class="mermaid">flowchart LR
+    DB[Database healthy] --&gt; Sync[Source sync succeeds]
+    Sync --&gt; Backend[Backend starts and becomes healthy]
+    Backend --&gt; Frontend[Frontend starts and becomes healthy]</div>
+<p>This ordering makes missing or invalid source data a startup failure instead of
+allowing the application to answer from a partially updated corpus. The database
+health check tests PostgreSQL readiness. Backend and frontend health checks test
+process liveness and intentionally do not call downstream dependencies. The
+documentation service starts independently because it serves only static files.</p>
+<h2 id="evidence-mechanisms">Evidence Mechanisms</h2>
+<p>Two evidence mechanisms serve different source shapes:</p>
+<ul>
+<li>PostgreSQL stores heading-sized Umsetzungsleitfaden sections. ParadeDB ranks
+  German prose matches with the BM25 algorithm and field boosts.</li>
+<li>Versioned XSD files stay as files. The backend builds an in-memory, exact-path
+  schema index lazily because XML structure, relationships, and source line
+  locations do not map naturally to the prose search table.</li>
+</ul>
+<p>The model sees only results from registered tools. It does not receive
+database credentials, arbitrary SQL capability, filesystem access, or a generic
+HTTP client.</p>
+<h2 id="trust-and-validation-boundaries">Trust and validation boundaries</h2>
+<p>This diagram shows which data the application may trust and which checks
+establish that trust.</p>
+<div class="mermaid">flowchart LR
+    External["Untrusted request"] --&gt;|Pydantic| Request["Validated request"]
+    Request --&gt; Model["Untrusted model  \n output"]
+    Model --&gt;|Strict tool calls| Evidence["Official evidence&lt;br/&gt;through local tools"]
+    Evidence --&gt;|Current-request results| Model
+    Model --&gt;|Structured answer| Gate["Answer and citation checks"]
+    Evidence --&gt;|Allowed citation IDs| Gate
+    Gate --&gt; Response["Typed response"]</div>
+<p>Trust is established at four checks:</p>
+<ul>
+<li><strong>Request validation:</strong> Pydantic converts untrusted HTTP input into a validated
+  <code>QueryRequest</code>, rejecting unknown fields, invalid types, blank text, and
+  oversized history.</li>
+<li><strong>Tool access:</strong> Model output remains untrusted. Only strict registered tool
+  calls may reach official XSD or prose evidence; the model has no direct
+  database, filesystem, or HTTP access.</li>
+<li><strong>Evidence provenance:</strong> Tool results are recorded for the current request and
+  returned to the model as data. Their citation IDs (internal identifiers for
+  specific evidence results) define the sources eligible for the public response.</li>
+<li><strong>Answer validation:</strong> Model output must match <code>ModelAnswer</code>. Supported answers
+  must cite current-request evidence; unsupported answers must cite none. The
+  backend rejects unknown IDs and returns cited, deduplicated sources in a typed
+  <code>QueryResponse</code>.</li>
+</ul>
+<h2 id="design-trade-offs">Design trade-offs</h2>
+<p>Within one query, model rounds and tool executions remain ordered and the answer
+is returned atomically. There is no partial streaming, so frontend HTTP timeouts
+remain deliberately long. Raising frontend concurrency may increase provider,
+database, and worker-thread load.</p>
+<p>Source synchronization fetches and validates all schemas, pages, and extracted documents before writing anything locally. If fetching or validation fails, existing local data remains unchanged. XSD files are replaced one file at a time, while Umsetzungsleitfaden rows are replaced in one database transaction. Treat successful completion of source synchronization as the point when both stores are known to be consistent.</p>
+<p>For simplicity, there is currently no authentication or authorization inside the application. Any network exposure must therefore be controlled outside the application until an auth boundary is added.</p>
+<p>For a full list of design decisions see the <a href="../ADR/">ARD</a>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../../user/how-to/troubleshoot/" class="btn btn-neutral float-left" title="Troubleshoot"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../backend-architecture/" class="btn btn-neutral float-right" title="Backend architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../../user/how-to/troubleshoot/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../backend-architecture/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

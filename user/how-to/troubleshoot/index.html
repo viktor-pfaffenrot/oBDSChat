@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Troubleshoot - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Troubleshoot";
+        var mkdocs_page_input_path = "user/how-to/troubleshoot.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Troubleshoot</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#no-question-is-submitted">No question is submitted</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-answer-takes-a-long-time">The answer takes a long time</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#backend-ist-derzeit-nicht-erreichbar">Backend ist derzeit nicht erreichbar.</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#backend-hat-eine-ungultige-antwort-geliefert">Backend hat eine ungültige Antwort geliefert.</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-requested-version-or-field-is-unavailable">The requested version or field is unavailable</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#an-answer-has-no-sources">An answer has no sources</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#copy-does-not-reach-the-clipboard">Copy does not reach the clipboard</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#a-source-link-does-not-open">A source link does not open</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../developer/reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../developer/database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../developer/explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User documentation</li>
+      <li class="breadcrumb-item active">Troubleshoot</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-troubleshoot-user-problems">How to troubleshoot user problems</h1>
+<p>This guide covers problems visible in the browser. It assumes you do not manage
+the running services.</p>
+<h2 id="no-question-is-submitted">No question is submitted</h2>
+<ol>
+<li>Remove leading or trailing whitespace.</li>
+<li>Enter at least one non-whitespace character.</li>
+<li>Shorten input to 10,000 characters or fewer.</li>
+<li>Select <code>Prüfen</code> again.</li>
+</ol>
+<h2 id="the-answer-takes-a-long-time">The answer takes a long time</h2>
+<ol>
+<li>Keep the tab open while <code>Quellen werden geprüft</code> is visible.</li>
+<li>Avoid submitting the same question repeatedly.</li>
+<li>Wait for either a complete answer or an error card.</li>
+<li>If requests repeatedly fail, send the maintainer the time, question topic,
+   and exact error text. Do not send secret values.</li>
+</ol>
+<p>The app allows potentially long waiting times because one request can include source
+search and final answer validation. A request can also wait briefly when all query slots configured by the maintainer are active.</p>
+<h2 id="backend-ist-derzeit-nicht-erreichbar"><code>Backend ist derzeit nicht erreichbar.</code></h2>
+<ol>
+<li>Reload the page once.</li>
+<li>Confirm the application URL is correct.</li>
+<li>Check whether coworkers see the same problem.</li>
+<li>Send the maintainer the time and frontend URL.</li>
+</ol>
+<h2 id="backend-hat-eine-ungultige-antwort-geliefert"><code>Backend hat eine ungültige Antwort geliefert.</code></h2>
+<ol>
+<li>Copy the conversation if possible.</li>
+<li>Reload the page and retry once.</li>
+<li>Report the exact question, time, and error.</li>
+</ol>
+<p>The app received data that did not match its expected response.</p>
+<h2 id="the-requested-version-or-field-is-unavailable">The requested version or field is unavailable</h2>
+<ol>
+<li>Check version spelling, including all three numeric parts such as <code>3.0.5</code>.</li>
+<li>Check the complete XML path shown in prior evidence.</li>
+<li>Ask the chatbot which versions are available, or retry without constraining a version.</li>
+<li>If a known official version remains unavailable, report it to the maintainer;
+   synchronized source data may be stale or incomplete.</li>
+</ol>
+<h2 id="an-answer-has-no-sources">An answer has no sources</h2>
+<p>Treat the answer as an explicit statement of insufficient evidence, not as an
+oBDS fact. Rephrase with a precise field, XML path, topic, or version. Do not use
+an unsupported claim.</p>
+<h2 id="copy-does-not-reach-the-clipboard">Copy does not reach the clipboard</h2>
+<ol>
+<li>Allow clipboard access if the browser asks.</li>
+<li>Retry <code>Chat kopieren</code> after the current answer completes.</li>
+<li>If browser policy blocks clipboard access, select and copy visible text
+   manually.</li>
+</ol>
+<h2 id="a-source-link-does-not-open">A source link does not open</h2>
+<ol>
+<li>Allow the browser to open the public source site.</li>
+<li>For XSD evidence, try <code>Offizielle XSD</code> from the field view.</li>
+<li>Report persistent dead upstream links with the source title and version.</li>
+</ol>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../reference/configuration/" class="btn btn-neutral float-left" title="Configuration"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../../developer/explanation/system-architecture/" class="btn btn-neutral float-right" title="System architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../reference/configuration/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../../developer/explanation/system-architecture/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

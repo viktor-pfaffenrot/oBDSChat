@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Backend architecture - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Backend architecture";
+        var mkdocs_page_input_path = "developer/explanation/backend-architecture.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Backend architecture</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#runtime-data-flow">Runtime data flow</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#request-boundary">Request boundary</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#failure-mapping">Failure mapping</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#provider-configuration">Provider configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#llm-tools">LLM tools</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#tool-boundary-and-registry">Tool boundary and registry</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#strict-tool-contracts">Strict tool contracts</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#version-handling">Version handling</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#versioned-xsd-catalog">Versioned XSD catalog</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#search_schema">search_schema</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#get_schema_concept_locations">get_schema_concept_locations</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#get_schema_element">get_schema_element</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#get_schema_values">get_schema_values</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#get_schema_cardinality">get_schema_cardinality</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#umsetzungsleitfaden-retrieval">Umsetzungsleitfaden retrieval</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#search_umsetzungsleitfaden">search_umsetzungsleitfaden</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#get_source_excerpt">get_source_excerpt</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tool-result-citations">Tool result citations</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tool-failure-behavior">Tool failure behavior</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#adding-or-changing-a-tool">Adding or changing a tool</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#concurrency-and-lifecycle">Concurrency and lifecycle</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Backend architecture</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-the-backend-works">How the backend works</h1>
+<p>The backend is a FastAPI application that turns an oBDS question into a
+source-grounded answer. It validates the public request, resolves the relevant
+oBDS version, lets an OpenAI-compatible model request well-defined local
+evidence tools, verifies the model's citations, and returns a typed response.</p>
+<p>The language model never receives database credentials, arbitrary SQL access,
+filesystem access, or a general HTTP client. All evidence access crosses the
+tool boundary described in <a href="#llm-tools">LLM tools</a>.</p>
+<h2 id="runtime-data-flow">Runtime data flow</h2>
+<p>Arrows show runtime data flow for one <code>POST /query</code> request. The dashed arrow
+shows the model requesting more evidence before producing an answer.</p>
+<div class="mermaid">---
+config:
+  themeVariables:
+    fontSize: "20px"
+  flowchart:
+    rankSpacing: 20
+---
+flowchart LR
+    Request["POST /query"]
+    Boundary["Request: app.py \n Validate input"]
+    Model["Model/tool loop: llm.py \n Choose evidence"]
+    Tools["Tools: tools.py \n Dispatch tool calls"]
+    XSD["XSD catalog: xsd.py \n Return schema evidence"]
+    Guide["Prose retrieval: search.py / db.py"]
+    Evidence["Tool results: tools.py \n evidence + citation IDs"]
+    Answer["Completion: llm.py \n answer + citation IDs"]
+    Validation["Response: app.py \n Provides HTTP resonse"]
+
+    Request --&gt; Boundary --&gt; Model
+    Model --&gt;|strict \n tool call| Tools
+    Tools --&gt; XSD --&gt; Evidence
+    Tools --&gt; Guide --&gt; Evidence
+    Evidence -.-&gt; Model
+    Evidence --&gt; |enough evidence| Answer --&gt; Validation</div>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Owns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend.app</code></td>
+<td>HTTP models, input limits, route orchestration, error mapping, citation-to-source conversion</td>
+</tr>
+<tr>
+<td><code>backend.config</code></td>
+<td>Environment loading, secret resolution, provider endpoint selection, database URI construction</td>
+</tr>
+<tr>
+<td><code>backend.llm</code></td>
+<td>Chat Completions messages, tool-call loop, version enforcement, structured answer and citation policy</td>
+</tr>
+<tr>
+<td><code>backend.tools</code></td>
+<td>Model-visible tool definitions, strict schemas, adapters, citation-ID injection</td>
+</tr>
+<tr>
+<td><code>backend.xsd</code></td>
+<td>Version discovery, lazy XSD indexes, structural queries, exact source evidence</td>
+</tr>
+<tr>
+<td><code>backend.search</code></td>
+<td>Parameterized ParadeDB queries and typed prose results</td>
+</tr>
+<tr>
+<td><code>backend.db</code></td>
+<td>Short-lived PostgreSQL connection construction</td>
+</tr>
+</tbody>
+</table>
+<p>This separation keeps route handlers thin and makes the model-facing surface
+small enough to audit and test.</p>
+<h2 id="request-boundary">Request boundary</h2>
+<p><code>POST /query</code> accepts a question, an optional exact <code>obds_version</code>, and up to
+ten completed conversation turns. Pydantic trims input, rejects whitespace-only
+values and unknown fields, and enforces both per-field limits and a 50,000
+character total history limit.</p>
+<p>Conversation history resolves references such as "und da?" or a version selected
+in an earlier question. It is not evidence: every answer must be re-established
+from tools executed for the current request.</p>
+<p>The route performs this orchestration:</p>
+<ol>
+<li>Build a version (<code>VersionContext</code>) from synchronized XSD versions.</li>
+<li>Convert public history datamodels to internal <code>ConversationTurn</code> values.</li>
+<li>Call <code>answer_question</code> with the complete local tool registry.</li>
+<li>Verify that every citation selected by the model was returned by a tool during this request, then convert cited results into public source metadata.</li>
+<li>Return the answer, versions used by successful retrieval, and deduplicated
+   public source metadata.</li>
+</ol>
+<p>FastAPI's generated OpenAPI schema is the <a href="../../reference/rest-api/">REST API reference</a>.</p>
+<h3 id="failure-mapping">Failure mapping</h3>
+<p>Expected failures become stable HTTP responses at the route boundary:</p>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Explicit request version is not synchronized</td>
+<td><code>422 oBDS schema version '&lt;version&gt;' is unavailable. Available versions: ...</code></td>
+</tr>
+<tr>
+<td>Model provider, structured-answer, tool-call, or citation protocol fails</td>
+<td><code>502 Language model request failed</code></td>
+</tr>
+<tr>
+<td>PostgreSQL, XSD parsing, secrets, or required runtime configuration fails</td>
+<td><code>503 Schema source unavailable</code></td>
+</tr>
+<tr>
+<td>Exact XSD evidence version or path is absent</td>
+<td><code>404 Not Found</code></td>
+</tr>
+<tr>
+<td>Exact XSD evidence input is malformed</td>
+<td><code>422 Unprocessable Content</code></td>
+</tr>
+</tbody>
+</table>
+<p>The Dependency responses do not expose provider messages, database details,
+secret paths, or parser internals.</p>
+<h2 id="provider-configuration">Provider configuration</h2>
+<p>On each load, <code>Settings</code> reads process environment variables and fills missing values from <code>.env</code>. In deployment, Docker Compose loads <code>.env</code> into the container environment before starting the backend. Pydantic validates and normalizes the environment variables, then creates an immutable settings instance. <code>resolve_llm_endpoint()</code> selects the configured provider’s URL, model or policy route and API key and packages them in a common <code>LlmEndpoint</code> used by the model. Currently, two provider options are implemented:</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Base URL</th>
+<th>Route selection</th>
+<th>Key source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td><code>https://api.openai.com/v1</code></td>
+<td><code>OPENAI_MODEL</code>, default <code>gpt-5.6-terra</code></td>
+<td><code>OPENAI_API_KEY</code> or mounted key file</td>
+</tr>
+<tr>
+<td>Requesty</td>
+<td><code>https://router.eu.requesty.ai/v1</code></td>
+<td>Stable <code>policy/obdschat</code> policy route</td>
+<td><code>REQUESTY_API_KEY</code> or mounted key file</td>
+</tr>
+</tbody>
+</table>
+<p><code>LLM_API_KEY_FILE</code> takes precedence over a direct provider key. The provider
+branch stays in configuration; the orchestration layer uses the same
+OpenAI-compatible Chat Completions protocol for both providers.</p>
+<p>When LLM_API_KEY_FILE is configured, The backend reads the API key from the secrets file <code>LLM_API_KEY_FILE</code>. Provider-specific URL, route, and key selection remains in <code>config.py</code>. llm.py uses the same OpenAI-compatible Chat Completions client all providers.</p>
+<h2 id="llm-tools">LLM tools</h2>
+<p>LLM tools are the only path from model reasoning to local oBDS evidence. This
+section describes them in more detail.</p>
+<h3 id="tool-boundary-and-registry">Tool boundary and registry</h3>
+<p>There are in total seven <code>LocalTool</code> definitions.
+Each definition binds a unique model-visible name and description to a strict
+JSON object schema and one synchronous Python handler.</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use it for</th>
+<th>Result</th>
+<th>Result limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>search_schema</code></td>
+<td>Discover XSD elements when exact name or path is unknown</td>
+<td><code>SchemaElement[]</code></td>
+<td>10 by default; caller may override</td>
+</tr>
+<tr>
+<td><code>get_schema_concept_locations</code></td>
+<td>Exhaustively find every structural location and containing message type for a concept</td>
+<td><code>SchemaConceptLocation[]</code></td>
+<td>None; deliberately exhaustive</td>
+</tr>
+<tr>
+<td><code>get_schema_element</code></td>
+<td>Retrieve complete facts for an exact name or XML path</td>
+<td><code>SchemaElement[]</code></td>
+<td>All exact matches</td>
+</tr>
+<tr>
+<td><code>get_schema_values</code></td>
+<td>Retrieve allowed enumeration values for an exact name or path</td>
+<td><code>SchemaValues[]</code></td>
+<td>All exact matches</td>
+</tr>
+<tr>
+<td><code>get_schema_cardinality</code></td>
+<td>Retrieve <code>minOccurs</code> and <code>maxOccurs</code> for an exact name or path</td>
+<td><code>SchemaCardinality[]</code></td>
+<td>All exact matches</td>
+</tr>
+<tr>
+<td><code>search_umsetzungsleitfaden</code></td>
+<td>Discover official prose about meaning, rules, guidance, or edge cases</td>
+<td><code>SearchResult[]</code></td>
+<td>5 by default; caller may override</td>
+</tr>
+<tr>
+<td><code>get_source_excerpt</code></td>
+<td>Fetch complete stored prose after discovery by source ID</td>
+<td><code>SourceExcerpt</code> or <code>null</code></td>
+<td>One exact row</td>
+</tr>
+</tbody>
+</table>
+<p>Schema tools are used for XML structure and prose tools (<code>search_umsetzungsleitfaden</code> and <code>get_source_excerpt</code>) for explanatory guidance. A strong answer may use both when the question combines e.g. values with interpretation.</p>
+<h3 id="strict-tool-contracts">Strict tool contracts</h3>
+<p>Every tool schema has these properties:</p>
+<ul>
+<li>top-level type is <code>object</code>;</li>
+<li>every declared property appears in <code>required</code>;</li>
+<li><code>additionalProperties</code> is <code>false</code>;</li>
+<li>semantically optional inputs use a nullable type and must still be present;</li>
+<li>Chat Completions receives <code>strict: true</code> for every function definition.</li>
+</ul>
+<p>For example, a schema-conforming call cannot omit <code>version</code>; the model sends
+<code>"version": null</code> to request default resolution. <code>LocalTool</code> validates the shape
+of each registered schema when the registry is built. During execution, the
+backend additionally requires decoded arguments to be a JSON object, validates
+version semantics, and converts handler <code>TypeError</code> or <code>ValueError</code> failures to
+a tool-protocol failure. Domain handlers remain responsible for constraints
+that cannot be expressed by the shared schema helpers.</p>
+<p>For example, <code>"version": null</code> requests default version. When tools are registered, <code>LocalTool</code> checks common strict-schema rules. For each model call, backend parses the JSON object, applies version rules, and invokes the handler. Invalid arguments abort the tool protocol. Individual handlers validate domain rules, such as requiring either an element name or path. With this, the model never sees or executes the handler directly.</p>
+<p>Common arguments:</p>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>version</code></td>
+<td>string or <code>null</code></td>
+<td>Exact synchronized semantic version. <code>null</code> is resolved by <code>VersionContext</code>.</td>
+</tr>
+<tr>
+<td><code>limit</code></td>
+<td>integer or <code>null</code></td>
+<td>Positive maximum result count. <code>null</code> selects the tool default. No schema-level maximum is imposed.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string or <code>null</code></td>
+<td>Case-insensitive exact XML element name. May match multiple paths.</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>string or <code>null</code></td>
+<td>Case-insensitive exact canonical XML path. Selects at most one occurrence before any name filter.</td>
+</tr>
+</tbody>
+</table>
+<p>For the three exact selector tools (<code>get_schema_element</code>, <code>get_schema_values</code>, <code>get_schema_cardinality</code>), <code>name</code>, <code>path</code>, and <code>version</code> are all
+required nullable properties. At least one of <code>name</code> or <code>path</code> must be
+non-null. When both are supplied, the element selected by <code>path</code> must also
+match <code>name</code>.</p>
+<h3 id="version-handling">Version handling</h3>
+<p>Version-aware tools do not decide their effective version independently. Before
+calling a handler, <code>backend.llm</code> applies request-level <code>VersionContext</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Effective behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Request contains <code>obds_version</code></td>
+<td>That validated version overrides every model-supplied version.</td>
+</tr>
+<tr>
+<td>No request constraint and tool sends a version</td>
+<td>Use that exact version.</td>
+</tr>
+<tr>
+<td>No request constraint and tool sends <code>null</code></td>
+<td>Use newest XSD version.</td>
+</tr>
+<tr>
+<td>Question compares versions</td>
+<td>Model calls version-aware tools separately for each relevant version.</td>
+</tr>
+<tr>
+<td>Model requests an unavailable version</td>
+<td>Do not call handler; return structured <code>unsupported_obds_version</code> result to model with requested and available versions.</td>
+</tr>
+</tbody>
+</table>
+<p>If the model is asked with an unavailable oBDS version, the backend does not execute the retrieval handler. Instead, it returns a structured error to the model. The model may then correct its tool call or explain that version is unavailable.</p>
+<p>The prose tool <code>get_source_excerpt</code> has no version argument because it follows an exact source ID returned by prose discovery. <code>search_umsetzungsleitfaden</code> receives the
+effective version and includes both rows for that version and version-independent rows.</p>
+<h3 id="versioned-xsd-catalog">Versioned XSD catalog</h3>
+<p><code>SchemaCatalog</code> manages local XSD files for all available oBDS versions. It discovers versions at startup and uses newest version by default. When a version is queried for first time, the backend parses its XSD and builds an in-memory lookup index; later requests reuse that index. The index contains element structure, datatypes, occurrence rules, allowed values, documentation, source metadata, and source-line positions. A lock prevents concurrent requests from building the same index twice. Because cached indexes do not track file changes, the backend must clear cache or restart after replacing XSD files.</p>
+<h4 id="search_schema"><code>search_schema</code></h4>
+<p><strong>Arguments:</strong> <code>query</code> (string), <code>version</code> (string or <code>null</code>), <code>limit</code>
+(positive integer or <code>null</code>, default 10).</p>
+<p>This discovery tool is used when the exact XML name or path is unknown. It searches
+normalized element names, paths, datatypes, documentation, and enumeration
+text. Exact-name matches rank highest; remaining matches are scored
+deterministically and ties are ordered by path. Results are bounded by <code>limit</code>.</p>
+<p>This tool is ment as a quick look-up. For coverage questions <code>get_schema_concept_locations</code> should be used.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Diagnosesicherung&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3.0.5&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="get_schema_concept_locations"><code>get_schema_concept_locations</code></h4>
+<p><strong>Arguments:</strong> <code>concept</code> (string), <code>version</code> (string or <code>null</code>).</p>
+<p><code>get_schema_concept_locations</code> is used when every place where a concept occurs in one XSD version is needed. It scans all indexed elements without a result limit, prefers matches in element or datatype names, and falls back to documentation or enumeration text only when no structural matches exist. Each result identifies its XML path, containing message type, and fields that matched.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;concept&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TNM&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3.0.5&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="get_schema_element"><code>get_schema_element</code></h4>
+<p><strong>Arguments:</strong> <code>name</code>, <code>path</code>, and <code>version</code> (each string or <code>null</code>); at
+least one selector must be non-null.</p>
+<p>This tool is used after discovery, or immediately when an exact name or canonical path is
+known. It returns complete <code>SchemaElement</code> facts. Name lookup may return many
+occurrences because the same XML name can appear under different paths. Path
+lookup selects at most one occurrence.</p>
+<h4 id="get_schema_values"><code>get_schema_values</code></h4>
+<p><strong>Arguments:</strong> same selector contract as <code>get_schema_element</code>.</p>
+<p><code>get_schema_values</code> returns the XSD enumeration values for elements selected by exact name or path. Each result represents one matching element and contains its allowed values and their optional descriptions. An empty <code>values</code> array means the element exists but defines no enumeration. An empty outer result array means that no element matched the selector.</p>
+<h4 id="get_schema_cardinality"><code>get_schema_cardinality</code></h4>
+<p><strong>Arguments:</strong> same selector contract as <code>get_schema_element</code>.</p>
+<p>This is used for occurrence rules of an exact element. Each result contains <code>name</code>,
+<code>path</code>, <code>min_occurs</code>, <code>max_occurs</code>, version and source metadata.
+<code>max_occurs</code> is an integer or the string <code>unbounded</code>.</p>
+<h3 id="umsetzungsleitfaden-retrieval">Umsetzungsleitfaden retrieval</h3>
+<p>Official guide content is stored as heading-sized rows in PostgreSQL. ParadeDB
+indexes title, section, and content fields. Retrieval uses fixed,
+parameterized SQL; model arguments cannot change selected columns, filters,
+ordering, or SQL structure. Database connections are short-lived and
+context-managed.</p>
+<h4 id="search_umsetzungsleitfaden"><code>search_umsetzungsleitfaden</code></h4>
+<p><strong>Arguments:</strong> <code>query</code> (German string), <code>version</code> (string or <code>null</code>),
+<code>limit</code> (positive integer or <code>null</code>, default 5).</p>
+<p>This discovery tool is used for field meaning, implementation guidance, rules, and
+edge cases. BM25 ranking boosts title threefold and section twofold relative to
+body content, then orders equal scores by database ID. With an effective
+version, the query includes both matching version-specific rows and rows whose
+version is null.</p>
+<p>Each result contains <code>source_id</code>, <code>source_type</code>, <code>title</code>, optional
+<code>section</code>, a maximum 600-character <code>excerpt</code>, <code>url</code>, optional
+<code>obds_version</code>, and <code>score</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Diagnosesicherung unbekannt&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3.0.5&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="get_source_excerpt"><code>get_source_excerpt</code></h4>
+<p><strong>Arguments:</strong> <code>source_id</code> (integer, minimum 1).</p>
+<p>This tool returns complete stored content for the exact row, not another bounded excerpt. The result contains <code>source_id</code>, <code>source_type</code>, <code>title</code>, optional <code>section</code>, <code>content</code>, <code>url</code>, and optional <code>obds_version</code>. A missing ID returns <code>null</code>.</p>
+<p>The model should obtain IDs from <code>search_umsetzungsleitfaden</code>; IDs identify
+rows in the currently synchronized corpus.</p>
+<h3 id="tool-result-citations">Tool result citations</h3>
+<p>Adapters add a deterministic <code>citation_id</code> whenever result metadata identifies
+a source:</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>XSD result</td>
+<td><code>xsd:&lt;version&gt;:&lt;canonical-path&gt;</code></td>
+</tr>
+<tr>
+<td>Prose result</td>
+<td><code>umsetzungsleitfaden:&lt;source-id&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>Citation IDs are internal evidence handles, not user-facing citation text. They
+connect three stages: evidence returned to the model, IDs selected in the
+structured model answer, and sources allowed into the public response.</p>
+<h3 id="tool-failure-behavior">Tool failure behavior</h3>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unknown tool or unsupported tool-call type</td>
+<td>Abort loop with <code>ToolCallError</code></td>
+</tr>
+<tr>
+<td>Invalid JSON or non-object arguments</td>
+<td>Abort loop with <code>ToolCallError</code></td>
+</tr>
+<tr>
+<td>Empty or wrongly typed version</td>
+<td>Abort loop with <code>ToolCallError</code></td>
+</tr>
+<tr>
+<td>Unavailable model-selected version</td>
+<td>Return structured error to model; continue loop</td>
+</tr>
+<tr>
+<td>Handler raises <code>TypeError</code> or <code>ValueError</code></td>
+<td>Treat as invalid arguments; abort loop</td>
+</tr>
+<tr>
+<td>Handler result is not JSON-serializable</td>
+<td>Abort loop with <code>ToolCallError</code></td>
+</tr>
+<tr>
+<td>Database, schema, configuration, or provider fails</td>
+<td>Propagate to route for sanitized HTTP mapping</td>
+</tr>
+<tr>
+<td>Model returns no choice, no structured answer, empty answer, or invalid citation state</td>
+<td>Abort loop with <code>ToolCallError</code></td>
+</tr>
+<tr>
+<td>Model cites an ID absent from current executions</td>
+<td>Reject response at HTTP boundary</td>
+</tr>
+</tbody>
+</table>
+<h3 id="adding-or-changing-a-tool">Adding or changing a tool</h3>
+<p>See <a href="../../how-to/extend-backend/">How to extend the backend</a>.</p>
+<h3 id="concurrency-and-lifecycle">Concurrency and lifecycle</h3>
+<p><code>POST /query</code> is asynchronous. Provider I/O is awaited, while schema version
+resolution and synchronous tool handlers use worker threads. Different requests
+can therefore overlap. Work within one request remains ordered, and the backend
+returns one complete answer rather than streaming partial output.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../system-architecture/" class="btn btn-neutral float-left" title="System architecture"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../frontend-architecture/" class="btn btn-neutral float-right" title="Frontend architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../system-architecture/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../frontend-architecture/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

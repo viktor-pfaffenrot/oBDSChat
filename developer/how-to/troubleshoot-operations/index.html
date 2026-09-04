@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Logging and troubleshooting - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Logging and troubleshooting";
+        var mkdocs_page_input_path = "developer/how-to/troubleshoot-operations.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Logging and troubleshooting</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#capture-current-state">Capture current state</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#understand-log-sources">Understand log sources</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#check-the-startup-chain">Check the startup chain</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#retry-failed-source-synchronization">Retry failed source synchronization</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#apply-the-right-recovery-action">Apply the right recovery action</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Operations</li>
+      <li class="breadcrumb-item active">Logging and troubleshooting</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-diagnose-an-obdschat-deployment">How to diagnose an oBDSChat deployment</h1>
+<p>This guide diagnoses the supplied Docker Compose deployment. It assumes shell
+access to the deployment host and permission to use Docker. For problems regarding usage of the app, start with <a href="../../../user/how-to/troubleshoot/">How to troubleshoot user problems</a>.</p>
+<h2 id="capture-current-state">Capture current state</h2>
+<p>Before restarting anything, capture service state and recent logs:</p>
+<div class="highlight"><pre><span></span><code>date<span class="w"> </span>-Is
+docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="w"> </span>-a
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--since<span class="o">=</span>15m<span class="w"> </span>--timestamps<span class="w"> </span>obdschat-db<span class="w"> </span>source-sync<span class="w"> </span>backend<span class="w"> </span>frontend<span class="w"> </span>docs
+docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+df<span class="w"> </span>-h
+</code></pre></div>
+<p>Record the deployed revision with <code>git rev-parse HEAD</code>. Redact credentials,
+provider payloads, user questions, and sensitive filesystem paths before sharing
+diagnostics.</p>
+<h2 id="understand-log-sources">Understand log sources</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Primary diagnostic output</th>
+<th>Additional location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obdschat-db</code></td>
+<td><code>docker compose logs obdschat-db</code></td>
+<td>Host path configured by <code>OBDSCHAT_DB_LOG_DIR</code> when PostgreSQL writes file logs</td>
+</tr>
+<tr>
+<td><code>source-sync</code></td>
+<td><code>docker compose logs source-sync</code></td>
+<td>None; completion and failure are written to standard output/error</td>
+</tr>
+<tr>
+<td><code>backend</code></td>
+<td><code>docker compose logs backend</code></td>
+<td>Uvicorn access, startup, and application errors on standard output/error</td>
+</tr>
+<tr>
+<td><code>frontend</code></td>
+<td><code>docker compose logs frontend</code></td>
+<td>Uvicorn access, startup, and application errors on standard output/error</td>
+</tr>
+<tr>
+<td><code>docs</code></td>
+<td><code>docker compose logs docs</code></td>
+<td>Nginx access and server errors on standard output/error</td>
+</tr>
+</tbody>
+</table>
+<p>Follow one service while reproducing a problem:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span><span class="w"> </span>backend
+</code></pre></div>
+<p>The Compose file does not configure a logging driver or retention limit. The
+host Docker configuration therefore controls container-log storage and
+rotation. Establish host-level retention before logs can exhaust disk space.</p>
+<h2 id="check-the-startup-chain">Check the startup chain</h2>
+<p>The required order is database, source synchronization, backend, then frontend.
+Start with the earliest unhealthy or failed service.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Likely area</th>
+<th>First checks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obdschat-db</code> unhealthy or restarting</td>
+<td>PostgreSQL startup, data-directory permissions, disk space, password/user/database settings, ParadeDB extension</td>
+<td>Database logs, <code>df -h</code>, bind-path ownership, matching PostgreSQL and application variables</td>
+</tr>
+<tr>
+<td><code>source-sync</code> exits non-zero</td>
+<td>Database access, official-source network access, changed upstream content, XSD validation</td>
+<td>Synchronizer logs, database health, outbound DNS/HTTPS</td>
+</tr>
+<tr>
+<td>Backend is not created or remains pending</td>
+<td>Synchronizer has not completed successfully</td>
+<td><code>docker compose ps -a</code> and synchronizer exit status</td>
+</tr>
+<tr>
+<td>Backend unhealthy or restarting</td>
+<td>Startup/import failure or unreadable XSD/configuration</td>
+<td>Backend logs, mounted XSD volume, resolved Compose configuration</td>
+</tr>
+<tr>
+<td>Frontend unhealthy or restarting</td>
+<td>Frontend startup failure</td>
+<td>Frontend logs and backend health</td>
+</tr>
+<tr>
+<td>Health routes pass but questions fail</td>
+<td>Health routes test liveness only; database, XSD, or model provider may still fail per request</td>
+<td>Backend logs during one request, provider selection/key, database connectivity, synchronized sources</td>
+</tr>
+<tr>
+<td>Health routes pass but questions wait before backend access</td>
+<td>Frontend query concurrency is saturated</td>
+<td><code>OBDSCHAT_QUERY_CONCURRENCY</code>, frontend access logs, provider latency, active user load</td>
+</tr>
+</tbody>
+</table>
+<p>Check PostgreSQL readiness inside its container:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>obdschat-db<span class="w"> </span>sh<span class="w"> </span>-lc<span class="w"> </span><span class="s1">&#39;pg_isready -U &quot;$POSTGRES_USER&quot; -d &quot;$POSTGRES_DB&quot;&#39;</span>
+</code></pre></div>
+<p>Check application liveness from the host:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-v<span class="w"> </span>http://localhost:18000/health
+curl<span class="w"> </span>-v<span class="w"> </span>http://localhost:17860/health
+curl<span class="w"> </span>-v<span class="w"> </span>http://localhost:8000/
+</code></pre></div>
+<p><code>OBDSCHAT_QUERY_CONCURRENCY</code> limits simultaneous query-completion events in each
+frontend process and defaults to eight. Increase it only after checking model
+provider capacity, database load, and backend latency. The setting does not limit
+clients that call the backend directly.</p>
+<h2 id="retry-failed-source-synchronization">Retry failed source synchronization</h2>
+<p>Use this after correcting database, credential, network, or upstream-input
+problems:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--force-recreate<span class="w"> </span>source-sync
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span><span class="w"> </span>source-sync
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>backend<span class="w"> </span>frontend
+</code></pre></div>
+<p>Confirm that the recreated <code>source-sync</code> container exits with status zero before
+starting dependent services.</p>
+<p>For a deliberate source refresh on an otherwise running deployment:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>source-sync
+docker<span class="w"> </span>compose<span class="w"> </span>restart<span class="w"> </span>backend
+</code></pre></div>
+<p>The backend restart clears its in-process XSD catalog cache so newly synchronized
+schemas become visible.</p>
+<h2 id="apply-the-right-recovery-action">Apply the right recovery action</h2>
+<ul>
+<li>Use <code>docker compose restart &lt;service&gt;</code> only for a transient process problem
+  when configuration and images are unchanged.</li>
+<li>Use <code>docker compose up -d --build &lt;service&gt;</code> after source-code or image changes.</li>
+<li>Recreate <code>source-sync</code> after fixing a failed initial synchronization.</li>
+<li>Do not use <code>docker compose down -v</code> during routine diagnosis; it removes named
+  volumes, including synchronized XSD data.</li>
+<li>Do not delete or replace the PostgreSQL data path as a troubleshooting shortcut.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../deploy/" class="btn btn-neutral float-left" title="Deploy and upgrade"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../explanation/ADR/" class="btn btn-neutral float-right" title="Decisions and rationale">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../deploy/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../explanation/ADR/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

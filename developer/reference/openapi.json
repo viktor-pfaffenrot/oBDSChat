@@ -1,0 +1,704 @@
+{
+  "components": {
+    "schemas": {
+      "ConversationTurnRequest": {
+        "additionalProperties": false,
+        "description": "One completed question-answer turn supplied as conversation context.",
+        "properties": {
+          "answer": {
+            "description": "Previous completed answer. It is untrusted context and is not evidence for the current answer.",
+            "maxLength": 50000,
+            "minLength": 1,
+            "title": "Answer",
+            "type": "string"
+          },
+          "question": {
+            "description": "Previous user question, used only to resolve current context.",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "answer"
+        ],
+        "title": "ConversationTurnRequest",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "description": "User-safe error returned for an expected backend failure.",
+        "properties": {
+          "detail": {
+            "description": "Stable description of the request failure.",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Backend liveness response.",
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "description": "Fixed value confirming that the backend process is alive.",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "QueryRequest": {
+        "additionalProperties": false,
+        "description": "Validated oBDS question submitted by an HTTP client.",
+        "properties": {
+          "history": {
+            "default": [],
+            "description": "Recent completed turns in chronological order. History resolves context but is never accepted as evidence.",
+            "items": {
+              "$ref": "#/components/schemas/ConversationTurnRequest"
+            },
+            "maxItems": 10,
+            "title": "History",
+            "type": "array"
+          },
+          "obds_version": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact synchronized oBDS schema version that constrains all version-aware retrieval. Omit to let the question context select a version, defaulting to the newest available schema.",
+            "examples": [
+              "3.0.5"
+            ],
+            "title": "Obds Version"
+          },
+          "question": {
+            "description": "Question about the German oBDS.",
+            "examples": [
+              "Welche Werte darf Diagnosesicherung in oBDS 3.0.5 haben?"
+            ],
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "QueryRequest",
+        "type": "object"
+      },
+      "QueryResponse": {
+        "additionalProperties": false,
+        "description": "LLM answer with used schema versions and deduplicated evidence.",
+        "properties": {
+          "answer": {
+            "description": "Complete model answer grounded in the returned sources.",
+            "title": "Answer",
+            "type": "string"
+          },
+          "sources": {
+            "description": "Deduplicated evidence cited by the answer, in citation order.",
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "used_versions": {
+            "description": "oBDS versions used by successful retrieval during the request.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Used Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answer",
+          "used_versions",
+          "sources"
+        ],
+        "title": "QueryResponse",
+        "type": "object"
+      },
+      "SchemaEnumValue": {
+        "description": "One allowed XSD enumeration value and its optional documentation.",
+        "properties": {
+          "documentation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Documentation attached to this enumeration value.",
+            "title": "Documentation"
+          },
+          "value": {
+            "description": "Allowed lexical value from the XSD enumeration.",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "SchemaEnumValue",
+        "type": "object"
+      },
+      "SchemaSourceLine": {
+        "description": "One numbered XSD source line and its evidence-highlight state.",
+        "properties": {
+          "content": {
+            "description": "Original XSD source line content.",
+            "title": "Content",
+            "type": "string"
+          },
+          "highlighted": {
+            "description": "Whether this line belongs to the selected declaration.",
+            "title": "Highlighted",
+            "type": "boolean"
+          },
+          "number": {
+            "description": "One-based source line number.",
+            "exclusiveMinimum": 0.0,
+            "title": "Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "number",
+          "content",
+          "highlighted"
+        ],
+        "title": "SchemaSourceLine",
+        "type": "object"
+      },
+      "SourceReference": {
+        "additionalProperties": false,
+        "description": "Public citation metadata derived from one local tool result.",
+        "properties": {
+          "element": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "XML element name for schema evidence.",
+            "title": "Element"
+          },
+          "obds_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact oBDS version, or null for version-independent evidence.",
+            "title": "Obds Version"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Canonical XML path for schema evidence.",
+            "title": "Path"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Source section heading when the evidence comes from prose.",
+            "title": "Section"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Request-local stored document identifier for prose evidence.",
+            "title": "Source Id"
+          },
+          "source_type": {
+            "description": "Evidence source category, such as xsd or umsetzungsleitfaden.",
+            "title": "Source Type",
+            "type": "string"
+          },
+          "title": {
+            "description": "Human-readable source title.",
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "description": "Official public source URL.",
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          },
+          "xsd_file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Official XSD filename for schema evidence.",
+            "title": "Xsd File"
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "source_type"
+        ],
+        "title": "SourceReference",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "XsdEvidenceResponse": {
+        "additionalProperties": false,
+        "description": "Public facts and exact source lines for one XSD element occurrence.",
+        "properties": {
+          "allowed_values": {
+            "description": "Enumeration values allowed by the element datatype.",
+            "items": {
+              "$ref": "#/components/schemas/SchemaEnumValue"
+            },
+            "title": "Allowed Values",
+            "type": "array"
+          },
+          "base_datatype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Primitive XSD base datatype when available.",
+            "title": "Base Datatype"
+          },
+          "datatype": {
+            "description": "Declared or resolved XSD datatype.",
+            "title": "Datatype",
+            "type": "string"
+          },
+          "datatype_documentation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Documentation inherited from the element datatype.",
+            "title": "Datatype Documentation"
+          },
+          "declaration_end_line": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last line of the complete declaration when located.",
+            "title": "Declaration End Line"
+          },
+          "declaration_start_line": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "First line of the complete declaration when located.",
+            "title": "Declaration Start Line"
+          },
+          "declaration_truncated": {
+            "description": "Whether the bounded excerpt omits part of the declaration.",
+            "title": "Declaration Truncated",
+            "type": "boolean"
+          },
+          "documentation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Documentation attached directly to the element declaration.",
+            "title": "Documentation"
+          },
+          "max_occurs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "const": "unbounded",
+                "type": "string"
+              }
+            ],
+            "description": "Maximum occurrences, or unbounded when no finite limit exists.",
+            "title": "Max Occurs"
+          },
+          "min_occurs": {
+            "description": "Minimum number of allowed occurrences.",
+            "minimum": 0.0,
+            "title": "Min Occurs",
+            "type": "integer"
+          },
+          "name": {
+            "description": "XML element name.",
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "description": "Canonical path of this element occurrence.",
+            "title": "Path",
+            "type": "string"
+          },
+          "source_lines": {
+            "description": "Bounded numbered excerpt around the element declaration.",
+            "items": {
+              "$ref": "#/components/schemas/SchemaSourceLine"
+            },
+            "title": "Source Lines",
+            "type": "array"
+          },
+          "source_url": {
+            "description": "Official public XSD URL.",
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "version": {
+            "description": "Exact oBDS schema version.",
+            "title": "Version",
+            "type": "string"
+          },
+          "xsd_file": {
+            "description": "Official XSD filename.",
+            "title": "Xsd File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "datatype",
+          "min_occurs",
+          "max_occurs",
+          "allowed_values",
+          "version",
+          "xsd_file",
+          "source_url",
+          "source_lines",
+          "declaration_truncated"
+        ],
+        "title": "XsdEvidenceResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Source-grounded HTTP API for questions about the German oncological basic data set (oBDS). Answers use synchronized official XSD schemas and Umsetzungsleitfaden sections and return the evidence selected for each answer.",
+    "summary": "Source-grounded oBDS question answering and evidence retrieval.",
+    "title": "oBDSChat Backend",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Report process liveness without checking downstream dependencies.",
+        "operationId": "get_health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Backend process is alive."
+          }
+        },
+        "summary": "Check backend liveness",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/query": {
+      "post": {
+        "description": "Answer one question using current-request evidence from local tools.\n\nAn explicit `obds_version` constrains every version-aware lookup. Conversation\nhistory is accepted only as context; each answer is re-established from\nofficial evidence retrieved during this request.",
+        "operationId": "query_obds",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            },
+            "description": "Grounded answer and its selected evidence."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The model provider or model-tool protocol failed."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A required backend dependency is unavailable."
+          }
+        },
+        "summary": "Answer an oBDS question",
+        "tags": [
+          "Questions"
+        ]
+      }
+    },
+    "/sources/xsd/{version}": {
+      "get": {
+        "description": "Return deterministic facts and source lines for one versioned XML path.",
+        "operationId": "get_xsd_source_evidence",
+        "parameters": [
+          {
+            "description": "Exact synchronized oBDS schema version.",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "description": "Exact synchronized oBDS schema version.",
+              "examples": [
+                "3.0.5"
+              ],
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Canonical XML path of one element occurrence.",
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "description": "Canonical XML path of one element occurrence.",
+              "examples": [
+                "/oBDS/Diagnose/Diagnosesicherung"
+              ],
+              "maxLength": 10000,
+              "minLength": 1,
+              "title": "Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/XsdEvidenceResponse"
+                }
+              }
+            },
+            "description": "Exact XSD facts and bounded source lines."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The schema version or exact XML path is unavailable."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The synchronized schema source is unavailable."
+          }
+        },
+        "summary": "Get exact XSD evidence",
+        "tags": [
+          "Source evidence"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Process-level service status.",
+      "name": "System"
+    },
+    {
+      "description": "Source-grounded oBDS question answering.",
+      "name": "Questions"
+    },
+    {
+      "description": "Exact evidence retrieved from synchronized official sources.",
+      "name": "Source evidence"
+    }
+  ]
+}

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Deploy and upgrade - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Deploy and upgrade";
+        var mkdocs_page_input_path = "developer/how-to/deploy.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Deploy and upgrade</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#protect-the-network-boundary">Protect the network boundary</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#deploy-a-new-installation">Deploy a new installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#upgrade-an-installation">Upgrade an installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#roll-back-an-application-only-release">Roll back an application-only release</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Operations</li>
+      <li class="breadcrumb-item active">Deploy and upgrade</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-to-deploy-and-upgrade-obdschat">How to deploy and upgrade oBDSChat</h1>
+<p>This guide deploys oBDSChat on one Docker Compose host and upgrades an existing
+installation. It assumes the host has Git, Docker with Compose, persistent local
+storage, and outbound HTTPS access to the model provider and official oBDS
+sources.</p>
+<p>The repository does not define a clustered, zero-downtime, or orchestrated
+deployment.</p>
+<h2 id="protect-the-network-boundary">Protect the network boundary</h2>
+<p>The application has no authentication or authorization. The supplied Compose
+file publishes the database, backend, frontend, and documentation ports on IPv4
+loopback only. They are reachable from the Docker host but not directly from
+other machines.</p>
+<p>Before deployment, choose one of these boundaries:</p>
+<ul>
+<li>use the application locally or through an SSH tunnel; or</li>
+<li>place an authenticated TLS-terminating gateway or outbound tunnel on the host
+  and route only the intended public hostname to the frontend loopback port.</li>
+</ul>
+<h2 id="deploy-a-new-installation">Deploy a new installation</h2>
+<ol>
+<li>
+<p>Check out the application version you want to deploy on the target host.</p>
+</li>
+<li>
+<p>Create deployment configuration:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+mkdir<span class="w"> </span>-p<span class="w"> </span>config/secrets
+chmod<span class="w"> </span><span class="m">700</span><span class="w"> </span>config/secrets
+</code></pre></div>
+<ol>
+<li>Put the database password in
+   <code>config/secrets/obdschat_db_password.txt</code> and the selected model-provider key
+   in <code>config/secrets/llm_api_key.txt</code>. Restrict both files:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span><span class="m">700</span><span class="w"> </span>config/secrets
+chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>config/secrets/obdschat_db_password.txt
+chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>config/secrets/llm_api_key.txt
+</code></pre></div>
+<ol>
+<li>
+<p>Review <code>.env</code> against the
+   <a href="../../reference/runtime-configuration/">runtime configuration reference</a>.
+   On a managed host, use stable absolute paths for PostgreSQL data and logs.</p>
+</li>
+<li>
+<p>Validate the resolved Compose model:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+</code></pre></div>
+<p>This validates Compose syntax and interpolation. It does not prove that a
+   secret file contains the correct value or that remote dependencies are
+   reachable.</p>
+<ol>
+<li>Build and start the deployment:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build
+</code></pre></div>
+<ol>
+<li>Follow initial source synchronization:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="w"> </span>-a
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="o">=</span><span class="m">200</span><span class="w"> </span>--timestamps<span class="w"> </span>source-sync
+</code></pre></div>
+<p>Wait until <code>source-sync</code> exits successfully. The backend starts only after
+   that checkpoint; the frontend starts only after the backend becomes healthy.</p>
+<ol>
+<li>Verify processes and health routes:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="w"> </span>-a
+curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:18000/health
+curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:17860/health
+curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:8000/
+</code></pre></div>
+<ol>
+<li>On the deployment host, open <code>http://localhost:17860</code> and complete one
+   source-grounded question. Confirm that its evidence opens. Open
+   <code>http://localhost:8000</code> and confirm that the documentation loads. When
+   administering remotely, reach these loopback ports through an SSH tunnel or
+   the authenticated gateway configured for the deployment.</li>
+</ol>
+<p>Expected result: the database, backend, frontend, and documentation service are
+healthy; <code>source-sync</code> has exited with status zero; and the UI completes a
+request using the selected provider.</p>
+<h2 id="upgrade-an-installation">Upgrade an installation</h2>
+<ol>
+<li>Record the currently deployed revision and inspect local changes:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>rev-parse<span class="w"> </span>HEAD
+git<span class="w"> </span>status<span class="w"> </span>--short
+</code></pre></div>
+<ol>
+<li>
+<p>Fetch and check out the reviewed target revision using your release process.</p>
+</li>
+<li>
+<p>Compare <code>.env.example</code>, <code>docker-compose.yaml</code>, and the container files with
+   the deployed revision. Apply required configuration changes to <code>.env</code> and the
+   secret files.</p>
+</li>
+<li>
+<p>If <code>db/init.sql</code> changed, review
+   <a href="../change-stored-data/">How to change stored source data</a> before continuing.
+   Bootstrap SQL alone does not update existing database objects.</p>
+</li>
+<li>
+<p>Validate, rebuild, and reconcile services:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+docker<span class="w"> </span>compose<span class="w"> </span>build<span class="w"> </span>--pull
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--remove-orphans
+</code></pre></div>
+<ol>
+<li>Monitor the dependency chain and recent logs:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="w"> </span>-a
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--since<span class="o">=</span>15m<span class="w"> </span>--timestamps<span class="w"> </span>obdschat-db<span class="w"> </span>source-sync<span class="w"> </span>backend<span class="w"> </span>frontend<span class="w"> </span>docs
+</code></pre></div>
+<ol>
+<li>Repeat the health-route and grounded-question checks from the initial
+   deployment.</li>
+</ol>
+<p>Expected result: containers use the target revision, source synchronization has
+completed, and health and functional checks pass.</p>
+<h2 id="roll-back-an-application-only-release">Roll back an application-only release</h2>
+<p>Use this procedure only when the release did not make persistent schema or data
+changes.</p>
+<ol>
+<li>Check out the previously deployed revision.</li>
+<li>Apply the configuration expected by that revision.</li>
+<li>Rebuild and reconcile services:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>--remove-orphans
+</code></pre></div>
+<ol>
+<li>Repeat the deployment verification steps.</li>
+</ol>
+<p>An application rollback does not reverse changes to persistent PostgreSQL
+objects or synchronized source data.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../reference/runtime-configuration/" class="btn btn-neutral float-left" title="Runtime configuration"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../troubleshoot-operations/" class="btn btn-neutral float-right" title="Logging and troubleshooting">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../reference/runtime-configuration/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../troubleshoot-operations/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Data storage - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Data storage";
+        var mkdocs_page_input_path = "developer/explanation/data-storage.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Data storage</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#postgresql-and-paradedb">PostgreSQL and ParadeDB</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#versioned-xsd-files">Versioned XSD files</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#bootstrap-versus-migration">Bootstrap versus migration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#synchronization-consistency">Synchronization consistency</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#runtime-ownership">Runtime ownership</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../ADR/">Decisions and rationale</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer documentation</li>
+      <li class="breadcrumb-item active">Data storage</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-source-data-is-stored">How source data is stored</h1>
+<p>oBDSChat uses two read models rather than one general-purpose source store. The
+choice follows retrieval behavior: prose needs ranked full-text search, while XSD
+needs deterministic structural traversal and exact source locations.</p>
+<h2 id="postgresql-and-paradedb">PostgreSQL and ParadeDB</h2>
+<p>The <code>documents</code> table stores sections extracted from the public
+<a href="https://plattform65c.atlassian.net/wiki/spaces/UMK/overview">Umsetzungsleitfaden</a>. One row contains source type, page title, optional heading, section content, public URL, and optional oBDS version. A bigint identity is both
+the primary key and the ParadeDB BM25 key field.</p>
+<p><code>documents_full_text_idx</code> indexes:</p>
+<ul>
+<li><code>source_type</code> and <code>obds_version</code> as literal fields;</li>
+<li><code>title</code>, <code>section</code>, and <code>content</code> with German stemming;</li>
+<li><code>id</code> as the required key field.</li>
+</ul>
+<p>Query-time boosts make title matches stronger than section matches and section
+matches stronger than body-only matches. Version filtering retains generic rows
+where <code>obds_version</code> is null alongside rows for the requested version.</p>
+<p>PostgreSQL is supplied by ParadeDB rather than a stock PostgreSQL image because
+the application depends on <code>pg_search</code>, the <code>bm25</code> index access method, <code>|||</code>
+matching, <code>pdb.boost</code>, and <code>pdb.score</code>.</p>
+<h2 id="versioned-xsd-files">Versioned XSD files</h2>
+<p>Downloaded files use this layout:</p>
+<div class="highlight"><pre><span></span><code>data/xsd/
+└── 3.x.y/
+    └── oBDS_v3.x.y.xsd
+</code></pre></div>
+<p>Compose stores them in the named <code>xsd-data</code> volume. The synchronizer mounts it
+read-write; the backend mounts it read-only. Outside Compose, the default is
+<code>data/xsd</code> below the working directory.</p>
+<h2 id="bootstrap-versus-migration">Bootstrap versus migration</h2>
+<p><code>db/init.sql</code> is bootstrap SQL. The database container runs it only when
+initializing an empty PostgreSQL data directory. Source synchronization also
+executes it before replacing documents, but <code>CREATE TABLE IF NOT EXISTS</code> and
+<code>CREATE INDEX IF NOT EXISTS</code> do not alter an existing object.</p>
+<p>Therefore, editing a column or index definition in <code>db/init.sql</code> does not migrate
+an existing database. The repository currently has no migration framework or
+schema-version table. Any schema-changing feature must define both:</p>
+<ul>
+<li>desired bootstrap state for new databases;</li>
+<li>an explicit forward migration for existing databases.</li>
+</ul>
+<p>The <a href="../../database/">database reference</a> summarizes the current table,
+column, constraint, and index definitions. <code>db/init.sql</code> remains canonical; keep
+the reference aligned and run <code>make docs-check</code> after changing the bootstrap
+definition.</p>
+<h2 id="synchronization-consistency">Synchronization consistency</h2>
+<p>The synchronizer downloads and validates every remote input before changing
+local stores. Schema files are replaced one at a time, so readers never see a
+partially written file. Guide rows are deleted and inserted inside one psycopg connection transaction; exceptions roll back the replacement.</p>
+<p>PostgreSQL row IDs can change after synchronization because guide rows are
+recreated. Treat them as request-local citation identifiers, not durable external
+IDs. Stable source identity is carried by source type, URL, version, section, and
+XML path where applicable.</p>
+<h2 id="runtime-ownership">Runtime ownership</h2>
+<p>Only source synchronization writes application source data. Backend request paths
+read PostgreSQL and XSD files. The frontend accesses neither store. This ownership
+keeps writes out of user requests and makes source refresh failure independent of
+an already-running backend until deployment chooses to restart or refresh it.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../request-data-flows/" class="btn btn-neutral float-left" title="Request and data flows"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../how-to/local-development/" class="btn btn-neutral float-right" title="Local development">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../request-data-flows/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../how-to/local-development/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

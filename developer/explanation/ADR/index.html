@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Decisions and rationale - oBDSChat documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../assets/stylesheets/readthedocs.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Decisions and rationale";
+        var mkdocs_page_input_path = "developer/explanation/ADR.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../assets/images/obdschat-logo-transparent.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/use-obdschat/">Use oBDSChat</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/reference/configuration/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../user/how-to/troubleshoot/">Troubleshoot</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer documentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../system-architecture/">System architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend-architecture/">Backend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend-architecture/">Frontend architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../request-data-flows/">Request and data flows</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../data-storage/">Data storage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/local-development/">Local development</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/extend-backend/">Extend the backend</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/change-stored-data/">Change stored data</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/test-changes/">Test changes</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../reference/rest-api/">REST API reference</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../database/">Database reference</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Operations</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/runtime-configuration/">Runtime configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/deploy/">Deploy and upgrade</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/troubleshoot-operations/">Logging and troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture Decision Records</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Decisions and rationale</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#adr-001-use-postgresql-instead-of-sqlite">ADR-001: Use PostgreSQL instead of SQLite</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-002-use-pg_search-bm25-instead-of-native-postgresql-full-text-search">ADR-002: Use pg_search BM25 instead of native PostgreSQL full-text search</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_1">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_1">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_1">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_1">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-003-query-the-obds-xsd-with-deterministic-tools">ADR-003: Query the oBDS XSD with deterministic tools</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_2">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_2">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_2">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_2">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-004-use-requesty-as-the-model-routing-boundary">ADR-004: Use Requesty as the model-routing boundary</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_3">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_3">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_3">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_3">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-005-target-openai-compatible-chat-completions-tool-calling">ADR-005: Target OpenAI-compatible Chat Completions tool calling</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_4">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_4">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_4">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_4">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-006-separate-the-gradio-frontend-from-the-fastapi-backend">ADR-006: Separate the Gradio frontend from the FastAPI backend</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_5">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_5">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_5">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_5">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-007-start-with-bm25-before-vector-search">ADR-007: Start with BM25 before vector search</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_6">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_6">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_6">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_6">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adr-008-make-evaluation-a-first-class-design-constraint">ADR-008: Make evaluation a first-class design constraint</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#context_7">Context</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_7">Decision and rationale</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_7">Alternatives considered</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consequences_7">Consequences</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#maintaining-these-records">Maintaining these records</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../license/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">oBDSChat documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Architecture Decision Records</li>
+      <li class="breadcrumb-item active">Decisions and rationale</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="architecture-decision-records">Architecture decision records</h1>
+<p>These records explain the major choices behind oBDSChat. They capture the
+constraints that led to each choice, the alternatives that were considered, and
+the trade-offs that future changes must account for. Read them before replacing
+a dependency, moving a system boundary, or adding infrastructure.</p>
+<p>All records on this page are accepted unless their status says otherwise. A
+record describes why a decision was made; the linked explanation and reference
+pages describe the current implementation.</p>
+<h2 id="adr-001-use-postgresql-instead-of-sqlite">ADR-001: Use PostgreSQL instead of SQLite</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context">Context</h3>
+<p>The application needs persistent storage for sections of the
+Umsetzungsleitfaden and may later store other official oBDS prose sources. It is
+containerized and intended to resemble a deployable application rather than a
+single-user local script.</p>
+<h3 id="decision-and-rationale">Decision and rationale</h3>
+<p>Use PostgreSQL as the application database. PostgreSQL is well established, provides multi-user storage, source and oBDS-version filtering, and support for both the current
+<code>pg_search</code> extension and a possible future <code>pgvector</code> extension for semantic RAG. It allows metadata, lexical retrieval, and a later vector index to remain in one service.</p>
+<p>This choice keeps deployment realistic without requiring a separate search
+engine. Docker Compose can provide the database, initialize it, check its
+health, and persist its data in the same way on every host.</p>
+<h3 id="alternatives-considered">Alternatives considered</h3>
+<ul>
+<li>SQLite would be simpler for a single process, but it does not provide the
+  required PostgreSQL search extensions or the same multi-service deployment
+  model.</li>
+<li>Separate database and search services would isolate those responsibilities,
+  but they would add synchronization and operational overhead before the corpus
+  requires it.</li>
+</ul>
+<h3 id="consequences">Consequences</h3>
+<p>The application needs a running database service, persistent storage,
+initialization, and health checks. In return, one database can serve structured
+metadata and ranked prose retrieval. See <a href="../data-storage/">How source data is stored</a>
+and the <a href="../../database/">database reference</a> for the current design.</p>
+<h2 id="adr-002-use-pg_search-bm25-instead-of-native-postgresql-full-text-search">ADR-002: Use pg_search BM25 instead of native PostgreSQL full-text search</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_1">Context</h3>
+<p>The Umsetzungsleitfaden contains exact oBDS field names, German medical terms,
+rare technical expressions, and sections of different lengths. Search must rank
+the most useful sections rather than merely identify every section containing a
+term.</p>
+<h3 id="decision-and-rationale_1">Decision and rationale</h3>
+<p>Use ParadeDB's <code>pg_search</code> extension and BM25 for lexical retrieval. BM25 uses
+corpus-level term rarity and document-length normalization, which gives a strong
+ranking baseline for this terminology-heavy corpus. Keeping the index in
+PostgreSQL also avoids a second search service and its synchronization path.</p>
+<p>The backend exposes this capability through a small domain function instead of
+leaking index details into callers:</p>
+<div class="highlight"><pre><span></span><code><span class="n">search_umsetzungsleitfaden</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="alternatives-considered_1">Alternatives considered</h3>
+<ul>
+<li>Native PostgreSQL <code>tsvector</code> and <code>ts_rank</code> would avoid a specialized
+  extension, but provide less suitable ranking behavior for this corpus.</li>
+<li>Vector-only retrieval would improve some semantic matches, but weaken the
+  simple, explainable baseline for exact technical vocabulary.</li>
+<li>Elasticsearch or OpenSearch would provide mature search features, but add a
+  service that the current project size does not justify.</li>
+<li>BM25 is typically combined with semantic search in a hybrid search via reciprocal rank fusion. The current setup can naturally be extented with vector search.</li>
+</ul>
+<h3 id="consequences_1">Consequences</h3>
+<p>Rare terms and field-name matches receive useful lexical weight without external
+search infrastructure. The database image is more specialized, however:
+<code>pg_search</code> must be installed and loaded, and tests of real search behavior need
+a compatible PostgreSQL instance. The index and query details are described in
+<a href="../data-storage/">How source data is stored</a>.</p>
+<h2 id="adr-003-query-the-obds-xsd-with-deterministic-tools">ADR-003: Query the oBDS XSD with deterministic tools</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_2">Context</h3>
+<p>The XSD contains authoritative facts such as element names, XML paths,
+datatypes, cardinalities, enumerations, and parent-child relationships. Those
+facts should not depend on probabilistic retrieval or on a model remembering the
+schema correctly.</p>
+<h3 id="decision-and-rationale_2">Decision and rationale</h3>
+<p>Keep the versioned XSD files as the source of truth and query them through
+oBDS-specific deterministic functions backed by <code>xmlschema</code> and <code>lxml</code>. The
+public tool boundary includes functions such as:</p>
+<div class="highlight"><pre><span></span><code><span class="n">search_schema</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">get_schema_concept_locations</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">get_schema_element</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">get_schema_values</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">get_schema_cardinality</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div>
+<p><code>search_schema</code> is ranked (e.g. element containing query ranks higher than documentations mentions query) and limited for discovery.
+<code>get_schema_concept_locations</code> instead returns every location for questions about
+concepts. It identifies the containing message type and prefers element-name or named-datatype matches, falling back to documentation and enumeration meanings only when no structural match exists.</p>
+<p>The implementation lives in <code>src/backend/xsd.py</code>, while <code>src/backend/tools.py</code>
+exposes the functions to the model. This thin layer delegates XSD semantics
+to established libraries, gives the model domain-oriented operations, and makes
+schema answers exact and testable.</p>
+<h3 id="alternatives-considered_2">Alternatives considered</h3>
+<ul>
+<li>Chunking the XSD as plain text would lose structural meaning and make exact
+  facts dependent on retrieval quality.</li>
+<li>A generic XML or XPath tool would expose more power than the model needs and
+  make correct tool use harder.</li>
+<li>A custom XSD parser would duplicate complex namespace, reference, and type
+  semantics already handled by libraries.</li>
+</ul>
+<h3 id="consequences_2">Consequences</h3>
+<p>Formal schema facts remain separate from prose guidance and can be verified
+deterministically. The wrapper still has to handle versions, namespaces,
+references, paths, and source locations correctly. Its design is described in
+<a href="../backend-architecture/#versioned-xsd-catalog">How the backend works</a>.</p>
+<h2 id="adr-004-use-requesty-as-the-model-routing-boundary">ADR-004: Use Requesty as the model-routing boundary</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_3">Context</h3>
+<p>The project needs to compare proprietary and open-weight models, select global
+or EU-hosted inference, and preserve a path to future on-premises inference. The
+rest of the application should not depend on the concrete provider selected for
+one evaluation or deployment.</p>
+<h3 id="decision-and-rationale_3">Decision and rationale</h3>
+<p>Use Requesty as the hosted model-routing boundary and keep provider selection in
+runtime configuration. The backend calls the stable <code>policy/obdschat</code> route;
+concrete model and routing changes belong to the provider policy rather than the
+application code. Direct OpenAI configuration remains available for controlled
+testing.</p>
+<p>The common boundary makes model switching and regional provider selection
+possible without changing retrieval, tool execution, or public HTTP contracts.
+It also allows hosted open-weight candidates to be benchmarked before committing
+to self-hosted inference infrastructure.</p>
+<h3 id="alternatives-considered_3">Alternatives considered</h3>
+<ul>
+<li>Direct integrations for every provider would expose provider differences
+  throughout the backend.</li>
+<li>Supporting only OpenAI would make comparisons and later deployment choices
+  harder.</li>
+</ul>
+<h3 id="consequences_3">Consequences</h3>
+<p>The backend remains mostly provider-independent and models can be compared
+without an infrastructure rewrite. Requesty is an external runtime dependency,
+and provider behavior can still vary behind a common API. Strict EU residency
+requires both an EU Requesty gateway and an EU-hosted inference provider. See
+the <a href="../../reference/runtime-configuration/">runtime configuration reference</a>
+for the current settings.</p>
+<h2 id="adr-005-target-openai-compatible-chat-completions-tool-calling">ADR-005: Target OpenAI-compatible Chat Completions tool calling</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_4">Context</h3>
+<p>Tool calling must work across proprietary models, open-weight models, Requesty,
+and possible future vLLM or SGLang deployments. A widely implemented protocol is
+more valuable here than a provider-specific feature set.</p>
+<h3 id="decision-and-rationale_4">Decision and rationale</h3>
+<p>Use the modern OpenAI-compatible Chat Completions tool-calling convention:</p>
+<div class="highlight"><pre><span></span><code>tools
+tool_choice
+assistant.tool_calls
+role=&quot;tool&quot;
+tool_call_id
+</code></pre></div>
+<p>Do not use the deprecated <code>functions</code> and <code>function_call</code> interface. The chosen
+contract is supported by hosted routers and common open-weight serving stacks,
+so the backend can keep one explicit model-tool loop across hosted and future
+self-hosted deployments.</p>
+<h3 id="alternatives-considered_4">Alternatives considered</h3>
+<ul>
+<li>The OpenAI Responses API alone would couple the application to an interface
+  that is not as broadly available across the target serving stacks.</li>
+<li>Provider-specific tool APIs would require multiple orchestration paths.</li>
+<li>Custom JSON prompting would move validation into prompt interpretation and be
+  less reliable than structured tool calls.</li>
+</ul>
+<h3 id="consequences_4">Consequences</h3>
+<p>The application gains a portable and mockable model contract. Some advanced
+provider features need separate treatment, and models (verified for glm-5.2) can differ in tool-call reliability even when they accept the same schema. Some models (e.g. QWEN-3.8) might still require model-specific implementation of the tool-loop.</p>
+<h2 id="adr-006-separate-the-gradio-frontend-from-the-fastapi-backend">ADR-006: Separate the Gradio frontend from the FastAPI backend</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_5">Context</h3>
+<p>The project needs a simple interactive interface while keeping model calls,
+retrieval, database access, XSD access, and source traceability on the server
+side.</p>
+<h3 id="decision-and-rationale_5">Decision and rationale</h3>
+<p>Run the Gradio frontend and FastAPI backend as separate services that communicate
+over HTTP:</p>
+<div class="highlight"><pre><span></span><code>Gradio frontend
+    |
+    | HTTP
+    v
+FastAPI backend
+</code></pre></div>
+<p>The frontend must not import backend internals. FastAPI remains the single owner
+of domain behavior and the frontend becomes a replaceable HTTP client. Each side
+can therefore be deployed and tested independently.</p>
+<h3 id="alternatives-considered_5">Alternatives considered</h3>
+<ul>
+<li>One combined Gradio application would reduce the number of services, but tie
+  presentation directly to domain and infrastructure code.</li>
+<li>Importing backend Python modules into the frontend would avoid HTTP calls, but
+  erase the application boundary and couple their dependencies.</li>
+</ul>
+<h3 id="consequences_5">Consequences</h3>
+<p>Responsibilities and deployment boundaries remain clear, and a future frontend
+can reuse the same API. Public response models live in the neutral
+<code>obdschat_api</code> package, so both services validate the same contract without the
+frontend importing backend internals. Response-contract changes require rebuilding both service images. See <a href="../frontend-architecture/">How the frontend works</a> for the state and
+contract implications.</p>
+<h2 id="adr-007-start-with-bm25-before-vector-search">ADR-007: Start with BM25 before vector search</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_6">Context</h3>
+<p>The Umsetzungsleitfaden contains many exact field names and technical terms, so
+lexical retrieval has a strong chance of solving the initial use cases. Vector
+retrieval may help semantic paraphrases, but it also needs an embedding model,
+an indexing pipeline, and separate quality evaluation.</p>
+<h3 id="decision-and-rationale_6">Decision and rationale</h3>
+<p>Start with BM25 only. Add vector retrieval later by using e.g.<code>pgvector</code> inside PostgreSQL and evaluate a hybrid strategy against the BM25 baseline.</p>
+<h3 id="alternatives-considered_6">Alternatives considered</h3>
+<ul>
+<li>Vector-only search would discard the strong exact-term baseline.</li>
+<li>Building hybrid retrieval immediately might improve some queries, but would
+  make it harder to implement and mentain.</li>
+<li>Treating BM25 as permanently sufficient would prevent evidence-driven
+  improvement when lexical overlap is genuinely weak.</li>
+</ul>
+<h3 id="consequences_6">Consequences</h3>
+<p>The application has no embedding pipeline or vector index today. Semantic
+paraphrases with little lexical overlap may be missed. That limitation is
+accepted until evaluation demonstrates that the added system complexity produces
+a meaningful gain.</p>
+<h2 id="adr-008-make-evaluation-a-first-class-design-constraint">ADR-008: Make evaluation a first-class design constraint</h2>
+<p><strong>Status:</strong> Accepted</p>
+<h3 id="context_7">Context</h3>
+<p>Generic model benchmarks do not measure the complete oBDS workflow: German
+technical language, tool choice, XSD reasoning, and BM25 retrieval all matter. A few manually selected examples would not provide a stable basis for model or retrieval decisions.</p>
+<h3 id="decision-and-rationale_7">Decision and rationale</h3>
+<p>Maintain an application-specific set of curreently 71 realistic oBDS questions. Evaluate model behavior across tool selection, tool argument validity,
+multi-tool completion, groundedness, correct abstention, unsupported claims, and
+German answer quality.</p>
+<p>Use GPT-5.6 Luna as the reference-quality model when comparing open-weight
+candidates. Requesty policy can select concrete candidates without changing the
+backend.</p>
+<p>The current production-style runner reads <code>tests/questions.yaml</code>, exercises the
+same tools as the application, and reports answer and citation correctness.
+Keeping the suite in the repository makes expected facts and sources reviewable
+alongside code changes.</p>
+<h3 id="alternatives-considered_7">Alternatives considered</h3>
+<ul>
+<li>Public benchmarks would be cheaper to consume, but would not represent the
+  project's source and tool boundaries.</li>
+<li>Ad hoc manual questions would help exploration, but would not make changes
+  comparable over time.</li>
+</ul>
+<h3 id="consequences_7">Consequences</h3>
+<p>Model, prompt, tool, and retrieval changes can be judged with project-specific
+evidence. Maintaining representative questions and carefully reviewed expected
+facts requires ongoing work, and live model evaluations have external cost and
+some provider variability. The tests are currently lexical, not semantic. That is, some answers to questions, in particular ambiguous or unanswerable questions, are harder to verify and tests might procude inflated false negatives.</p>
+<h2 id="maintaining-these-records">Maintaining these records</h2>
+<p>Add an ADR when a change:</p>
+<ul>
+<li>replaces a major dependency;</li>
+<li>moves a system boundary;</li>
+<li>changes the retrieval or model-provider strategy;</li>
+<li>introduces substantial infrastructure; or</li>
+<li>reverses a previously accepted choice.</li>
+</ul>
+<p>Do not add ADRs for ordinary implementation details. When a decision changes,
+keep its history and change its status to <code>Superseded by ADR-XXX</code> instead of
+deleting it. Add the replacement as a new numbered record with its own context
+and consequences.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../how-to/troubleshoot-operations/" class="btn btn-neutral float-left" title="Logging and troubleshooting"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../../license/" class="btn btn-neutral float-right" title="License">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../how-to/troubleshoot-operations/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../../license/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js"></script>
+      <script src="../../../assets/javascripts/mermaid.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
