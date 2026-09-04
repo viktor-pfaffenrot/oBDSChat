@@ -5,7 +5,7 @@ objects. This reference summarizes its table, columns, constraints, and search
 index for quick lookup.
 
 For storage rationale and synchronization behavior, read
-[How source data is stored](../explanation/data-storage.md).
+[Data Storage](../explanation/data-storage.md).
 
 ## `public.documents`
 

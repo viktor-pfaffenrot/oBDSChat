@@ -17,9 +17,7 @@ or orchestration logic in focused modules.
 5. Add boundary tests in `tests/test_app.py` for success, validation, and each
    mapped failure.
 6. Inspect `/openapi.json`; treat it as the canonical signature.
-7. If the frontend consumes the route, update its client method and any rendering
-   that reads changed response fields, then add frontend boundary tests. Do not
-   duplicate the response model in `src/frontend/api.py`.
+7. If the frontend calls this route, update its HTTP client and UI code to match any request or response changes. Add tests covering the frontend’s handling of the response. Import the shared response model from `src/obdschat_api/models.py`; do not redefine it in `src/frontend/api.py`.
 
 Expected result: the route contract is visible in generated OpenAPI, errors are
 stable, no domain work is embedded in the handler, and long provider waits do not
@@ -27,8 +25,7 @@ block unrelated asynchronous request tasks.
 
 ## Add a model-callable evidence tool
 
-1. Implement a typed domain function in the owning module. Keep arbitrary SQL,
-   filesystem paths, and external URLs out of model-controlled arguments.
+1. First, implement the operation as a type-annotated function in the backend module responsible for that data or feature. (see e.g. `get_schema_values()` in `src/backend/xsd.py`). Keep arbitrary SQL, filesystem paths, and external URLs out of model-controlled arguments.
 2. Add an adapter in `src/backend/tools.py` that returns JSON-serializable typed
    data.
 3. Define one `LocalTool` with a unique name, precise description, and strict
@@ -47,7 +44,7 @@ serializable and normally bounded, and cited results can be proven to come from
 the current request. An intentionally exhaustive tool must document why
 truncation would be incorrect and test complete deterministic ordering.
 
-## Add a schema-derived fact
+## Add a new fact from an XSD to backend retrieval
 
 1. Add the fact to the relevant frozen Pydantic model in `src/backend/xsd.py`.
 2. Extract it while building `_SchemaIndex`; do not reparse the schema for every
@@ -65,13 +62,14 @@ traceable to the official XSD.
 ## Add a model provider
 
 1. Add a value to `LlmProvider` in `src/backend/config.py`.
-2. Add provider base URL, route policy, and key resolution in
+2. Verify the complete tool loop with the provider route and selected model. OpenAI API compatibility alone does not guarantee reliable strict, multi-round tool use and structured final responses. In particular, Qwen3.8 behaved unreliably with currently implemented multi-round sequence.
+3. Add provider base URL, route policy, and key resolution in
    `Settings.resolve_llm_endpoint`.
-3. Keep `backend.llm` provider-neutral unless the Chat Completions protocol itself
+4. Keep `backend.llm` provider-neutral unless the Chat Completions protocol itself
    differs.
-4. Add settings tests for normalization, missing key, mounted key, and endpoint
+5. Add settings tests for normalization, missing key, mounted key, and endpoint
    resolution.
-5. Update `.env.example` without adding real credentials.
+6. Update `.env.example` without adding real credentials.
 
 Expected result: asynchronous `answer_question` receives one resolved
 `LlmEndpoint`, awaits the provider client, and does not branch on provider.

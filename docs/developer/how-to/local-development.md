@@ -37,7 +37,7 @@ variables.
 5. Build and start the stack:
 
    ```bash
-   docker compose up --build
+   docker compose up -d --force-recreate
    ```
 
    On a fresh or recreated source-sync container, startup downloads official oBDS
@@ -49,13 +49,16 @@ variables.
    docker compose ps
    curl -fsS http://localhost:18000/health
    curl -fsS http://localhost:17860/health
+   curl -fsS http://localhost:8000/
    ```
 
-7. Open <http://localhost:17860>. FastAPI's interactive backend schema is at
+7. Open <http://localhost:17860>. The documentation site is at
+   <http://localhost:8000>, and FastAPI's interactive backend schema is at
    <http://localhost:18000/docs>.
 
-Expected result: database, backend, and frontend report healthy; source-sync has
-exited successfully; the browser can complete a grounded question.
+Expected result: database, backend, frontend, and documentation service report
+healthy; source-sync has exited successfully; the browser can complete a
+grounded question.
 
 ## Rebuild after code changes
 
@@ -104,13 +107,13 @@ Use this mode for reload-driven development while keeping ParadeDB in Compose.
    OBDSCHAT_DB_PORT=55434 \
    OBDSCHAT_DB_PASSWORD_FILE=config/secrets/obdschat_db_password.txt \
    LLM_API_KEY_FILE=config/secrets/llm_api_key.txt \
-   uv run uvicorn backend.app:app --reload --port 8000
+   uv run uvicorn backend.app:app --reload --port 9000
    ```
 
 5. Start the frontend in another terminal:
 
    ```bash
-   BACKEND_URL=http://localhost:8000 \
+   BACKEND_URL=http://localhost:9000 \
    uv run uvicorn frontend.app:app --reload --port 7860
    ```
 
@@ -125,15 +128,4 @@ reuse the Compose-oriented file without changing container paths.
 make docs-serve
 ```
 
-The command exports OpenAPI and starts MkDocs. Open <http://127.0.0.1:8000>. If
-the backend already uses port 8000, stop it or run MkDocs directly with a
-different address.
-
-## Stop local services
-
-Stop foreground Python or MkDocs processes with Ctrl+C. Stop Compose services
-without deleting persisted database files:
-
-```bash
-docker compose down
-```
+The command exports OpenAPI and starts MkDocs. Open <http://127.0.0.1:8000>.

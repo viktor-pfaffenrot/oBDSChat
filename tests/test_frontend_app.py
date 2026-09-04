@@ -122,6 +122,10 @@ def test_query_events_allow_bounded_parallel_requests() -> None:
     assert {block_function.concurrency_id for block_function in query_functions} == {
         "backend-queries"
     }
+    assert {
+        tuple(output.elem_id for output in block_function.outputs)
+        for block_function in query_functions
+    } == {("question-input", "submit-question", "conversation", None)}
 
 
 def test_query_concurrency_defaults_to_eight(
@@ -158,6 +162,21 @@ def test_xsd_viewer_links_have_same_tab_navigation_override() -> None:
     assert "obds-close-xsd-viewer" in app_module.SAME_TAB_XSD_LINKS_HEAD
 
 
+def test_prepare_question_disables_input_while_pending() -> None:
+    question_update, submit_update, messages, pending_state = (
+        app_module.prepare_question(
+            "  Welche Werte?  ",
+            None,
+        )
+    )
+
+    assert question_update["value"] == ""
+    assert question_update["interactive"] is False
+    assert submit_update["interactive"] is False
+    assert pending_state.pending_question == "Welche Werte?"
+    assert messages[-2].content == "Welche Werte?"
+
+
 def test_complete_question_keeps_sources_with_answer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -173,8 +192,13 @@ def test_complete_question_keeps_sources_with_answer(
     )
     pending_state = ConversationState(pending_question="Welche Werte?")
 
-    messages, completed_state = app_module.complete_question(pending_state)
+    question_update, submit_update, messages, completed_state = (
+        app_module.complete_question(pending_state)
+    )
 
+    assert question_update["value"] == ""
+    assert question_update["interactive"] is True
+    assert submit_update["interactive"] is True
     assert completed_state.pending_question is None
     assert completed_state.turns[0].sources == (_xsd_source(),)
     assert messages[-1].role == "assistant"
@@ -188,6 +212,32 @@ def test_complete_question_keeps_sources_with_answer(
         'target="_blank" rel="noopener noreferrer">Offizielle XSD</a>'
         in assistant_content
     )
+
+
+def test_complete_question_restores_input_after_backend_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _FailingBackendClient:
+        def query(self, question: str, **kwargs: object) -> QueryResponse:
+            raise BackendApiError("Backend ist derzeit nicht erreichbar.")
+
+    monkeypatch.setattr(
+        app_module,
+        "get_backend_client",
+        _FailingBackendClient,
+    )
+    pending_state = ConversationState(pending_question="Welche Werte?")
+
+    question_update, submit_update, messages, stable_state = (
+        app_module.complete_question(pending_state)
+    )
+
+    assert question_update["value"] == "Welche Werte?"
+    assert question_update["interactive"] is True
+    assert submit_update["interactive"] is True
+    assert stable_state.pending_question is None
+    assert stable_state.turns == ()
+    assert "nicht erreichbar" in str(messages[-1].content)
 
 
 def test_backend_history_keeps_newest_turns_within_character_limit() -> None:

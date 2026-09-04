@@ -7,8 +7,7 @@ needs deterministic structural traversal and exact source locations.
 ## PostgreSQL and ParadeDB
 
 The `documents` table stores sections extracted from the public
-Umsetzungsleitfaden. One row contains source type, page title, optional heading,
-section content, public URL, and optional oBDS version. A bigint identity is both
+[Umsetzungsleitfaden](https://plattform65c.atlassian.net/wiki/spaces/UMK/overview). One row contains source type, page title, optional heading, section content, public URL, and optional oBDS version. A bigint identity is both
 the primary key and the ParadeDB BM25 key field.
 
 `documents_full_text_idx` indexes:
@@ -39,10 +38,6 @@ Compose stores them in the named `xsd-data` volume. The synchronizer mounts it
 read-write; the backend mounts it read-only. Outside Compose, the default is
 `data/xsd` below the working directory.
 
-The backend verifies that a directory version matches the schema's declared
-version. It derives element facts and source locations at runtime, avoiding a
-second persisted representation that could drift from the official file.
-
 ## Bootstrap versus migration
 
 `db/init.sql` is bootstrap SQL. The database container runs it only when
@@ -65,9 +60,8 @@ definition.
 ## Synchronization consistency
 
 The synchronizer downloads and validates every remote input before changing
-local stores. Schema files are atomically replaced one file at a time. Guide rows
-are deleted and inserted inside one psycopg connection transaction; exceptions
-roll back the replacement.
+local stores. Schema files are replaced one at a time, so readers never see a
+partially written file. Guide rows are deleted and inserted inside one psycopg connection transaction; exceptions roll back the replacement.
 
 PostgreSQL row IDs can change after synchronization because guide rows are
 recreated. Treat them as request-local citation identifiers, not durable external

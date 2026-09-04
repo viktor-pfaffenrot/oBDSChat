@@ -1,8 +1,7 @@
 # How to diagnose an oBDSChat deployment
 
 This guide diagnoses the supplied Docker Compose deployment. It assumes shell
-access to the deployment host and permission to use Docker. For browser-only
-problems, start with [How to troubleshoot user problems](../../user/how-to/troubleshoot.md).
+access to the deployment host and permission to use Docker. For problems regarding usage of the app, start with [How to troubleshoot user problems](../../user/how-to/troubleshoot.md).
 
 ## Capture current state
 
@@ -11,7 +10,7 @@ Before restarting anything, capture service state and recent logs:
 ```bash
 date -Is
 docker compose ps -a
-docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend
+docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend docs
 docker compose config --quiet
 df -h
 ```
@@ -28,6 +27,7 @@ diagnostics.
 | `source-sync` | `docker compose logs source-sync` | None; completion and failure are written to standard output/error |
 | `backend` | `docker compose logs backend` | Uvicorn access, startup, and application errors on standard output/error |
 | `frontend` | `docker compose logs frontend` | Uvicorn access, startup, and application errors on standard output/error |
+| `docs` | `docker compose logs docs` | Nginx access and server errors on standard output/error |
 
 Follow one service while reproducing a problem:
 
@@ -65,6 +65,7 @@ Check application liveness from the host:
 ```bash
 curl -v http://localhost:18000/health
 curl -v http://localhost:17860/health
+curl -v http://localhost:8000/
 ```
 
 `OBDSCHAT_QUERY_CONCURRENCY` limits simultaneous query-completion events in each
@@ -105,18 +106,3 @@ schemas become visible.
 - Do not use `docker compose down -v` during routine diagnosis; it removes named
   volumes, including synchronized XSD data.
 - Do not delete or replace the PostgreSQL data path as a troubleshooting shortcut.
-
-## Escalation information
-
-Provide these facts when the documented checks do not isolate the problem:
-
-- deployment revision and approximate failure time;
-- `docker compose ps -a` output;
-- relevant timestamped service logs with sensitive values removed;
-- failing health route or user action;
-- whether the problem began after code, configuration, credential, source, or
-  host changes;
-- available disk space and the earliest failed service in the startup chain.
-
-Expected result: the earliest failing component is identified, the evidence is
-safe to share, and recovery uses the narrowest action appropriate to the change.

@@ -34,48 +34,18 @@ sequenceDiagram
     participant U as Browser
     participant F as Frontend
     participant A as FastAPI backend
-    participant M as Model provider
-    participant T as Local tools
-    participant E as XSD / ParadeDB evidence
 
     U->>F: Submit question
-    F->>F: Store pending state and render progress
-    F->>A: Typed question plus bounded history
-    A->>A: Validate input; resolve version in worker thread
-    A->>M: Await model with policy, history, question, strict tools
-    M->>T: Required first tool call
-    T->>E: Run synchronous evidence handler in worker thread
-    E-->>T: Official source facts
-    T-->>M: JSON result with citation IDs
-    loop Optional additional tool rounds
-        M->>T: Tool call
-        T->>E: Retrieve evidence
-        E-->>M: Serialized result
-    end
-    M-->>A: Structured answer and selected citation IDs
-    A->>A: Remove inline citation tokens; validate current evidence
-    A-->>F: Answer, used versions, deduplicated sources
-    F-->>U: Complete answer and expandable evidence cards
+    F->>F: Render pending state
+    F->>A: Question, version, and bounded history
+    A->>A: Validate request and run grounded answering
+    A->>A: Verify citations and build response
+    A-->>F: Answer, used versions, and sources
+    F-->>U: Render answer and evidence cards
 ```
 
-If the API explicitly constrains `obds_version`, every version-aware tool call is
-forced to that version. Otherwise, model tool arguments can select a version;
-missing selection resolves to the newest available XSD version.
-
-Questions asking where or how a concept can be reported, which message types
-contain it, or for all occurrences use exhaustive concept-location lookup. That
-lookup covers every structural match in the selected schema version instead of
-using the ranked, limited schema search.
-
-Provider waits do not block the backend event loop, and synchronous version and
-tool work is offloaded to worker threads. Separate requests can overlap. Within
-one request, model rounds and tool calls remain ordered; answers are not streamed.
-The frontend applies its configured per-process concurrency limit, but direct API
-clients bypass that frontend limit.
-
-The backend returns only sources named by the model and verified against current
-tool executions. Search results that were read but not cited do not appear in the
-response.
+The backend's model, tool, and evidence processing is described in
+[How the backend works](backend-architecture.md#runtime-data-flow).
 
 ## Exact XSD evidence view
 
@@ -95,18 +65,7 @@ sequenceDiagram
     F-->>U: Escaped field view
 ```
 
-The evidence excerpt includes three context lines around the declaration and is
-bounded to 160 lines. Metadata reports the full declaration range and whether the
-displayed declaration was truncated.
-
-## Failure propagation
-
-- Frontend transport failures become a user-safe backend-unreachable message.
-- Backend validation failures retain HTTP client-error meaning.
-- Model failures become a bad-gateway response.
-- database, runtime configuration, and XSD parsing failures become
-  service-unavailable responses.
-- Frontend response-model mismatch becomes an invalid-backend-response message.
-
-Health routes are intentionally outside these dependency flows; they report only
-whether their own process can answer HTTP.
+The evidence view shows the declaration with up to three lines of surrounding
+context. To keep the response manageable, the excerpt is limited to 160 lines.
+The metadata still records the declaration's complete line range and indicates
+whether the excerpt omits any part of it.

@@ -10,21 +10,20 @@ deployment.
 
 ## Protect the network boundary
 
-The application has no authentication or authorization. The database is
-published on loopback only, but the supplied backend and frontend port mappings
-bind all host interfaces.
+The application has no authentication or authorization. The supplied Compose
+file publishes the database, backend, frontend, and documentation ports on IPv4
+loopback only. They are reachable from the Docker host but not directly from
+other machines.
 
 Before deployment, choose one of these boundaries:
 
-- keep the host and published ports on a trusted private network; or
-- place an authenticated TLS-terminating gateway in front of the frontend and
-  restrict direct access to the published application ports.
+- use the application locally or through an SSH tunnel; or
+- place an authenticated TLS-terminating gateway or outbound tunnel on the host
+  and route only the intended public hostname to the frontend loopback port.
 
-Do not expose the supplied Compose ports directly to an untrusted network.
+## Deploy a new installation
 
-## Deploy a reviewed revision
-
-1. Check out the reviewed application revision on the target host.
+1. Check out the application version you want to deploy on the target host.
 
 2. Create deployment configuration:
 
@@ -39,8 +38,9 @@ Do not expose the supplied Compose ports directly to an untrusted network.
    in `config/secrets/llm_api_key.txt`. Restrict both files:
 
    ```bash
-   chmod 600 config/secrets/obdschat_db_password.txt
-   chmod 600 config/secrets/llm_api_key.txt
+   chmod 700 config/secrets
+   chmod 644 config/secrets/obdschat_db_password.txt
+   chmod 644 config/secrets/llm_api_key.txt
    ```
 
 4. Review `.env` against the
@@ -79,14 +79,18 @@ Do not expose the supplied Compose ports directly to an untrusted network.
    docker compose ps -a
    curl -fsS http://localhost:18000/health
    curl -fsS http://localhost:17860/health
+   curl -fsS http://localhost:8000/
    ```
 
-9. Open `http://localhost:17860` from an allowed client and complete one
-   source-grounded question. Confirm that its evidence opens.
+9. On the deployment host, open `http://localhost:17860` and complete one
+   source-grounded question. Confirm that its evidence opens. Open
+   `http://localhost:8000` and confirm that the documentation loads. When
+   administering remotely, reach these loopback ports through an SSH tunnel or
+   the authenticated gateway configured for the deployment.
 
-Expected result: the database, backend, and frontend are healthy;
-`source-sync` has exited with status zero; and the UI completes a request using
-the selected provider.
+Expected result: the database, backend, frontend, and documentation service are
+healthy; `source-sync` has exited with status zero; and the UI completes a
+request using the selected provider.
 
 ## Upgrade an installation
 
@@ -119,7 +123,7 @@ the selected provider.
 
    ```bash
    docker compose ps -a
-   docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend
+   docker compose logs --since=15m --timestamps obdschat-db source-sync backend frontend docs
    ```
 
 7. Repeat the health-route and grounded-question checks from the initial

@@ -22,10 +22,8 @@ single-user local script.
 
 ### Decision and rationale
 
-Use PostgreSQL as the application database. PostgreSQL provides multi-user
-storage, source and oBDS-version filtering, and support for both the current
-`pg_search` extension and a possible future `pgvector` extension. It allows
-metadata, lexical retrieval, and a later vector index to remain in one service.
+Use PostgreSQL as the application database. PostgreSQL is well established, provides multi-user storage, source and oBDS-version filtering, and support for both the current
+`pg_search` extension and a possible future `pgvector` extension for semantic RAG. It allows metadata, lexical retrieval, and a later vector index to remain in one service.
 
 This choice keeps deployment realistic without requiring a separate search
 engine. Docker Compose can provide the database, initialize it, check its
@@ -80,6 +78,7 @@ search_umsetzungsleitfaden(query, version=None, limit=5)
   simple, explainable baseline for exact technical vocabulary.
 - Elasticsearch or OpenSearch would provide mature search features, but add a
   service that the current project size does not justify.
+- BM25 is typically combined with semantic search in a hybrid search via reciprocal rank fusion. The current setup can naturally be extented with vector search.
 
 ### Consequences
 
@@ -114,14 +113,12 @@ get_schema_values(...)
 get_schema_cardinality(...)
 ```
 
-`search_schema` remains ranked and limited for discovery.
+`search_schema` is ranked (e.g. element containing query ranks higher than documentations mentions query) and limited for discovery.
 `get_schema_concept_locations` instead returns every location for questions about
-where a concept can be reported. It identifies the containing message type and
-prefers element-name or named-datatype matches, falling back to documentation and
-enumeration meanings only when no structural match exists.
+concepts. It identifies the containing message type and prefers element-name or named-datatype matches, falling back to documentation and enumeration meanings only when no structural match exists.
 
 The implementation lives in `src/backend/xsd.py`, while `src/backend/tools.py`
-exposes focused functions to the model. This thin layer delegates XSD semantics
+exposes the functions to the model. This thin layer delegates XSD semantics
 to established libraries, gives the model domain-oriented operations, and makes
 schema answers exact and testable.
 
@@ -140,11 +137,6 @@ Formal schema facts remain separate from prose guidance and can be verified
 deterministically. The wrapper still has to handle versions, namespaces,
 references, paths, and source locations correctly. Its design is described in
 [How the backend works](backend-architecture.md#versioned-xsd-catalog).
-
-Exhaustive concept lookup can return more data than ranked discovery; omitting a
-result limit is deliberate because truncation would make message-type coverage
-incorrect. Prompts and tests must keep coverage questions on the exhaustive tool
-and ordinary discovery on the limited search tool.
 
 ## ADR-004: Use Requesty as the model-routing boundary
 
@@ -176,8 +168,6 @@ to self-hosted inference infrastructure.
   throughout the backend.
 - Supporting only OpenAI would make comparisons and later deployment choices
   harder.
-- Self-hosting an open-weight model from the start would add substantial
-  infrastructure before evaluation establishes that it is useful.
 
 ### Consequences
 
@@ -226,10 +216,7 @@ self-hosted deployments.
 ### Consequences
 
 The application gains a portable and mockable model contract. Some advanced
-provider features need separate treatment, and models can differ in tool-call
-reliability even when they accept the same schema. The current loop and its
-validation rules are covered in
-[How the backend works](backend-architecture.md#model-loop-and-citation-policy).
+provider features need separate treatment, and models (verified for glm-5.2) can differ in tool-call reliability even when they accept the same schema. Some models (e.g. QWEN-3.8) might still require model-specific implementation of the tool-loop.
 
 ## ADR-006: Separate the Gradio frontend from the FastAPI backend
 
@@ -270,9 +257,7 @@ can therefore be deployed and tested independently.
 Responsibilities and deployment boundaries remain clear, and a future frontend
 can reuse the same API. Public response models live in the neutral
 `obdschat_api` package, so both services validate the same contract without the
-frontend importing backend internals. The split still adds an HTTP client and
-one network hop, and response-contract changes require rebuilding both service
-images. See [How the frontend works](frontend-architecture.md) for the state and
+frontend importing backend internals. Response-contract changes require rebuilding both service images. See [How the frontend works](frontend-architecture.md) for the state and
 contract implications.
 
 ## ADR-007: Start with BM25 before vector search
@@ -288,20 +273,13 @@ an indexing pipeline, and separate quality evaluation.
 
 ### Decision and rationale
 
-Start with BM25 only. Add vector retrieval only when the application-specific
-evaluation set shows meaningful failures caused by vocabulary mismatch. If that
-happens, prefer `pgvector` inside PostgreSQL and evaluate a hybrid strategy
-against the BM25 baseline.
-
-This is a sequencing decision, distinct from ADR-002's choice of lexical search
-engine. It prevents an unmeasured feature from becoming permanent infrastructure
-and keeps the initial retrieval path easy to inspect and debug.
+Start with BM25 only. Add vector retrieval later by using e.g.`pgvector` inside PostgreSQL and evaluate a hybrid strategy against the BM25 baseline.
 
 ### Alternatives considered
 
 - Vector-only search would discard the strong exact-term baseline.
 - Building hybrid retrieval immediately might improve some queries, but would
-  make it harder to attribute quality gains and failures.
+  make it harder to implement and mentain.
 - Treating BM25 as permanently sufficient would prevent evidence-driven
   improvement when lexical overlap is genuinely weak.
 
@@ -319,21 +297,16 @@ a meaningful gain.
 ### Context
 
 Generic model benchmarks do not measure the complete oBDS workflow: German
-technical language, tool choice, XSD reasoning, BM25 query formulation,
-grounding, and correct abstention all matter. A few manually selected examples
-would not provide a stable basis for model or retrieval decisions.
+technical language, tool choice, XSD reasoning, and BM25 retrieval all matter. A few manually selected examples would not provide a stable basis for model or retrieval decisions.
 
 ### Decision and rationale
 
-Maintain an application-specific set of approximately 50 to 100 realistic oBDS
-questions. Evaluate model behavior across tool selection, tool argument validity,
+Maintain an application-specific set of curreently 71 realistic oBDS questions. Evaluate model behavior across tool selection, tool argument validity,
 multi-tool completion, groundedness, correct abstention, unsupported claims, and
-German answer quality. Evaluate retrieval separately with `Recall@1`,
-`Recall@3`, `Recall@5`, and mean reciprocal rank.
+German answer quality.
 
 Use GPT-5.6 Luna as the reference-quality model when comparing open-weight
-candidates. The model name is a comparison baseline, not an application
-dependency; Requesty policy can select concrete candidates without changing the
+candidates. Requesty policy can select concrete candidates without changing the
 backend.
 
 The current production-style runner reads `tests/questions.yaml`, exercises the
@@ -353,87 +326,7 @@ alongside code changes.
 Model, prompt, tool, and retrieval changes can be judged with project-specific
 evidence. Maintaining representative questions and carefully reviewed expected
 facts requires ongoing work, and live model evaluations have external cost and
-some provider variability.
-
-## ADR-009: Use Docker Compose for deployable infrastructure
-
-**Status:** Accepted
-
-### Context
-
-The application should run consistently on a developer machine and on a
-single-host deployment. Its services have explicit startup dependencies, but the
-MVP does not need a distributed orchestrator.
-
-### Decision and rationale
-
-Use Docker Compose for the MVP deployment. Compose defines the frontend,
-backend, source synchronizer, and PostgreSQL services, while the model remains an
-external service reached through the configured provider.
-
-This is sufficient for the current size of the project. It makes service
-boundaries, health checks, persistent storage, and startup ordering reproducible
-without introducing a second orchestration platform.
-
-### Alternatives considered
-
-- Manual local processes would be lighter, but leave dependencies and startup
-  order to each operator.
-- Kubernetes would provide stronger distributed orchestration, but its
-  operational cost is not justified by this single-host MVP.
-- Separate deployment manifests would increase the number of configurations
-  that must stay aligned.
-
-### Consequences
-
-Local and deployed environments share one understandable topology. Compose is
-not intended to be the final answer for a large distributed deployment, and
-production hardening may eventually require additional infrastructure. See
-[How oBDSChat is structured](system-architecture.md) and
-[How to deploy and upgrade oBDSChat](../how-to/deploy.md).
-
-## ADR-010: Keep the architecture deliberately small
-
-**Status:** Accepted
-
-### Context
-
-oBDSChat is an engineering experiment and a portfolio project. Its important
-problems are deterministic XSD querying, retrieval, model tool use, grounding,
-and evaluation. Premature layers would make those behaviors harder to follow
-without yet solving a demonstrated maintenance problem.
-
-### Decision and rationale
-
-Keep the backend as a small set of explicit modules:
-
-```text
-app.py
-config.py
-db.py
-llm.py
-search.py
-tools.py
-xsd.py
-```
-
-Add service, repository, adapter, port, or use-case layers only when the current
-modules become difficult to maintain. Narrow typed boundaries are still
-required; the decision rejects speculative abstraction, not structure.
-
-### Alternatives considered
-
-A layered architecture with `services/`, `repositories/`, `adapters/`, `ports/`,
-and `use_cases/` could support a larger system. For the current codebase it would
-mostly distribute straightforward behavior across more files and indirection.
-
-### Consequences
-
-The backend stays easy to read, explain, and test. Modules may eventually need
-to split as responsibilities or team ownership grow. When that happens, add the
-smallest boundary justified by the observed pressure and record a new decision
-if it materially changes the architecture. The current ownership map is in the
-[repository structure](../reference/repository-structure.md).
+some provider variability. The tests are currently lexical, not semantic. That is, some answers to questions, in particular ambiguous or unanswerable questions, are harder to verify and tests might procude inflated false negatives.
 
 ## Maintaining these records
 

@@ -165,6 +165,14 @@ class ConversationState(BaseModel):
     pending_question: str | None = None
 
 
+type QuestionEventResult = tuple[
+    dict[str, object],
+    dict[str, object],
+    list[gr.ChatMessage],
+    ConversationState,
+]
+
+
 def get_backend_client() -> BackendClient:
     """Create the configured backend client for one frontend operation."""
     return BackendClient.from_environment()
@@ -173,7 +181,7 @@ def get_backend_client() -> BackendClient:
 def prepare_question(
     question: str,
     state: ConversationState | None,
-) -> tuple[str, list[gr.ChatMessage], ConversationState]:
+) -> QuestionEventResult:
     """Show the user message immediately without revealing a partial answer."""
     normalized_question = question.strip()
     if not normalized_question:
@@ -185,16 +193,28 @@ def prepare_question(
     pending_state = current_state.model_copy(
         update={"pending_question": normalized_question}
     )
-    return "", render_conversation(pending_state), pending_state
+    question_update = gr.update(value="", interactive=False)
+    submit_update = gr.update(interactive=False)
+    return (
+        question_update,
+        submit_update,
+        render_conversation(pending_state),
+        pending_state,
+    )
 
 
 def complete_question(
     state: ConversationState,
-) -> tuple[list[gr.ChatMessage], ConversationState]:
+) -> QuestionEventResult:
     """Fetch and display one complete answer, never answer fragments."""
     question = state.pending_question
     if question is None:
-        return render_conversation(state), state
+        return (
+            gr.update(interactive=True),
+            gr.update(interactive=True),
+            render_conversation(state),
+            state,
+        )
 
     try:
         response = get_backend_client().query(
@@ -210,7 +230,9 @@ def complete_question(
                 content=_error_message(str(error)),
             )
         )
-        return messages, stable_state
+        question_update = gr.update(value=question, interactive=True)
+        submit_update = gr.update(interactive=True)
+        return question_update, submit_update, messages, stable_state
 
     completed_state = ConversationState(
         turns=(
@@ -222,7 +244,14 @@ def complete_question(
             ),
         )
     )
-    return render_conversation(completed_state), completed_state
+    question_update = gr.update(value="", interactive=True)
+    submit_update = gr.update(interactive=True)
+    return (
+        question_update,
+        submit_update,
+        render_conversation(completed_state),
+        completed_state,
+    )
 
 
 def clear_conversation() -> tuple[str, list[gr.ChatMessage], ConversationState]:
@@ -484,26 +513,26 @@ def build_interface() -> gr.Blocks:
         submit_event = submit.click(
             prepare_question,
             inputs=(question, state),
-            outputs=(question, chatbot, state),
+            outputs=(question, submit, chatbot, state),
             queue=False,
         )
         submit_event.then(
             complete_question,
             inputs=state,
-            outputs=(chatbot, state),
+            outputs=(question, submit, chatbot, state),
             concurrency_limit=QUERY_CONCURRENCY,
             concurrency_id="backend-queries",
         )
         question_event = question.submit(
             prepare_question,
             inputs=(question, state),
-            outputs=(question, chatbot, state),
+            outputs=(question, submit, chatbot, state),
             queue=False,
         )
         question_event.then(
             complete_question,
             inputs=state,
-            outputs=(chatbot, state),
+            outputs=(question, submit, chatbot, state),
             concurrency_limit=QUERY_CONCURRENCY,
             concurrency_id="backend-queries",
         )

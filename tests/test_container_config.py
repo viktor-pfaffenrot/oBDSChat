@@ -21,6 +21,7 @@ def test_compose_loads_runtime_configuration_from_dotenv() -> None:
         "source-sync",
         "backend",
         "frontend",
+        "docs",
     }
     for service_name in ("obdschat-db", "source-sync", "backend"):
         assert services[service_name]["env_file"] == ".env"
@@ -43,6 +44,7 @@ def test_compose_mounts_secrets_only_where_required() -> None:
         "llm_api_key",
     ]
     assert "secrets" not in services["frontend"]
+    assert "secrets" not in services["docs"]
 
 
 def test_compose_orders_source_sync_before_applications() -> None:
@@ -71,25 +73,56 @@ def test_source_sync_shares_xsd_volume_with_backend() -> None:
     assert services["backend"]["volumes"] == ["xsd-data:/app/data/xsd:ro"]
 
 
-def test_compose_uses_non_conflicting_default_ports() -> None:
+def test_compose_publishes_non_conflicting_ports_on_loopback() -> None:
     services = _compose_config()["services"]
 
     assert services["obdschat-db"]["ports"] == [
         "127.0.0.1:${OBDSCHAT_DB_PUBLISHED_PORT:-55434}:5432"
     ]
-    assert services["backend"]["ports"] == ["${OBDSCHAT_BACKEND_PORT:-18000}:8000"]
-    assert services["frontend"]["ports"] == ["${OBDSCHAT_FRONTEND_PORT:-17860}:7860"]
+    assert services["backend"]["ports"] == [
+        "127.0.0.1:${OBDSCHAT_BACKEND_PORT:-18000}:8000"
+    ]
+    assert services["frontend"]["ports"] == [
+        "127.0.0.1:${OBDSCHAT_FRONTEND_PORT:-17860}:7860"
+    ]
+    assert services["docs"]["ports"] == ["127.0.0.1:${OBDSCHAT_DOCS_PORT:-8000}:8080"]
 
 
-def test_dockerfiles_install_only_their_dependency_group() -> None:
+def test_compose_uses_dedicated_docs_image() -> None:
+    docs_service = _compose_config()["services"]["docs"]
+
+    assert docs_service["image"] == "obdschat-docs:local"
+    assert docs_service["build"] == {
+        "context": ".",
+        "dockerfile": "Dockerfile.docs",
+    }
+    assert docs_service["healthcheck"]["test"] == [
+        "CMD-SHELL",
+        "wget -q -O /dev/null http://127.0.0.1:8080/",
+    ]
+
+
+def test_dockerfiles_install_their_dependency_group() -> None:
     backend_dockerfile = (PROJECT_ROOT / "Dockerfile.backend").read_text(
         encoding="utf-8"
     )
     frontend_dockerfile = (PROJECT_ROOT / "Dockerfile.frontend").read_text(
         encoding="utf-8"
     )
+    docs_dockerfile = (PROJECT_ROOT / "Dockerfile.docs").read_text(encoding="utf-8")
 
     assert "--group backend" in backend_dockerfile
     assert "--group frontend" not in backend_dockerfile
     assert "--group frontend" in frontend_dockerfile
     assert "--group backend" not in frontend_dockerfile
+    assert "--group docs" in docs_dockerfile
+    assert "--group backend" not in docs_dockerfile
+    assert "--group frontend" not in docs_dockerfile
+
+
+def test_docs_image_builds_static_site_for_unprivileged_nginx() -> None:
+    docs_dockerfile = (PROJECT_ROOT / "Dockerfile.docs").read_text(encoding="utf-8")
+
+    assert "mkdocs build --strict --clean" in docs_dockerfile
+    assert "nginxinc/nginx-unprivileged:" in docs_dockerfile
+    assert "EXPOSE 8080" in docs_dockerfile

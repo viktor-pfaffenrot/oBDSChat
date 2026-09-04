@@ -18,9 +18,8 @@ the running services.
 4. If requests repeatedly fail, send the maintainer the time, question topic,
    and exact error text. Do not send secret values.
 
-The frontend allows long backend work because one request can include source
-search, several model tool rounds, and final answer validation. A request can
-also wait briefly when all query slots configured by the maintainer are active.
+The app allows potentially long waiting times because one request can include source
+search and final answer validation. A request can also wait briefly when all query slots configured by the maintainer are active.
 
 ## `Backend ist derzeit nicht erreichbar.`
 
@@ -29,22 +28,19 @@ also wait briefly when all query slots configured by the maintainer are active.
 3. Check whether coworkers see the same problem.
 4. Send the maintainer the time and frontend URL.
 
-This message means the frontend could not establish or complete its HTTP request
-to the backend.
-
 ## `Backend hat eine ungültige Antwort geliefert.`
 
 1. Copy the conversation if possible.
 2. Reload the page and retry once.
 3. Report the exact question, time, and error.
 
-The frontend received data that did not match its expected typed response.
+The app received data that did not match its expected response.
 
 ## The requested version or field is unavailable
 
 1. Check version spelling, including all three numeric parts such as `3.0.5`.
 2. Check the complete XML path shown in prior evidence.
-3. Ask which versions are available, or retry without constraining a version.
+3. Ask the chatbot which versions are available, or retry without constraining a version.
 4. If a known official version remains unavailable, report it to the maintainer;
    synchronized source data may be stale or incomplete.
 
@@ -52,7 +48,7 @@ The frontend received data that did not match its expected typed response.
 
 Treat the answer as an explicit statement of insufficient evidence, not as an
 oBDS fact. Rephrase with a precise field, XML path, topic, or version. Do not use
-an unsupported claim for an implementation decision.
+an unsupported claim.
 
 ## Copy does not reach the clipboard
 

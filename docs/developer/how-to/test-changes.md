@@ -6,7 +6,7 @@ Run checks from the repository root. Install development dependencies first:
 uv sync --group backend --group frontend --group dev
 ```
 
-## Run the required suite
+## Commands to run test suite
 
 ```bash
 uv run ruff check .
@@ -35,8 +35,6 @@ Choose the closest boundary first:
 | Gradio state/rendering/viewer | `uv run pytest tests/test_frontend_app.py` |
 | Source synchronization | `uv run pytest tests/test_sync_sources.py` |
 
-After focused tests pass, run the complete required suite.
-
 ## Test real ParadeDB behavior
 
 The smoke test requires a disposable ParadeDB/PostgreSQL database with
@@ -46,6 +44,33 @@ The smoke test requires a disposable ParadeDB/PostgreSQL database with
 TEST_DATABASE_URL=postgresql://user:password@host:port/database \
 uv run pytest -m db_smoke
 ```
+
+Run the full smoke test against a separate temporary container:
+
+```bash
+SMOKE_DB_PASSWORD=obdschat-smoke-local-only
+
+docker run --rm -d \
+  --name obdschat-smoke-db \
+  --publish 127.0.0.1:55435:5432 \
+  --env POSTGRES_USER=obdschat_smoke \
+  --env POSTGRES_PASSWORD="$SMOKE_DB_PASSWORD" \
+  --env POSTGRES_DB=obdschat_smoke \
+  paradedb/paradedb:0.25.3-pg18 \
+  postgres -c shared_preload_libraries=pg_search
+
+docker exec obdschat-smoke-db \
+  pg_isready -U obdschat_smoke -d obdschat_smoke
+
+TEST_DATABASE_URL="postgresql://obdschat_smoke:${SMOKE_DB_PASSWORD}@localhost:55435/obdschat_smoke" \
+uv run pytest -m db_smoke
+
+docker stop obdschat-smoke-db
+```
+
+Wait for `pg_isready` to report that the database accepts connections before
+running pytest. The container uses a host-local port and `--rm`, so stopping it
+removes the container and its test data. Always stop it even when the test fails.
 
 The test creates an isolated schema, verifies German BM25 search, checks version
 filtering and exact content lookup, confirms the ParadeDB index definition, then
@@ -64,12 +89,3 @@ This first verifies that committed OpenAPI JSON matches the FastAPI application,
 then performs a clean strict Material for MkDocs build. A stale schema or
 warnings—including broken internal links, invalid anchors, omitted documentation
 files, and unrecognized links—fail the command.
-
-## Review after tests
-
-Classify findings before handoff:
-
-- **Must fix:** failing required check, contract mismatch, unhandled expected
-  error, unsafe SQL/source handling, missing forward schema path, or stale docs.
-- **Optional:** non-blocking cleanup, performance measurement, broader test data,
-  or a future design improvement that does not affect current correctness.
