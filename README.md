@@ -1,4 +1,5 @@
 # oBDSChat <a href="https://viktor-pfaffenrot.github.io/oBDSChat/"><img src="src/frontend/assets/obdschat-logo-transparent.png" align="right" height="138" alt="oBDSChat documentation" /></a>
+<br>
 
 ## Overview
 
@@ -10,6 +11,10 @@ supported answer.
 The browser interface supports contextual follow-up questions, version-aware
 schema answers, expandable source cards, and an exact XSD field view with
 datatype, cardinality, allowed values, documentation, and original source lines.
+
+Here is a quick demo of the app:
+
+![oBDSChat demo](docs/assets/demo.gif)
 
 ## Installation
 
