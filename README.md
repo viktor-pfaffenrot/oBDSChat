@@ -1,4 +1,6 @@
 # oBDSChat <a href="https://viktor-pfaffenrot.github.io/oBDSChat/"><img src="src/frontend/assets/obdschat-logo-transparent.png" align="right" height="138" alt="oBDSChat documentation" /></a>
+
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://viktor-pfaffenrot.github.io/oBDSChat/)
 <br>
 
 ## Overview
