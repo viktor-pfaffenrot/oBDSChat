@@ -176,14 +176,15 @@ writes a timestamped JSON report and PNG summary to `evaluation-results/`. Add
 Read the complete documentation at
 [oBDSChat Documentation](https://viktor-pfaffenrot.github.io/oBDSChat/).
 
-New users should start with [Ask your first oBDS question](docs/user/how-to/use-obdschat.md).
+New users should start with [Ask your first oBDS question](https://viktor-pfaffenrot.github.io/oBDSChat/user/how-to/use-obdschat/).
 Developers and operators can continue with:
 
-1. [Local development](docs/developer/how-to/local-development.md)
-2. [System architecture](docs/developer/explanation/system-architecture.md)
-3. [Runtime configuration](docs/developer/reference/runtime-configuration.md)
-4. [Deployment and upgrades](docs/developer/how-to/deploy.md)
-5. [Testing changes](docs/developer/how-to/test-changes.md)
+1. [Local development](https://viktor-pfaffenrot.github.io/oBDSChat/developer/how-to/local-development/)
+2. [System architecture](https://viktor-pfaffenrot.github.io/oBDSChat/developer/explanation/system-architecture/)
+3. [Runtime configuration](https://viktor-pfaffenrot.github.io/oBDSChat/developer/reference/runtime-configuration/)
+4. [Deployment and upgrades](https://viktor-pfaffenrot.github.io/oBDSChat/developer/how-to/deploy/)
+5. [Testing changes](https://viktor-pfaffenrot.github.io/oBDSChat/developer/how-to/test-changes/)
+6. [ARD](https://viktor-pfaffenrot.github.io/oBDSChat/developer/explanation/ADR/)
 
 Build the complete documentation site with `make docs`, preview it with
 `make docs-serve`, or run the strict documentation check with `make docs-check`.
