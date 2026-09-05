@@ -429,7 +429,7 @@ def build_interface() -> gr.Blocks:
               </a>
               <div class="masthead__status">
                 <span class="status-dot"></span>
-                Powered by LAS
+                oBDS-Wissen im Dialog
               </div>
             </header>
             """
