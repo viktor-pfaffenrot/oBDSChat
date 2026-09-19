@@ -1,5 +1,9 @@
 # oBDSChat
 
+## Context
+
+Read `CONTEXT.md` for infos on codebase terminology and the project's domain model.
+
 ## Coding standards
 
 - Use latest versions of libraries and idiomatic approaches as of today

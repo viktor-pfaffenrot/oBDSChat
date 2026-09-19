@@ -107,3 +107,8 @@ Quick decision tree:
 | How-to guide | Does it solve the stated problem for an experienced user? |
 | Reference | Can the user find a specific fact in under 30 seconds? |
 | Explanation | Does the user understand the *why*, not just the *what*? |
+
+
+### Step 5 - ARD synchronization
+
+Inspect `internal_docs/adr/` against `docs/developer/explanation/ADR.md`. If `internal_docs/adr/` contains new or updated content, synchronize `docs/developer/explanation/ADR.md`. `internal_docs/adr/` is the working directory, `docs/developer/explanation/ADR.md` is the user- and developer-facing content.

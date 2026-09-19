@@ -1,344 +1,212 @@
 # Architecture decision records
 
-These records explain the major choices behind oBDSChat. They capture the
-constraints that led to each choice, the alternatives that were considered, and
-the trade-offs that future changes must account for. Read them before replacing
-a dependency, moving a system boundary, or adding infrastructure.
-
-All records on this page are accepted unless their status says otherwise. A
-record describes why a decision was made; the linked explanation and reference
-pages describe the current implementation.
+These accepted records capture the major decisions behind oBDSChat and why they
+were made. Linked explanation and reference pages describe the implementation.
 
 ## ADR-001: Use PostgreSQL instead of SQLite
 
-**Status:** Accepted
+The application needs persistent, multi-user storage for Umsetzungsleitfaden
+sections and potentially other official oBDS prose sources in a containerized
+deployment. Use PostgreSQL to keep metadata, source and oBDS-version filtering,
+`pg_search` retrieval, and a possible future `pgvector` index in one service.
+Docker Compose provides consistent initialization, health checks, and persistent
+storage across hosts.
 
-### Context
+### Considered Options
 
-The application needs persistent storage for sections of the
-Umsetzungsleitfaden and may later store other official oBDS prose sources. It is
-containerized and intended to resemble a deployable application rather than a
-single-user local script.
-
-### Decision and rationale
-
-Use PostgreSQL as the application database. PostgreSQL is well established, provides multi-user storage, source and oBDS-version filtering, and support for both the current
-`pg_search` extension and a possible future `pgvector` extension for semantic RAG. It allows metadata, lexical retrieval, and a later vector index to remain in one service.
-
-This choice keeps deployment realistic without requiring a separate search
-engine. Docker Compose can provide the database, initialize it, check its
-health, and persist its data in the same way on every host.
-
-### Alternatives considered
-
-- SQLite would be simpler for a single process, but it does not provide the
-  required PostgreSQL search extensions or the same multi-service deployment
-  model.
-- Separate database and search services would isolate those responsibilities,
-  but they would add synchronization and operational overhead before the corpus
-  requires it.
+- SQLite simplifies single-process storage but lacks the required PostgreSQL
+  search extensions and the same multi-service deployment model.
+- Separate database and search services add synchronization and operational
+  overhead before the corpus requires them.
 
 ### Consequences
 
-The application needs a running database service, persistent storage,
-initialization, and health checks. In return, one database can serve structured
-metadata and ranked prose retrieval. See [How source data is stored](data-storage.md)
-and the [database reference](../database/index.md) for the current design.
+The application requires a running database service and persistent storage. See
+[How source data is stored](data-storage.md) and the
+[database reference](../database/index.md).
 
 ## ADR-002: Use pg_search BM25 instead of native PostgreSQL full-text search
 
-**Status:** Accepted
-
-### Context
-
 The Umsetzungsleitfaden contains exact oBDS field names, German medical terms,
-rare technical expressions, and sections of different lengths. Search must rank
-the most useful sections rather than merely identify every section containing a
-term.
+rare expressions, and sections of different lengths. Use ParadeDB's `pg_search`
+extension and BM25 for lexical retrieval because corpus-level term rarity and
+document-length normalization provide a strong ranking baseline for this corpus.
+Keeping the index in PostgreSQL avoids a separate search service and its
+synchronization path.
 
-### Decision and rationale
+### Considered Options
 
-Use ParadeDB's `pg_search` extension and BM25 for lexical retrieval. BM25 uses
-corpus-level term rarity and document-length normalization, which gives a strong
-ranking baseline for this terminology-heavy corpus. Keeping the index in
-PostgreSQL also avoids a second search service and its synchronization path.
-
-The backend exposes this capability through a small domain function instead of
-leaking index details into callers:
-
-```python
-search_umsetzungsleitfaden(query, version=None, limit=5)
-```
-
-### Alternatives considered
-
-- Native PostgreSQL `tsvector` and `ts_rank` would avoid a specialized
-  extension, but provide less suitable ranking behavior for this corpus.
-- Vector-only retrieval would improve some semantic matches, but weaken the
-  simple, explainable baseline for exact technical vocabulary.
-- Elasticsearch or OpenSearch would provide mature search features, but add a
-  service that the current project size does not justify.
-- BM25 is typically combined with semantic search in a hybrid search via reciprocal rank fusion. The current setup can naturally be extented with vector search.
+- Native PostgreSQL `tsvector` and `ts_rank` avoid a specialized extension but
+  provide less suitable ranking behavior for this corpus.
+- Vector-only retrieval may improve semantic matches but weakens the explainable
+  baseline for exact technical vocabulary.
+- Elasticsearch or OpenSearch add a service that the current project size does
+  not justify.
 
 ### Consequences
 
-Rare terms and field-name matches receive useful lexical weight without external
-search infrastructure. The database image is more specialized, however:
-`pg_search` must be installed and loaded, and tests of real search behavior need
-a compatible PostgreSQL instance. The index and query details are described in
-[How source data is stored](data-storage.md).
+The database image must install and load `pg_search`, and real search tests need
+compatible PostgreSQL. A small domain function hides index details from callers.
+The setup can later combine BM25 and vector search through reciprocal rank fusion;
+see ADR-007 and [How source data is stored](data-storage.md).
 
 ## ADR-003: Query the oBDS XSD with deterministic tools
 
-**Status:** Accepted
+The XSD defines authoritative element names, XML paths, datatypes, cardinalities,
+enumerations, and parent-child relationships. Keep versioned XSD files as the
+source of truth and query them through oBDS-specific deterministic functions
+backed by `xmlschema` and `lxml`, so formal schema facts remain exact, testable,
+and separate from prose retrieval. Domain-oriented tools delegate XSD semantics
+to established libraries instead of relying on model memory.
 
-### Context
+### Considered Options
 
-The XSD contains authoritative facts such as element names, XML paths,
-datatypes, cardinalities, enumerations, and parent-child relationships. Those
-facts should not depend on probabilistic retrieval or on a model remembering the
-schema correctly.
-
-### Decision and rationale
-
-Keep the versioned XSD files as the source of truth and query them through
-oBDS-specific deterministic functions backed by `xmlschema` and `lxml`. The
-public tool boundary includes functions such as:
-
-```python
-search_schema(...)
-get_schema_concept_locations(...)
-get_schema_element(...)
-get_schema_values(...)
-get_schema_cardinality(...)
-```
-
-`search_schema` is ranked (e.g. element containing query ranks higher than documentations mentions query) and limited for discovery.
-`get_schema_concept_locations` instead returns every location for questions about
-concepts. It identifies the containing message type and prefers element-name or named-datatype matches, falling back to documentation and enumeration meanings only when no structural match exists.
-
-The implementation lives in `src/backend/xsd.py`, while `src/backend/tools.py`
-exposes the functions to the model. This thin layer delegates XSD semantics
-to established libraries, gives the model domain-oriented operations, and makes
-schema answers exact and testable.
-
-### Alternatives considered
-
-- Chunking the XSD as plain text would lose structural meaning and make exact
-  facts dependent on retrieval quality.
-- A generic XML or XPath tool would expose more power than the model needs and
-  make correct tool use harder.
-- A custom XSD parser would duplicate complex namespace, reference, and type
-  semantics already handled by libraries.
+- Chunking the XSD as plain text loses structure and makes exact facts depend on
+  retrieval quality.
+- Generic XML or XPath tools expose more power than the model needs and make
+  correct tool use harder.
+- A custom parser duplicates complex namespace, reference, and type semantics
+  already handled by libraries.
 
 ### Consequences
 
-Formal schema facts remain separate from prose guidance and can be verified
-deterministically. The wrapper still has to handle versions, namespaces,
-references, paths, and source locations correctly. Its design is described in
-[How the backend works](backend-architecture.md#versioned-xsd-catalog).
+The wrapper must handle versions, namespaces, references, paths, and source
+locations correctly. Ranked, limited `search_schema` serves discovery;
+`get_schema_concept_locations` returns every concept location, identifies its
+containing message type, and prefers element-name or named-datatype matches,
+falling back to documentation and enumeration meanings only when no structural
+match exists. Dedicated tools expose element details, values, and cardinalities.
+See [How the backend works](backend-architecture.md#versioned-xsd-catalog).
 
 ## ADR-004: Use Requesty as the model-routing boundary
 
-**Status:** Accepted
-
-### Context
-
 The project needs to compare proprietary and open-weight models, select global
-or EU-hosted inference, and preserve a path to future on-premises inference. The
-rest of the application should not depend on the concrete provider selected for
-one evaluation or deployment.
+or EU-hosted inference, and preserve a path to on-premises inference. Use Requesty
+as the hosted routing boundary, with the backend calling `policy/obdschat` and
+concrete model selection controlled by runtime configuration and provider policy.
+This keeps retrieval, tool execution, and public HTTP contracts independent of
+model switching and allows hosted candidates to be benchmarked before investing
+in self-hosted inference.
 
-### Decision and rationale
+### Considered Options
 
-Use Requesty as the hosted model-routing boundary and keep provider selection in
-runtime configuration. The backend calls the stable `policy/obdschat` route;
-concrete model and routing changes belong to the provider policy rather than the
-application code. Direct OpenAI configuration remains available for controlled
-testing.
-
-The common boundary makes model switching and regional provider selection
-possible without changing retrieval, tool execution, or public HTTP contracts.
-It also allows hosted open-weight candidates to be benchmarked before committing
-to self-hosted inference infrastructure.
-
-### Alternatives considered
-
-- Direct integrations for every provider would expose provider differences
-  throughout the backend.
-- Supporting only OpenAI would make comparisons and later deployment choices
-  harder.
+- Direct integrations for every provider spread provider differences throughout
+  the backend.
+- Supporting only OpenAI restricts comparisons and later deployment choices.
 
 ### Consequences
 
-The backend remains mostly provider-independent and models can be compared
-without an infrastructure rewrite. Requesty is an external runtime dependency,
-and provider behavior can still vary behind a common API. Strict EU residency
-requires both an EU Requesty gateway and an EU-hosted inference provider. See
-the [runtime configuration reference](../reference/runtime-configuration.md)
-for the current settings.
+Requesty becomes an external runtime dependency, and provider behavior can still
+vary behind the common API. Strict EU residency requires both an EU Requesty
+gateway and an EU-hosted inference provider. Direct OpenAI configuration remains
+available for controlled testing; see the
+[runtime configuration reference](../reference/runtime-configuration.md).
 
 ## ADR-005: Target OpenAI-compatible Chat Completions tool calling
 
-**Status:** Accepted
-
-### Context
-
 Tool calling must work across proprietary models, open-weight models, Requesty,
-and possible future vLLM or SGLang deployments. A widely implemented protocol is
-more valuable here than a provider-specific feature set.
+and possible future vLLM or SGLang deployments. Use the OpenAI-compatible Chat
+Completions contract (`tools`, `tool_choice`, `assistant.tool_calls`,
+`role="tool"`, and `tool_call_id`) rather than the deprecated `functions` and
+`function_call` interface. This widely implemented contract supports one explicit,
+portable, mockable model-tool loop across hosted and future self-hosted deployments.
 
-### Decision and rationale
+### Considered Options
 
-Use the modern OpenAI-compatible Chat Completions tool-calling convention:
-
-```text
-tools
-tool_choice
-assistant.tool_calls
-role="tool"
-tool_call_id
-```
-
-Do not use the deprecated `functions` and `function_call` interface. The chosen
-contract is supported by hosted routers and common open-weight serving stacks,
-so the backend can keep one explicit model-tool loop across hosted and future
-self-hosted deployments.
-
-### Alternatives considered
-
-- The OpenAI Responses API alone would couple the application to an interface
-  that is not as broadly available across the target serving stacks.
-- Provider-specific tool APIs would require multiple orchestration paths.
-- Custom JSON prompting would move validation into prompt interpretation and be
-  less reliable than structured tool calls.
+- Using only the OpenAI Responses API couples the application to an interface
+  less broadly available across the target serving stacks.
+- Provider-specific tool APIs require multiple orchestration paths.
+- Custom JSON prompting moves validation into prompt interpretation and is less
+  reliable than structured tool calls.
 
 ### Consequences
 
-The application gains a portable and mockable model contract. Some advanced
-provider features need separate treatment, and models (verified for glm-5.2) can differ in tool-call reliability even when they accept the same schema. Some models (e.g. QWEN-3.8) might still require model-specific implementation of the tool-loop.
+Advanced provider features may need separate treatment. Accepting the same schema
+does not guarantee equal tool-call reliability, as observed with glm-5.2;
+models such as QWEN-3.8 may still require model-specific loop handling.
 
 ## ADR-006: Separate the Gradio frontend from the FastAPI backend
 
-**Status:** Accepted
+The project needs an interactive interface while keeping model calls, retrieval,
+database access, XSD access, and source traceability on the server. Run Gradio
+and FastAPI as separate services communicating over HTTP, with FastAPI owning
+domain behavior and the frontend acting as a replaceable client that never
+imports backend internals. This allows independent deployment and testing and
+lets future frontends reuse the API.
 
-### Context
+### Considered Options
 
-The project needs a simple interactive interface while keeping model calls,
-retrieval, database access, XSD access, and source traceability on the server
-side.
-
-### Decision and rationale
-
-Run the Gradio frontend and FastAPI backend as separate services that communicate
-over HTTP:
-
-```text
-Gradio frontend
-    |
-    | HTTP
-    v
-FastAPI backend
-```
-
-The frontend must not import backend internals. FastAPI remains the single owner
-of domain behavior and the frontend becomes a replaceable HTTP client. Each side
-can therefore be deployed and tested independently.
-
-### Alternatives considered
-
-- One combined Gradio application would reduce the number of services, but tie
-  presentation directly to domain and infrastructure code.
-- Importing backend Python modules into the frontend would avoid HTTP calls, but
-  erase the application boundary and couple their dependencies.
+- A combined Gradio application reduces service count but ties presentation to
+  domain and infrastructure code.
+- Importing backend modules into the frontend avoids HTTP calls but erases the
+  application boundary and couples dependencies.
 
 ### Consequences
 
-Responsibilities and deployment boundaries remain clear, and a future frontend
-can reuse the same API. Public response models live in the neutral
-`obdschat_api` package, so both services validate the same contract without the
-frontend importing backend internals. Response-contract changes require rebuilding both service images. See [How the frontend works](frontend-architecture.md) for the state and
-contract implications.
+Public response models live in the neutral `obdschat_api` package, so both
+services validate the same contract without backend imports. Response-contract
+changes require rebuilding both service images. See
+[How the frontend works](frontend-architecture.md).
 
 ## ADR-007: Start with BM25 before vector search
 
-**Status:** Accepted
+Exact field names and technical terms make lexical retrieval a strong initial
+baseline for the Umsetzungsleitfaden, while vector retrieval requires an embedding
+model, an indexing pipeline, and separate quality evaluation. Start with BM25
+only and add vector retrieval, for example through PostgreSQL's `pgvector`, when
+evaluation demonstrates a meaningful gain. Evaluate any hybrid strategy against
+the BM25 baseline.
 
-### Context
+### Considered Options
 
-The Umsetzungsleitfaden contains many exact field names and technical terms, so
-lexical retrieval has a strong chance of solving the initial use cases. Vector
-retrieval may help semantic paraphrases, but it also needs an embedding model,
-an indexing pipeline, and separate quality evaluation.
-
-### Decision and rationale
-
-Start with BM25 only. Add vector retrieval later by using e.g.`pgvector` inside PostgreSQL and evaluate a hybrid strategy against the BM25 baseline.
-
-### Alternatives considered
-
-- Vector-only search would discard the strong exact-term baseline.
-- Building hybrid retrieval immediately might improve some queries, but would
-  make it harder to implement and mentain.
-- Treating BM25 as permanently sufficient would prevent evidence-driven
-  improvement when lexical overlap is genuinely weak.
+- Vector-only search discards the strong exact-term baseline.
+- Immediate hybrid retrieval adds implementation and maintenance complexity.
+- Treating BM25 as permanently sufficient prevents evidence-driven improvement
+  when lexical overlap is weak.
 
 ### Consequences
 
-The application has no embedding pipeline or vector index today. Semantic
-paraphrases with little lexical overlap may be missed. That limitation is
-accepted until evaluation demonstrates that the added system complexity produces
-a meaningful gain.
+The application has no embedding pipeline or vector index. Semantic paraphrases
+with little lexical overlap may be missed until evaluation justifies the added
+complexity.
 
 ## ADR-008: Make evaluation a first-class design constraint
 
-**Status:** Accepted
+Generic benchmarks and a few manual examples cannot reliably assess German oBDS
+language, tool choice, XSD reasoning, and BM25 retrieval together. Maintain a
+repository-owned suite of realistic oBDS questions covering tool selection,
+argument validity, multi-tool completion, groundedness, correct abstention,
+unsupported claims, and German answer quality. Use GPT-5.6 Luna as the
+reference-quality model for open-weight comparisons, with Requesty policy
+selecting candidates without backend changes.
 
-### Context
+### Considered Options
 
-Generic model benchmarks do not measure the complete oBDS workflow: German
-technical language, tool choice, XSD reasoning, and BM25 retrieval all matter. A few manually selected examples would not provide a stable basis for model or retrieval decisions.
-
-### Decision and rationale
-
-Maintain an application-specific set of curreently 71 realistic oBDS questions. Evaluate model behavior across tool selection, tool argument validity,
-multi-tool completion, groundedness, correct abstention, unsupported claims, and
-German answer quality.
-
-Use GPT-5.6 Luna as the reference-quality model when comparing open-weight
-candidates. Requesty policy can select concrete candidates without changing the
-backend.
-
-The current production-style runner reads `tests/questions.yaml`, exercises the
-same tools as the application, and reports answer and citation correctness.
-Keeping the suite in the repository makes expected facts and sources reviewable
-alongside code changes.
-
-### Alternatives considered
-
-- Public benchmarks would be cheaper to consume, but would not represent the
-  project's source and tool boundaries.
-- Ad hoc manual questions would help exploration, but would not make changes
-  comparable over time.
+- Public benchmarks are cheaper to consume but do not represent the project's
+  source and tool boundaries.
+- Ad hoc manual questions aid exploration but do not make changes comparable
+  over time.
 
 ### Consequences
 
-Model, prompt, tool, and retrieval changes can be judged with project-specific
-evidence. Maintaining representative questions and carefully reviewed expected
-facts requires ongoing work, and live model evaluations have external cost and
-some provider variability. The tests are currently lexical, not semantic. That is, some answers to questions, in particular ambiguous or unanswerable questions, are harder to verify and tests might procude inflated false negatives.
+The recorded suite contains 71 questions in `tests/questions.yaml`; its
+production-style runner exercises application tools and reports answer and
+citation correctness. Keeping expected facts and sources reviewable alongside
+code requires ongoing maintenance, while live evaluations incur external cost
+and provider variability. Current checks are lexical rather than semantic and
+may produce inflated false negatives, particularly for ambiguous or unanswerable
+questions.
 
 ## Maintaining these records
 
-Add an ADR when a change:
+Add an ADR only when a decision is hard to reverse, surprising without context,
+and the result of a real trade-off. Record its context, decision, and rationale
+in one to three sentences; add Considered Options or Consequences only when they
+preserve useful rejected alternatives or non-obvious downstream effects.
 
-- replaces a major dependency;
-- moves a system boundary;
-- changes the retrieval or model-provider strategy;
-- introduces substantial infrastructure; or
-- reverses a previously accepted choice.
-
-Do not add ADRs for ordinary implementation details. When a decision changes,
-keep its history and change its status to `Superseded by ADR-XXX` instead of
-deleting it. Add the replacement as a new numbered record with its own context
-and consequences.
+New individual records belong in `internal_docs/adr/` as `0001-slug.md`,
+`0002-slug.md`, and so on, incrementing the highest existing number. Compile them
+into this page only when requested. When revisiting a decision, use optional
+`status` frontmatter (`proposed`, `accepted`, `deprecated`, or
+`superseded by ADR-NNNN`); preserve the old record and add its replacement with a
+new number.
