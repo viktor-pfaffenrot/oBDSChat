@@ -1,7 +1,7 @@
 # PostgreSQL schema reference
 
 `db/init.sql` is the canonical definition of application-owned PostgreSQL
-objects. This reference summarizes its table, columns, constraints, and search
+objects. This reference summarizes its tables, constraints, and search
 index for quick lookup.
 
 For storage rationale and synchronization behavior, read
@@ -48,3 +48,22 @@ Change `db/init.sql` first, keep this reference aligned, account for existing
 installations as described in
 [How to change stored source data](../how-to/change-stored-data.md), then run
 `make docs-check`.
+
+## Current evidence tables
+
+The guide synchronizer still uses `documents`. These tables provide persistence
+for future ingestion; bootstrap does not publish a Manual Plus corpus.
+
+| Table | Contents | Constraints |
+| --- | --- | --- |
+| `sources` | UUID; source family, origin, native kind/ID; current original bytes and SHA-256; media type, title, URL, source revision label, observation/modification timestamps, edition, decision/applicability dates, JSON metadata | Unique native key; supported family/kind/media values; hash checked against bytes; metadata object. |
+| `evidence_blocks` | UUID; source ID; extraction version, local key, kind, text, locator, structured payload | Source foreign key with cascading deletion; unique source/local key; JSON objects. |
+
+`backend.evidence.SourceEvidence` validates HTML/PDF locators and unique block keys.
+`replace_source` replaces current bytes, metadata, and blocks in one transaction,
+keeping the source UUID. Evidence UUIDs are newly assigned on every replacement;
+expired IDs cannot resolve to replacement text. `get_current_source` reads bytes
+and blocks in one statement. Source UUIDs identify mutable sources, not citations.
+
+No revision/archive/snapshot-history tables or immutability triggers are needed.
+Extraction versions describe current processing, without retaining older results.

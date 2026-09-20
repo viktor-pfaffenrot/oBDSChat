@@ -5,8 +5,9 @@ This guide covers changes to PostgreSQL-backed sections of the Umsetzungsleitfad
 ## Change the `documents` data model
 
 1. Update the desired bootstrap state in `db/init.sql`.
-2. Decide how an existing installation reaches that state. Do not assume
-   `CREATE TABLE IF NOT EXISTS` changes existing columns or constraints.
+2. For the current disposable development installation, rebuild from scratch.
+   `CREATE TABLE IF NOT EXISTS` does not change existing columns or constraints.
+   Reassess migration requirements before retaining production data.
 3. Update the `Document` pydantic data model in `scripts/sync_sources.py` so external data is validated before persistence.
 4. Update row construction and the parameterized `INSERT` in
    `replace_documents`.
@@ -15,15 +16,30 @@ This guide covers changes to PostgreSQL-backed sections of the Umsetzungsleitfad
    fields. Choose literal versus stemmed text behavior explicitly.
 7. Update `tests/test_sync_sources.py`, `tests/test_search.py`, and
    `tests/test_db_smoke.py`.
-8. Test the forward migration on a disposable copy of an existing database, then
-   test fresh bootstrap separately.
+8. Test fresh bootstrap and repeated synchronization against disposable ParadeDB.
 
-Expected result: new and upgraded databases expose the same schema, synchronized
+Expected result: freshly initialized databases expose the expected schema, synchronized
 rows validate before insertion, and search returns typed results.
 
-The repository does not yet provide a migration runner. Add one as part of any
-schema change that must work on persisted installations; do not encode an
-unreviewed destructive fallback in application startup.
+The repository intentionally has no migration runner for this pre-production
+step. Database recreation is an explicit operator action; application startup
+never drops a database or existing tables automatically.
+
+## Change current evidence storage
+
+1. Update `sources` or `evidence_blocks` in `db/init.sql` and rebuild the disposable
+   database explicitly.
+2. Update `SourceEvidence` and the persistence helpers in `src/backend/evidence.py`.
+3. Keep originals and their blocks in the same transaction. `replace_source`
+   replaces one source; callers can group replacements in an outer transaction.
+4. Assign fresh evidence IDs when replacing blocks. Source UUIDs identify current
+   mutable pages or attachments and must not serve as historical evidence IDs.
+5. Test exact bytes/hashes, replacement cleanup, rollback, and native identity in
+   `tests/test_evidence.py`. Keep evaluation fixtures outside runtime retention.
+
+Expected result: only current originals and extraction results remain; failed
+writes preserve the previous current source. Corpus publication belongs to the
+later refresh orchestration.
 
 ## Change guide extraction
 
@@ -75,8 +91,8 @@ produces a deterministic in-memory index.
 
 ## Review checklist
 
-- Fresh bootstrap and forward migration both exist where needed.
-- Upgrade must preserve stored database. Operators should not need to delete PostgreSQL volume and rebuild everything.
+- Fresh bootstrap and repeated initialization work on disposable PostgreSQL.
+- Any future requirement to preserve populated installations needs a separate migration decision.
 - Backend requests should only read source data. Synchronization process owns downloads, XSD updates, and guide-row replacement. User request must not trigger data mutation.
 - Remote content is validated before persistence. Bad download must not replace valid data.
 - SQL stays parameterized.

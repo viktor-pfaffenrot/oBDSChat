@@ -30,26 +30,6 @@ def test_document_schema_supports_german_bm25_search() -> None:
                     sql.Identifier(schema_name)
                 )
             )
-            cursor.execute(
-                """
-                CREATE TABLE documents (
-                    id BIGSERIAL PRIMARY KEY,
-                    source_type TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    section TEXT,
-                    content TEXT NOT NULL,
-                    url TEXT NOT NULL,
-                    obds_version TEXT
-                )
-                """
-            )
-            cursor.execute(
-                """
-                CREATE INDEX documents_full_text_idx
-                ON documents
-                USING GIN (to_tsvector('german', content))
-                """
-            )
             cursor.execute(schema_sql.encode(), prepare=False)
             cursor.execute(
                 """

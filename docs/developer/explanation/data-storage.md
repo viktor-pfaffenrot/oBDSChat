@@ -38,19 +38,46 @@ Compose stores them in the named `xsd-data` volume. The synchronizer mounts it
 read-write; the backend mounts it read-only. Outside Compose, the default is
 `data/xsd` below the working directory.
 
-## Bootstrap versus migration
+## Current source evidence
+
+`sources` keeps one current original per source family, origin, native kind, and
+native ID. Titles and URLs can change without changing source identity. Original
+storage HTML (UTF-8) and PDF bytes are stored once per source, with a
+database-checked SHA-256 hash. Source revision labels and dates remain metadata.
+Identical bytes from different sources keep separate provenance.
+
+`evidence_blocks` stores current parsed text, structural HTML or physical PDF
+locators, and structured payloads. `backend.evidence.replace_source` replaces
+original, metadata, and all blocks atomically. Old originals and extraction
+results are removed; each replacement assigns fresh evidence UUIDs.
+`get_current_source` returns a consistent current original/evidence view.
+Old chats may keep displayed excerpts and public links, but those links open the
+current website. There is no historical-original lookup. Evaluation fixtures
+remain separate from runtime storage.
+
+The caller owns the outer transaction, allowing future refresh to group validated
+candidate replacements and withdrawn-source deletions before commit. Deleting a
+source cascades to its evidence. Full staging, completeness validation,
+publication, and readiness orchestration belong to step four.
+
+Existing synchronization still fills `documents`; it does not fabricate original
+HTML or revision metadata. No Manual Plus corpus is added to active search.
+Registry assessments and qualifications follow in step two. Deterministic XSD
+storage and public query behavior remain unchanged.
+
+## Fresh bootstrap
 
 `db/init.sql` is bootstrap SQL. The database container runs it only when
 initializing an empty PostgreSQL data directory. Source synchronization also
 executes it before replacing documents, but `CREATE TABLE IF NOT EXISTS` and
 `CREATE INDEX IF NOT EXISTS` do not alter an existing object.
 
-Therefore, editing a column or index definition in `db/init.sql` does not migrate
-an existing database. The repository currently has no migration framework or
-schema-version table. Any schema-changing feature must define both:
-
-- desired bootstrap state for new databases;
-- an explicit forward migration for existing databases.
+Editing a column or index definition therefore does not migrate an existing
+database. For Manual Plus step one, the owner explicitly chose a fresh rebuild:
+the current development database is disposable and has no production users.
+There is no migration runner, schema history, or legacy-data backfill. The entire
+schema is defined in `db/init.sql` and can be initialized repeatedly on the same
+schema version. This is not an upgrade mechanism for future populated deployments.
 
 The [database reference](../database/index.md) summarizes the current table,
 column, constraint, and index definitions. `db/init.sql` remains canonical; keep
