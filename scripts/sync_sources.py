@@ -8,16 +8,19 @@ import re
 import sys
 import tempfile
 from collections.abc import Iterator, Mapping, Sequence
+from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
-from typing import Final, Literal
+from typing import Any, Final, Literal
 from urllib.parse import unquote, urljoin, urlsplit
+from uuid import UUID
 from xml.etree import ElementTree
 
 import httpx
 import psycopg
 from bs4 import BeautifulSoup, NavigableString, Tag
 from pydantic import (
+    AwareDatetime,
     BaseModel,
     ConfigDict,
     Field,
@@ -28,6 +31,13 @@ from pydantic import (
 )
 
 from backend.config import load_settings
+from backend.evidence import (
+    OriginalArtifact,
+    SourceEvidence,
+    SourceIdentity,
+    replace_source,
+)
+from backend.manual_plus import SemanticExtractionError, extract_manual_plus_page
 
 PROJECT_ROOT: Final = Path(__file__).resolve().parents[1]
 DATABASE_SCHEMA_PATH: Final = PROJECT_ROOT / "db" / "init.sql"
@@ -90,12 +100,17 @@ class DownloadedSchema(SchemaDownload):
 
 
 class ConfluencePage(_FrozenModel):
-    """Validated source page from the Umsetzungsleitfaden space."""
+    """Current storage HTML and source-native Confluence metadata."""
 
     page_id: str = Field(min_length=1)
     title: str = Field(min_length=1)
     url: HttpUrl
     body_html: str
+    source_revision: str | None = None
+    source_modified_at: AwareDatetime | None = None
+    observed_at: AwareDatetime = Field(default_factory=lambda: datetime.now(UTC))
+    space_id: str | None = None
+    status: str | None = None
 
     @field_validator("page_id", "title", mode="after")
     @classmethod
@@ -177,13 +192,64 @@ class SyncResult(_FrozenModel):
     document_count: int = Field(ge=0)
 
 
+class ManualPlusPageImport(_FrozenModel):
+    """Page-only extraction; never a complete or published Manual Plus corpus."""
+
+    sources: tuple[SourceEvidence, ...]
+    corpus_complete: Literal[False] = False
+    pdf_coverage: Literal["pending"] = "pending"
+
+
+def fetch_manual_plus_evidence(client: httpx.Client) -> ManualPlusPageImport:
+    """Prepare current HTML evidence without changing storage or active search."""
+    pages = fetch_confluence_pages(client, space_key="Dokumentat")
+    sources = []
+    for page in pages:
+        source = SourceEvidence(
+            identity=SourceIdentity(
+                source_family="manual_plus",
+                origin=CONFLUENCE_BASE_URL,
+                native_kind="page",
+                native_id=page.page_id,
+            ),
+            original=OriginalArtifact(
+                media_type="text/html", content=page.body_html.encode("utf-8")
+            ),
+            source_revision=page.source_revision,
+            source_modified_at=page.source_modified_at,
+            observed_at=page.observed_at,
+            title=page.title,
+            url=page.url,
+            metadata={"space_id": page.space_id, "status": page.status},
+        )
+        try:
+            sources.append(extract_manual_plus_page(source))
+        except SemanticExtractionError as error:
+            raise SourceSyncError(str(error)) from error
+    return ManualPlusPageImport(sources=tuple(sources))
+
+
+def import_manual_plus_pages(
+    connection: psycopg.Connection[Any], *, client: httpx.Client
+) -> tuple[UUID, ...]:
+    """Store validated page evidence only, in an already initialized database.
+
+    Explicit development/import boundary, not wired into startup or search.
+    No withdrawal cleanup, readiness claim, PDF import, or family publication.
+    The caller owns the connection and can roll back the surrounding transaction.
+    """
+    candidate = fetch_manual_plus_evidence(client)
+    with connection.transaction():
+        return tuple(replace_source(connection, source) for source in candidate.sources)
+
+
 class _ConfluenceLinks(_ApiModel):
     next: str | None = None
     webui: str | None = None
 
 
 class _ConfluenceSpace(_ApiModel):
-    id: str
+    id: str = Field(pattern=r"^[0-9]+$")
     key: str
 
 
@@ -192,8 +258,9 @@ class _ConfluenceSpaceList(_ApiModel):
 
 
 class _ConfluencePageSummary(_ApiModel):
-    id: str
+    id: str = Field(pattern=r"^[0-9]+$")
     title: str
+    status: str | None = None
 
 
 class _ConfluencePageList(_ApiModel):
@@ -209,10 +276,18 @@ class _ConfluenceBody(_ApiModel):
     storage: _ConfluenceStorage
 
 
+class _ConfluenceVersion(_ApiModel):
+    number: int = Field(ge=1)
+    createdAt: AwareDatetime
+
+
 class _ConfluencePageDetail(_ApiModel):
-    id: str
+    id: str = Field(pattern=r"^[0-9]+$")
     title: str
     body: _ConfluenceBody
+    status: str | None = None
+    spaceId: str | None = None
+    version: _ConfluenceVersion | None = None
     links: _ConfluenceLinks = Field(alias="_links")
 
 
@@ -318,12 +393,15 @@ def write_schemas(
     return written_paths
 
 
-def fetch_confluence_pages(client: httpx.Client) -> list[ConfluencePage]:
-    """Fetch every current page in the public Umsetzungsleitfaden space."""
+def fetch_confluence_pages(
+    client: httpx.Client, *, space_key: str = CONFLUENCE_SPACE_KEY
+) -> list[ConfluencePage]:
+    """Fetch current pages; Manual Plus requires explicit status and revision."""
+    strict = space_key == "Dokumentat"
     space_response = _get(
         client,
         f"{CONFLUENCE_BASE_URL}/api/v2/spaces",
-        params={"keys": CONFLUENCE_SPACE_KEY},
+        params={"keys": space_key},
         allowed_hosts=_CONFLUENCE_HOSTS,
     )
     spaces = _validated_json(
@@ -331,15 +409,14 @@ def fetch_confluence_pages(client: httpx.Client) -> list[ConfluencePage]:
         _ConfluenceSpaceList,
         "Confluence space list",
     )
-    matching_spaces = [
-        space for space in spaces.results if space.key == CONFLUENCE_SPACE_KEY
-    ]
+    matching_spaces = [space for space in spaces.results if space.key == space_key]
     if len(matching_spaces) != 1:
         raise SourceSyncError(
-            f"Expected exactly one Confluence space named {CONFLUENCE_SPACE_KEY}"
+            f"Expected exactly one Confluence space named {space_key}"
         )
 
-    summaries = _fetch_page_summaries(client, matching_spaces[0].id)
+    space_id = matching_spaces[0].id
+    summaries = _fetch_page_summaries(client, space_id, strict=strict)
     pages: list[ConfluencePage] = []
     for summary in summaries:
         response = _get(
@@ -359,17 +436,27 @@ def fetch_confluence_pages(client: httpx.Client) -> list[ConfluencePage]:
             )
         if detail.links.webui is None:
             raise SourceSyncError(f"Confluence page {summary.id} has no public URL")
+        if strict and (
+            detail.status != "current"
+            or detail.spaceId != space_id
+            or detail.version is None
+        ):
+            raise SourceSyncError(f"Incomplete current page metadata: {summary.id}")
         pages.append(
             ConfluencePage(
                 page_id=detail.id,
                 title=detail.title,
                 url=_confluence_url(detail.links.webui),
                 body_html=detail.body.storage.value,
+                source_revision=str(detail.version.number) if detail.version else None,
+                source_modified_at=detail.version.createdAt if detail.version else None,
+                space_id=detail.spaceId,
+                status=detail.status,
             )
         )
 
     if not pages:
-        raise SourceSyncError("The Umsetzungsleitfaden space contains no pages")
+        raise SourceSyncError(f"The {space_key} space contains no current pages")
     return pages
 
 
@@ -516,9 +603,11 @@ def _fetch_all_sources(
 def _fetch_page_summaries(
     client: httpx.Client,
     space_id: str,
+    *,
+    strict: bool = False,
 ) -> list[_ConfluencePageSummary]:
     url = f"{CONFLUENCE_BASE_URL}/api/v2/spaces/{space_id}/pages"
-    params: Mapping[str, str] | None = {"limit": "250"}
+    params: Mapping[str, str] | None = {"limit": "250", "status": "current"}
     summaries: list[_ConfluencePageSummary] = []
     seen_page_ids: set[str] = set()
     visited_urls: set[str] = set()
@@ -544,6 +633,10 @@ def _fetch_page_summaries(
                     f"Confluence returned page {summary.id} more than once"
                 )
             seen_page_ids.add(summary.id)
+            if strict and summary.status == "archived":
+                continue
+            if strict and summary.status != "current":
+                raise SourceSyncError(f"Unexpected page listing status: {summary.id}")
             summaries.append(summary)
 
         if page_list.links.next is None:
@@ -647,7 +740,19 @@ def _get(
     allowed_hosts: frozenset[str] | None = None,
 ) -> httpx.Response:
     try:
-        response = client.get(url, params=params)
+        for _ in range(20):
+            if allowed_hosts is not None:
+                _require_allowed_host(url, allowed_hosts)
+            response = client.get(url, params=params, follow_redirects=False)
+            if not response.is_redirect:
+                break
+            location = response.headers.get("location")
+            if location is None:
+                raise SourceSyncError(f"Redirect without location: {url}")
+            url = urljoin(str(response.url), location)
+            params = None
+        else:
+            raise SourceSyncError("Too many source redirects")
         response.raise_for_status()
     except httpx.HTTPError as error:
         raise SourceSyncError(f"Failed to fetch {url}") from error
@@ -669,7 +774,7 @@ def _validated_json[ModelT: BaseModel](
 
 
 def _confluence_url(link: str) -> str:
-    if link.startswith("/wiki/"):
+    if link.startswith(("/wiki/", "//")):
         resolved = urljoin(CONFLUENCE_ORIGIN, link)
     else:
         resolved = urljoin(f"{CONFLUENCE_BASE_URL}/", link.lstrip("/"))
@@ -678,7 +783,14 @@ def _confluence_url(link: str) -> str:
 
 
 def _require_allowed_host(url: str, allowed_hosts: frozenset[str]) -> None:
-    if urlsplit(url).hostname not in allowed_hosts:
+    parsed = urlsplit(url)
+    if (
+        parsed.hostname not in allowed_hosts
+        or parsed.scheme != "https"
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.port not in (None, 443)
+    ):
         raise SourceSyncError(f"Refusing unexpected source host in URL: {url}")
 
 

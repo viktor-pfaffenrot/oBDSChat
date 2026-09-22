@@ -1,0 +1,42 @@
+[
+  {
+    "fixture": "diagnose.json",
+    "page_id": "75366493",
+    "source_revision": "129",
+    "storage_sha256": "fccc820848cc64c652752f6e7a4f3288cced1428f945d61426b726ba3cad0509",
+    "url": "https://plattform65c.atlassian.net/wiki/api/v2/pages/75366493?body-format=storage",
+    "observed_on": "2026-09-22"
+  },
+  {
+    "fixture": "overview.json",
+    "page_id": "72646998",
+    "source_revision": "30",
+    "storage_sha256": "786c74c2ec96d8a84cdbe46ccc586da86996c137b7aa6af539e131ce493dc9e9",
+    "url": "https://plattform65c.atlassian.net/wiki/api/v2/pages/72646998?body-format=storage",
+    "observed_on": "2026-09-22"
+  },
+  {
+    "fixture": "systemische-therapie.json",
+    "page_id": "75399290",
+    "source_revision": "139",
+    "storage_sha256": "ceba855c9b2e0337d23c4f261199fd6e91fdec6aca80e4e9dce56adc58ae0733",
+    "url": "https://plattform65c.atlassian.net/wiki/api/v2/pages/75399290?body-format=storage",
+    "observed_on": "2026-09-22"
+  },
+  {
+    "fixture": "todesmeldung.json",
+    "page_id": "75399312",
+    "source_revision": "47",
+    "storage_sha256": "22b1686d4f39bd20c3472ccc6b760db3e12b7a4fc9d69066371558d767606747",
+    "url": "https://plattform65c.atlassian.net/wiki/api/v2/pages/75399312?body-format=storage",
+    "observed_on": "2026-09-22"
+  },
+  {
+    "fixture": "tumorzuordnung.json",
+    "page_id": "75366552",
+    "source_revision": "47",
+    "storage_sha256": "41fe3904c5a4096178b297d4174793fb6db2369ed8e711c453bebb619a1a4639",
+    "url": "https://plattform65c.atlassian.net/wiki/api/v2/pages/75366552?body-format=storage",
+    "observed_on": "2026-09-22"
+  }
+]
