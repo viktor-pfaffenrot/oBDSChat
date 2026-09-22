@@ -92,6 +92,8 @@
     </li>
         </ul>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#current-evidence-tables">Current evidence tables</a>
+    </li>
     </ul>
                 </li>
               </ul>
@@ -138,7 +140,7 @@
               
                 <h1 id="postgresql-schema-reference">PostgreSQL schema reference</h1>
 <p><code>db/init.sql</code> is the canonical definition of application-owned PostgreSQL
-objects. This reference summarizes its table, columns, constraints, and search
+objects. This reference summarizes its tables, constraints, and search
 index for quick lookup.</p>
 <p>For storage rationale and synchronization behavior, read
 <a href="../explanation/data-storage/">Data Storage</a>.</p>
@@ -262,6 +264,37 @@ extension.</p>
 installations as described in
 <a href="../how-to/change-stored-data/">How to change stored source data</a>, then run
 <code>make docs-check</code>.</p>
+<h2 id="current-evidence-tables">Current evidence tables</h2>
+<p>The guide synchronizer still uses <code>documents</code>. These tables provide persistence
+for future ingestion; bootstrap does not publish a Manual Plus corpus.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Contents</th>
+<th>Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sources</code></td>
+<td>UUID; source family, origin, native kind/ID; current original bytes and SHA-256; media type, title, URL, source revision label, observation/modification timestamps, edition, decision/applicability dates, JSON metadata</td>
+<td>Unique native key; supported family/kind/media values; hash checked against bytes; metadata object.</td>
+</tr>
+<tr>
+<td><code>evidence_blocks</code></td>
+<td>UUID; source ID; extraction version, local key, kind, text, locator, structured payload</td>
+<td>Source foreign key with cascading deletion; unique source/local key; JSON objects.</td>
+</tr>
+</tbody>
+</table>
+<p><code>backend.evidence.SourceEvidence</code> validates HTML/PDF locators and unique block keys.
+<code>replace_source</code> replaces current bytes, metadata, and blocks in one transaction,
+keeping the source UUID. Evidence UUIDs are newly assigned on every replacement;
+expired IDs cannot resolve to replacement text. <code>get_current_source</code> reads bytes
+and blocks in one statement. Source UUIDs identify mutable sources, not citations.</p>
+<p>No revision/archive/snapshot-history tables or immutability triggers are needed.
+Extraction versions describe current processing, without retaining older results.</p>
               
             </div>
           </div><footer>

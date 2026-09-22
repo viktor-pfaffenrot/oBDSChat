@@ -70,7 +70,9 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#versioned-xsd-files">Versioned XSD files</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#bootstrap-versus-migration">Bootstrap versus migration</a>
+    <li class="toctree-l2"><a class="reference internal" href="#current-source-evidence">Current source evidence</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fresh-bootstrap">Fresh bootstrap</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#synchronization-consistency">Synchronization consistency</a>
     </li>
@@ -166,18 +168,39 @@ matching, <code>pdb.boost</code>, and <code>pdb.score</code>.</p>
 <p>Compose stores them in the named <code>xsd-data</code> volume. The synchronizer mounts it
 read-write; the backend mounts it read-only. Outside Compose, the default is
 <code>data/xsd</code> below the working directory.</p>
-<h2 id="bootstrap-versus-migration">Bootstrap versus migration</h2>
+<h2 id="current-source-evidence">Current source evidence</h2>
+<p><code>sources</code> keeps one current original per source family, origin, native kind, and
+native ID. Titles and URLs can change without changing source identity. Original
+storage HTML (UTF-8) and PDF bytes are stored once per source, with a
+database-checked SHA-256 hash. Source revision labels and dates remain metadata.
+Identical bytes from different sources keep separate provenance.</p>
+<p><code>evidence_blocks</code> stores current parsed text, structural HTML or physical PDF
+locators, and structured payloads. <code>backend.evidence.replace_source</code> replaces
+original, metadata, and all blocks atomically. Old originals and extraction
+results are removed; each replacement assigns fresh evidence UUIDs.
+<code>get_current_source</code> returns a consistent current original/evidence view.
+Old chats may keep displayed excerpts and public links, but those links open the
+current website. There is no historical-original lookup. Evaluation fixtures
+remain separate from runtime storage.</p>
+<p>The caller owns the outer transaction, allowing future refresh to group validated
+candidate replacements and withdrawn-source deletions before commit. Deleting a
+source cascades to its evidence. Full staging, completeness validation,
+publication, and readiness orchestration belong to step four.</p>
+<p>Existing synchronization still fills <code>documents</code>; it does not fabricate original
+HTML or revision metadata. No Manual Plus corpus is added to active search.
+Registry assessments and qualifications follow in step two. Deterministic XSD
+storage and public query behavior remain unchanged.</p>
+<h2 id="fresh-bootstrap">Fresh bootstrap</h2>
 <p><code>db/init.sql</code> is bootstrap SQL. The database container runs it only when
 initializing an empty PostgreSQL data directory. Source synchronization also
 executes it before replacing documents, but <code>CREATE TABLE IF NOT EXISTS</code> and
 <code>CREATE INDEX IF NOT EXISTS</code> do not alter an existing object.</p>
-<p>Therefore, editing a column or index definition in <code>db/init.sql</code> does not migrate
-an existing database. The repository currently has no migration framework or
-schema-version table. Any schema-changing feature must define both:</p>
-<ul>
-<li>desired bootstrap state for new databases;</li>
-<li>an explicit forward migration for existing databases.</li>
-</ul>
+<p>Editing a column or index definition therefore does not migrate an existing
+database. For Manual Plus step one, the owner explicitly chose a fresh rebuild:
+the current development database is disposable and has no production users.
+There is no migration runner, schema history, or legacy-data backfill. The entire
+schema is defined in <code>db/init.sql</code> and can be initialized repeatedly on the same
+schema version. This is not an upgrade mechanism for future populated deployments.</p>
 <p>The <a href="../../database/">database reference</a> summarizes the current table,
 column, constraint, and index definitions. <code>db/init.sql</code> remains canonical; keep
 the reference aligned and run <code>make docs-check</code> after changing the bootstrap

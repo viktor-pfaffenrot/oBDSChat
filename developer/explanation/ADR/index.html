@@ -98,11 +98,7 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#adr-001-use-postgresql-instead-of-sqlite">ADR-001: Use PostgreSQL instead of SQLite</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences">Consequences</a>
     </li>
@@ -110,11 +106,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-002-use-pg_search-bm25-instead-of-native-postgresql-full-text-search">ADR-002: Use pg_search BM25 instead of native PostgreSQL full-text search</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_1">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_1">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_1">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_1">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_1">Consequences</a>
     </li>
@@ -122,11 +114,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-003-query-the-obds-xsd-with-deterministic-tools">ADR-003: Query the oBDS XSD with deterministic tools</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_2">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_2">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_2">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_2">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_2">Consequences</a>
     </li>
@@ -134,11 +122,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-004-use-requesty-as-the-model-routing-boundary">ADR-004: Use Requesty as the model-routing boundary</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_3">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_3">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_3">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_3">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_3">Consequences</a>
     </li>
@@ -146,11 +130,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-005-target-openai-compatible-chat-completions-tool-calling">ADR-005: Target OpenAI-compatible Chat Completions tool calling</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_4">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_4">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_4">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_4">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_4">Consequences</a>
     </li>
@@ -158,11 +138,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-006-separate-the-gradio-frontend-from-the-fastapi-backend">ADR-006: Separate the Gradio frontend from the FastAPI backend</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_5">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_5">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_5">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_5">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_5">Consequences</a>
     </li>
@@ -170,11 +146,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-007-start-with-bm25-before-vector-search">ADR-007: Start with BM25 before vector search</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_6">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_6">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_6">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_6">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_6">Consequences</a>
     </li>
@@ -182,11 +154,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#adr-008-make-evaluation-a-first-class-design-constraint">ADR-008: Make evaluation a first-class design constraint</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#context_7">Context</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#decision-and-rationale_7">Decision and rationale</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#alternatives-considered_7">Alternatives considered</a>
+    <li class="toctree-l3"><a class="reference internal" href="#considered-options_7">Considered Options</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#consequences_7">Consequences</a>
     </li>
@@ -226,264 +194,181 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="architecture-decision-records">Architecture decision records</h1>
-<p>These records explain the major choices behind oBDSChat. They capture the
-constraints that led to each choice, the alternatives that were considered, and
-the trade-offs that future changes must account for. Read them before replacing
-a dependency, moving a system boundary, or adding infrastructure.</p>
-<p>All records on this page are accepted unless their status says otherwise. A
-record describes why a decision was made; the linked explanation and reference
-pages describe the current implementation.</p>
+<p>These accepted records capture the major decisions behind oBDSChat and why they
+were made. Linked explanation and reference pages describe the implementation.</p>
 <h2 id="adr-001-use-postgresql-instead-of-sqlite">ADR-001: Use PostgreSQL instead of SQLite</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context">Context</h3>
-<p>The application needs persistent storage for sections of the
-Umsetzungsleitfaden and may later store other official oBDS prose sources. It is
-containerized and intended to resemble a deployable application rather than a
-single-user local script.</p>
-<h3 id="decision-and-rationale">Decision and rationale</h3>
-<p>Use PostgreSQL as the application database. PostgreSQL is well established, provides multi-user storage, source and oBDS-version filtering, and support for both the current
-<code>pg_search</code> extension and a possible future <code>pgvector</code> extension for semantic RAG. It allows metadata, lexical retrieval, and a later vector index to remain in one service.</p>
-<p>This choice keeps deployment realistic without requiring a separate search
-engine. Docker Compose can provide the database, initialize it, check its
-health, and persist its data in the same way on every host.</p>
-<h3 id="alternatives-considered">Alternatives considered</h3>
+<p>The application needs persistent, multi-user storage for Umsetzungsleitfaden
+sections and potentially other official oBDS prose sources in a containerized
+deployment. Use PostgreSQL to keep metadata, source and oBDS-version filtering,
+<code>pg_search</code> retrieval, and a possible future <code>pgvector</code> index in one service.
+Docker Compose provides consistent initialization, health checks, and persistent
+storage across hosts.</p>
+<h3 id="considered-options">Considered Options</h3>
 <ul>
-<li>SQLite would be simpler for a single process, but it does not provide the
-  required PostgreSQL search extensions or the same multi-service deployment
-  model.</li>
-<li>Separate database and search services would isolate those responsibilities,
-  but they would add synchronization and operational overhead before the corpus
-  requires it.</li>
+<li>SQLite simplifies single-process storage but lacks the required PostgreSQL
+  search extensions and the same multi-service deployment model.</li>
+<li>Separate database and search services add synchronization and operational
+  overhead before the corpus requires them.</li>
 </ul>
 <h3 id="consequences">Consequences</h3>
-<p>The application needs a running database service, persistent storage,
-initialization, and health checks. In return, one database can serve structured
-metadata and ranked prose retrieval. See <a href="../data-storage/">How source data is stored</a>
-and the <a href="../../database/">database reference</a> for the current design.</p>
+<p>The application requires a running database service and persistent storage. See
+<a href="../data-storage/">How source data is stored</a> and the
+<a href="../../database/">database reference</a>.</p>
 <h2 id="adr-002-use-pg_search-bm25-instead-of-native-postgresql-full-text-search">ADR-002: Use pg_search BM25 instead of native PostgreSQL full-text search</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_1">Context</h3>
 <p>The Umsetzungsleitfaden contains exact oBDS field names, German medical terms,
-rare technical expressions, and sections of different lengths. Search must rank
-the most useful sections rather than merely identify every section containing a
-term.</p>
-<h3 id="decision-and-rationale_1">Decision and rationale</h3>
-<p>Use ParadeDB's <code>pg_search</code> extension and BM25 for lexical retrieval. BM25 uses
-corpus-level term rarity and document-length normalization, which gives a strong
-ranking baseline for this terminology-heavy corpus. Keeping the index in
-PostgreSQL also avoids a second search service and its synchronization path.</p>
-<p>The backend exposes this capability through a small domain function instead of
-leaking index details into callers:</p>
-<div class="highlight"><pre><span></span><code><span class="n">search_umsetzungsleitfaden</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-</code></pre></div>
-<h3 id="alternatives-considered_1">Alternatives considered</h3>
+rare expressions, and sections of different lengths. Use ParadeDB's <code>pg_search</code>
+extension and BM25 for lexical retrieval because corpus-level term rarity and
+document-length normalization provide a strong ranking baseline for this corpus.
+Keeping the index in PostgreSQL avoids a separate search service and its
+synchronization path.</p>
+<h3 id="considered-options_1">Considered Options</h3>
 <ul>
-<li>Native PostgreSQL <code>tsvector</code> and <code>ts_rank</code> would avoid a specialized
-  extension, but provide less suitable ranking behavior for this corpus.</li>
-<li>Vector-only retrieval would improve some semantic matches, but weaken the
-  simple, explainable baseline for exact technical vocabulary.</li>
-<li>Elasticsearch or OpenSearch would provide mature search features, but add a
-  service that the current project size does not justify.</li>
-<li>BM25 is typically combined with semantic search in a hybrid search via reciprocal rank fusion. The current setup can naturally be extented with vector search.</li>
+<li>Native PostgreSQL <code>tsvector</code> and <code>ts_rank</code> avoid a specialized extension but
+  provide less suitable ranking behavior for this corpus.</li>
+<li>Vector-only retrieval may improve semantic matches but weakens the explainable
+  baseline for exact technical vocabulary.</li>
+<li>Elasticsearch or OpenSearch add a service that the current project size does
+  not justify.</li>
 </ul>
 <h3 id="consequences_1">Consequences</h3>
-<p>Rare terms and field-name matches receive useful lexical weight without external
-search infrastructure. The database image is more specialized, however:
-<code>pg_search</code> must be installed and loaded, and tests of real search behavior need
-a compatible PostgreSQL instance. The index and query details are described in
-<a href="../data-storage/">How source data is stored</a>.</p>
+<p>The database image must install and load <code>pg_search</code>, and real search tests need
+compatible PostgreSQL. A small domain function hides index details from callers.
+The setup can later combine BM25 and vector search through reciprocal rank fusion;
+see ADR-007 and <a href="../data-storage/">How source data is stored</a>.</p>
 <h2 id="adr-003-query-the-obds-xsd-with-deterministic-tools">ADR-003: Query the oBDS XSD with deterministic tools</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_2">Context</h3>
-<p>The XSD contains authoritative facts such as element names, XML paths,
-datatypes, cardinalities, enumerations, and parent-child relationships. Those
-facts should not depend on probabilistic retrieval or on a model remembering the
-schema correctly.</p>
-<h3 id="decision-and-rationale_2">Decision and rationale</h3>
-<p>Keep the versioned XSD files as the source of truth and query them through
-oBDS-specific deterministic functions backed by <code>xmlschema</code> and <code>lxml</code>. The
-public tool boundary includes functions such as:</p>
-<div class="highlight"><pre><span></span><code><span class="n">search_schema</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">get_schema_concept_locations</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">get_schema_element</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">get_schema_values</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">get_schema_cardinality</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</code></pre></div>
-<p><code>search_schema</code> is ranked (e.g. element containing query ranks higher than documentations mentions query) and limited for discovery.
-<code>get_schema_concept_locations</code> instead returns every location for questions about
-concepts. It identifies the containing message type and prefers element-name or named-datatype matches, falling back to documentation and enumeration meanings only when no structural match exists.</p>
-<p>The implementation lives in <code>src/backend/xsd.py</code>, while <code>src/backend/tools.py</code>
-exposes the functions to the model. This thin layer delegates XSD semantics
-to established libraries, gives the model domain-oriented operations, and makes
-schema answers exact and testable.</p>
-<h3 id="alternatives-considered_2">Alternatives considered</h3>
+<p>The XSD defines authoritative element names, XML paths, datatypes, cardinalities,
+enumerations, and parent-child relationships. Keep versioned XSD files as the
+source of truth and query them through oBDS-specific deterministic functions
+backed by <code>xmlschema</code> and <code>lxml</code>, so formal schema facts remain exact, testable,
+and separate from prose retrieval. Domain-oriented tools delegate XSD semantics
+to established libraries instead of relying on model memory.</p>
+<h3 id="considered-options_2">Considered Options</h3>
 <ul>
-<li>Chunking the XSD as plain text would lose structural meaning and make exact
-  facts dependent on retrieval quality.</li>
-<li>A generic XML or XPath tool would expose more power than the model needs and
-  make correct tool use harder.</li>
-<li>A custom XSD parser would duplicate complex namespace, reference, and type
-  semantics already handled by libraries.</li>
+<li>Chunking the XSD as plain text loses structure and makes exact facts depend on
+  retrieval quality.</li>
+<li>Generic XML or XPath tools expose more power than the model needs and make
+  correct tool use harder.</li>
+<li>A custom parser duplicates complex namespace, reference, and type semantics
+  already handled by libraries.</li>
 </ul>
 <h3 id="consequences_2">Consequences</h3>
-<p>Formal schema facts remain separate from prose guidance and can be verified
-deterministically. The wrapper still has to handle versions, namespaces,
-references, paths, and source locations correctly. Its design is described in
-<a href="../backend-architecture/#versioned-xsd-catalog">How the backend works</a>.</p>
+<p>The wrapper must handle versions, namespaces, references, paths, and source
+locations correctly. Ranked, limited <code>search_schema</code> serves discovery;
+<code>get_schema_concept_locations</code> returns every concept location, identifies its
+containing message type, and prefers element-name or named-datatype matches,
+falling back to documentation and enumeration meanings only when no structural
+match exists. Dedicated tools expose element details, values, and cardinalities.
+See <a href="../backend-architecture/#versioned-xsd-catalog">How the backend works</a>.</p>
 <h2 id="adr-004-use-requesty-as-the-model-routing-boundary">ADR-004: Use Requesty as the model-routing boundary</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_3">Context</h3>
 <p>The project needs to compare proprietary and open-weight models, select global
-or EU-hosted inference, and preserve a path to future on-premises inference. The
-rest of the application should not depend on the concrete provider selected for
-one evaluation or deployment.</p>
-<h3 id="decision-and-rationale_3">Decision and rationale</h3>
-<p>Use Requesty as the hosted model-routing boundary and keep provider selection in
-runtime configuration. The backend calls the stable <code>policy/obdschat</code> route;
-concrete model and routing changes belong to the provider policy rather than the
-application code. Direct OpenAI configuration remains available for controlled
-testing.</p>
-<p>The common boundary makes model switching and regional provider selection
-possible without changing retrieval, tool execution, or public HTTP contracts.
-It also allows hosted open-weight candidates to be benchmarked before committing
-to self-hosted inference infrastructure.</p>
-<h3 id="alternatives-considered_3">Alternatives considered</h3>
+or EU-hosted inference, and preserve a path to on-premises inference. Use Requesty
+as the hosted routing boundary, with the backend calling <code>policy/obdschat</code> and
+concrete model selection controlled by runtime configuration and provider policy.
+This keeps retrieval, tool execution, and public HTTP contracts independent of
+model switching and allows hosted candidates to be benchmarked before investing
+in self-hosted inference.</p>
+<h3 id="considered-options_3">Considered Options</h3>
 <ul>
-<li>Direct integrations for every provider would expose provider differences
-  throughout the backend.</li>
-<li>Supporting only OpenAI would make comparisons and later deployment choices
-  harder.</li>
+<li>Direct integrations for every provider spread provider differences throughout
+  the backend.</li>
+<li>Supporting only OpenAI restricts comparisons and later deployment choices.</li>
 </ul>
 <h3 id="consequences_3">Consequences</h3>
-<p>The backend remains mostly provider-independent and models can be compared
-without an infrastructure rewrite. Requesty is an external runtime dependency,
-and provider behavior can still vary behind a common API. Strict EU residency
-requires both an EU Requesty gateway and an EU-hosted inference provider. See
-the <a href="../../reference/runtime-configuration/">runtime configuration reference</a>
-for the current settings.</p>
+<p>Requesty becomes an external runtime dependency, and provider behavior can still
+vary behind the common API. Strict EU residency requires both an EU Requesty
+gateway and an EU-hosted inference provider. Direct OpenAI configuration remains
+available for controlled testing; see the
+<a href="../../reference/runtime-configuration/">runtime configuration reference</a>.</p>
 <h2 id="adr-005-target-openai-compatible-chat-completions-tool-calling">ADR-005: Target OpenAI-compatible Chat Completions tool calling</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_4">Context</h3>
 <p>Tool calling must work across proprietary models, open-weight models, Requesty,
-and possible future vLLM or SGLang deployments. A widely implemented protocol is
-more valuable here than a provider-specific feature set.</p>
-<h3 id="decision-and-rationale_4">Decision and rationale</h3>
-<p>Use the modern OpenAI-compatible Chat Completions tool-calling convention:</p>
-<div class="highlight"><pre><span></span><code>tools
-tool_choice
-assistant.tool_calls
-role=&quot;tool&quot;
-tool_call_id
-</code></pre></div>
-<p>Do not use the deprecated <code>functions</code> and <code>function_call</code> interface. The chosen
-contract is supported by hosted routers and common open-weight serving stacks,
-so the backend can keep one explicit model-tool loop across hosted and future
-self-hosted deployments.</p>
-<h3 id="alternatives-considered_4">Alternatives considered</h3>
+and possible future vLLM or SGLang deployments. Use the OpenAI-compatible Chat
+Completions contract (<code>tools</code>, <code>tool_choice</code>, <code>assistant.tool_calls</code>,
+<code>role="tool"</code>, and <code>tool_call_id</code>) rather than the deprecated <code>functions</code> and
+<code>function_call</code> interface. This widely implemented contract supports one explicit,
+portable, mockable model-tool loop across hosted and future self-hosted deployments.</p>
+<h3 id="considered-options_4">Considered Options</h3>
 <ul>
-<li>The OpenAI Responses API alone would couple the application to an interface
-  that is not as broadly available across the target serving stacks.</li>
-<li>Provider-specific tool APIs would require multiple orchestration paths.</li>
-<li>Custom JSON prompting would move validation into prompt interpretation and be
-  less reliable than structured tool calls.</li>
+<li>Using only the OpenAI Responses API couples the application to an interface
+  less broadly available across the target serving stacks.</li>
+<li>Provider-specific tool APIs require multiple orchestration paths.</li>
+<li>Custom JSON prompting moves validation into prompt interpretation and is less
+  reliable than structured tool calls.</li>
 </ul>
 <h3 id="consequences_4">Consequences</h3>
-<p>The application gains a portable and mockable model contract. Some advanced
-provider features need separate treatment, and models (verified for glm-5.2) can differ in tool-call reliability even when they accept the same schema. Some models (e.g. QWEN-3.8) might still require model-specific implementation of the tool-loop.</p>
+<p>Advanced provider features may need separate treatment. Accepting the same schema
+does not guarantee equal tool-call reliability, as observed with glm-5.2;
+models such as QWEN-3.8 may still require model-specific loop handling.</p>
 <h2 id="adr-006-separate-the-gradio-frontend-from-the-fastapi-backend">ADR-006: Separate the Gradio frontend from the FastAPI backend</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_5">Context</h3>
-<p>The project needs a simple interactive interface while keeping model calls,
-retrieval, database access, XSD access, and source traceability on the server
-side.</p>
-<h3 id="decision-and-rationale_5">Decision and rationale</h3>
-<p>Run the Gradio frontend and FastAPI backend as separate services that communicate
-over HTTP:</p>
-<div class="highlight"><pre><span></span><code>Gradio frontend
-    |
-    | HTTP
-    v
-FastAPI backend
-</code></pre></div>
-<p>The frontend must not import backend internals. FastAPI remains the single owner
-of domain behavior and the frontend becomes a replaceable HTTP client. Each side
-can therefore be deployed and tested independently.</p>
-<h3 id="alternatives-considered_5">Alternatives considered</h3>
+<p>The project needs an interactive interface while keeping model calls, retrieval,
+database access, XSD access, and source traceability on the server. Run Gradio
+and FastAPI as separate services communicating over HTTP, with FastAPI owning
+domain behavior and the frontend acting as a replaceable client that never
+imports backend internals. This allows independent deployment and testing and
+lets future frontends reuse the API.</p>
+<h3 id="considered-options_5">Considered Options</h3>
 <ul>
-<li>One combined Gradio application would reduce the number of services, but tie
-  presentation directly to domain and infrastructure code.</li>
-<li>Importing backend Python modules into the frontend would avoid HTTP calls, but
-  erase the application boundary and couple their dependencies.</li>
+<li>A combined Gradio application reduces service count but ties presentation to
+  domain and infrastructure code.</li>
+<li>Importing backend modules into the frontend avoids HTTP calls but erases the
+  application boundary and couples dependencies.</li>
 </ul>
 <h3 id="consequences_5">Consequences</h3>
-<p>Responsibilities and deployment boundaries remain clear, and a future frontend
-can reuse the same API. Public response models live in the neutral
-<code>obdschat_api</code> package, so both services validate the same contract without the
-frontend importing backend internals. Response-contract changes require rebuilding both service images. See <a href="../frontend-architecture/">How the frontend works</a> for the state and
-contract implications.</p>
+<p>Public response models live in the neutral <code>obdschat_api</code> package, so both
+services validate the same contract without backend imports. Response-contract
+changes require rebuilding both service images. See
+<a href="../frontend-architecture/">How the frontend works</a>.</p>
 <h2 id="adr-007-start-with-bm25-before-vector-search">ADR-007: Start with BM25 before vector search</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_6">Context</h3>
-<p>The Umsetzungsleitfaden contains many exact field names and technical terms, so
-lexical retrieval has a strong chance of solving the initial use cases. Vector
-retrieval may help semantic paraphrases, but it also needs an embedding model,
-an indexing pipeline, and separate quality evaluation.</p>
-<h3 id="decision-and-rationale_6">Decision and rationale</h3>
-<p>Start with BM25 only. Add vector retrieval later by using e.g.<code>pgvector</code> inside PostgreSQL and evaluate a hybrid strategy against the BM25 baseline.</p>
-<h3 id="alternatives-considered_6">Alternatives considered</h3>
+<p>Exact field names and technical terms make lexical retrieval a strong initial
+baseline for the Umsetzungsleitfaden, while vector retrieval requires an embedding
+model, an indexing pipeline, and separate quality evaluation. Start with BM25
+only and add vector retrieval, for example through PostgreSQL's <code>pgvector</code>, when
+evaluation demonstrates a meaningful gain. Evaluate any hybrid strategy against
+the BM25 baseline.</p>
+<h3 id="considered-options_6">Considered Options</h3>
 <ul>
-<li>Vector-only search would discard the strong exact-term baseline.</li>
-<li>Building hybrid retrieval immediately might improve some queries, but would
-  make it harder to implement and mentain.</li>
-<li>Treating BM25 as permanently sufficient would prevent evidence-driven
-  improvement when lexical overlap is genuinely weak.</li>
+<li>Vector-only search discards the strong exact-term baseline.</li>
+<li>Immediate hybrid retrieval adds implementation and maintenance complexity.</li>
+<li>Treating BM25 as permanently sufficient prevents evidence-driven improvement
+  when lexical overlap is weak.</li>
 </ul>
 <h3 id="consequences_6">Consequences</h3>
-<p>The application has no embedding pipeline or vector index today. Semantic
-paraphrases with little lexical overlap may be missed. That limitation is
-accepted until evaluation demonstrates that the added system complexity produces
-a meaningful gain.</p>
+<p>The application has no embedding pipeline or vector index. Semantic paraphrases
+with little lexical overlap may be missed until evaluation justifies the added
+complexity.</p>
 <h2 id="adr-008-make-evaluation-a-first-class-design-constraint">ADR-008: Make evaluation a first-class design constraint</h2>
-<p><strong>Status:</strong> Accepted</p>
-<h3 id="context_7">Context</h3>
-<p>Generic model benchmarks do not measure the complete oBDS workflow: German
-technical language, tool choice, XSD reasoning, and BM25 retrieval all matter. A few manually selected examples would not provide a stable basis for model or retrieval decisions.</p>
-<h3 id="decision-and-rationale_7">Decision and rationale</h3>
-<p>Maintain an application-specific set of curreently 71 realistic oBDS questions. Evaluate model behavior across tool selection, tool argument validity,
-multi-tool completion, groundedness, correct abstention, unsupported claims, and
-German answer quality.</p>
-<p>Use GPT-5.6 Luna as the reference-quality model when comparing open-weight
-candidates. Requesty policy can select concrete candidates without changing the
-backend.</p>
-<p>The current production-style runner reads <code>tests/questions.yaml</code>, exercises the
-same tools as the application, and reports answer and citation correctness.
-Keeping the suite in the repository makes expected facts and sources reviewable
-alongside code changes.</p>
-<h3 id="alternatives-considered_7">Alternatives considered</h3>
+<p>Generic benchmarks and a few manual examples cannot reliably assess German oBDS
+language, tool choice, XSD reasoning, and BM25 retrieval together. Maintain a
+repository-owned suite of realistic oBDS questions covering tool selection,
+argument validity, multi-tool completion, groundedness, correct abstention,
+unsupported claims, and German answer quality. Use GPT-5.6 Luna as the
+reference-quality model for open-weight comparisons, with Requesty policy
+selecting candidates without backend changes.</p>
+<h3 id="considered-options_7">Considered Options</h3>
 <ul>
-<li>Public benchmarks would be cheaper to consume, but would not represent the
-  project's source and tool boundaries.</li>
-<li>Ad hoc manual questions would help exploration, but would not make changes
-  comparable over time.</li>
+<li>Public benchmarks are cheaper to consume but do not represent the project's
+  source and tool boundaries.</li>
+<li>Ad hoc manual questions aid exploration but do not make changes comparable
+  over time.</li>
 </ul>
 <h3 id="consequences_7">Consequences</h3>
-<p>Model, prompt, tool, and retrieval changes can be judged with project-specific
-evidence. Maintaining representative questions and carefully reviewed expected
-facts requires ongoing work, and live model evaluations have external cost and
-some provider variability. The tests are currently lexical, not semantic. That is, some answers to questions, in particular ambiguous or unanswerable questions, are harder to verify and tests might procude inflated false negatives.</p>
+<p>The recorded suite contains 71 questions in <code>tests/questions.yaml</code>; its
+production-style runner exercises application tools and reports answer and
+citation correctness. Keeping expected facts and sources reviewable alongside
+code requires ongoing maintenance, while live evaluations incur external cost
+and provider variability. Current checks are lexical rather than semantic and
+may produce inflated false negatives, particularly for ambiguous or unanswerable
+questions.</p>
 <h2 id="maintaining-these-records">Maintaining these records</h2>
-<p>Add an ADR when a change:</p>
-<ul>
-<li>replaces a major dependency;</li>
-<li>moves a system boundary;</li>
-<li>changes the retrieval or model-provider strategy;</li>
-<li>introduces substantial infrastructure; or</li>
-<li>reverses a previously accepted choice.</li>
-</ul>
-<p>Do not add ADRs for ordinary implementation details. When a decision changes,
-keep its history and change its status to <code>Superseded by ADR-XXX</code> instead of
-deleting it. Add the replacement as a new numbered record with its own context
-and consequences.</p>
+<p>Add an ADR only when a decision is hard to reverse, surprising without context,
+and the result of a real trade-off. Record its context, decision, and rationale
+in one to three sentences; add Considered Options or Consequences only when they
+preserve useful rejected alternatives or non-obvious downstream effects.</p>
+<p>New individual records belong in <code>internal_docs/adr/</code> as <code>0001-slug.md</code>,
+<code>0002-slug.md</code>, and so on, incrementing the highest existing number. Compile them
+into this page only when requested. When revisiting a decision, use optional
+<code>status</code> frontmatter (<code>proposed</code>, <code>accepted</code>, <code>deprecated</code>, or
+<code>superseded by ADR-NNNN</code>); preserve the old record and add its replacement with a
+new number.</p>
               
             </div>
           </div><footer>
